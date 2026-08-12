@@ -120,7 +120,7 @@ class Signer:
         self.state.check_not_revoked()
         acct = self._load_account()
         sig = acct.sign_message(encode_defunct(text=message))
-        return {"address": acct.address, "signature": sig.signature.hex()}
+        return {"address": acct.address, "signature": "0x" + sig.signature.hex()}
 
     # -- wallet_pay -----------------------------------------------------------
     def _check_caps(self, payment_id: str, amount: Decimal) -> dict | None:
@@ -186,7 +186,7 @@ class Signer:
             "x402Version": 1,
             "scheme": "exact",
             "network": "base-sepolia",
-            "payload": {"signature": signature.signature.hex(),
+            "payload": {"signature": "0x" + signature.signature.hex(),
                         "authorization": authorization},
         }
         requirements = {
