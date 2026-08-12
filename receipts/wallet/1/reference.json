@@ -1,0 +1,252 @@
+{
+  "receipt_format": 1,
+  "recipe": "wallet",
+  "rev": 1,
+  "target": "reference",
+  "profile": "standard",
+  "configuration": {
+    "custody": "local-keyfile",
+    "attendance": "unattended-under-cap",
+    "network": "base-sepolia"
+  },
+  "parameters": {
+    "cap_per_tx": "0.10",
+    "cap_daily": "1.00"
+  },
+  "manifest_sha256": "88870a9530a688558d7fcf1e011afd84cd43a4472299fdcc7384806b3e4ba743",
+  "environment": {
+    "gpu": "NVIDIA GeForce RTX 3090, 595.71.05",
+    "inference_server": "llama.cpp llama-server",
+    "llama_cpp_tag": "b10375",
+    "llama_cpp_commit": "ba360efe1f574ebae727aad64112d18ecedca85a",
+    "model_repo": "unsloth/Qwen3.6-27B-GGUF",
+    "model_file": "Qwen3.6-27B-Q4_K_M.gguf",
+    "model_sha256": "5ed60d0af4650a854b1755bd392f9aef4872643dc25a254bc68043fa638392a0",
+    "ctx": 65536
+  },
+  "harness": "hermes-agent v0.20.0 (2026.8.3) @ 3c27eb6, stock config + custom provider (llamacpp)",
+  "date": "2026-08-12",
+  "protocol": {
+    "reps": 15,
+    "green": 15,
+    "verdict": "green"
+  },
+  "cost": "0.15 USDC testnet + ~3.5h RTX 3090 secure @ $0.50/hr",
+  "interventions": 0,
+  "notes": [
+    "RunPod secure cloud EU-CZ-1, pod f3nu48e1draqgo",
+    "5 rung attempts; attempts 1-4 red on harness/dependency issues, all fixed in code (see cst-8ih.1); attempt 5 clean 15/15"
+  ],
+  "reps": [
+    {
+      "rep": "rep-01",
+      "green": true,
+      "tx": "0x84d015171962286be94fa4092d98aad8ecab5b5101cf2a0bc2110d954128d67e",
+      "checks": {
+        "one_settled_spend": true,
+        "payee_matches": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "counters_rederive": true,
+        "exactly_one_paid_200": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-02",
+      "green": true,
+      "tx": "0xe306748c291e14d8febad4e449e8bee3df067c6a71576c11c1bb1812990627cd",
+      "checks": {
+        "one_settled_spend": true,
+        "payee_matches": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "counters_rederive": true,
+        "exactly_one_paid_200": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-03",
+      "green": true,
+      "tx": "0xb93f0b203c55b2309ebe66049b4e9a3abbf8dc7aae4c24c76bdbc7f745f7f4f0",
+      "checks": {
+        "one_settled_spend": true,
+        "payee_matches": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "counters_rederive": true,
+        "exactly_one_paid_200": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-04",
+      "green": true,
+      "tx": "0x424b6f4f7639885ed0fabf927f2f36c66254b283b62d94930cf59d5febf6659d",
+      "checks": {
+        "one_settled_spend": true,
+        "payee_matches": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "counters_rederive": true,
+        "exactly_one_paid_200": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-05",
+      "green": true,
+      "tx": "0x73ac8b4b40b013e8adb825199ccf14dc94b6830049f7cf507a2f4dbbf78201ba",
+      "checks": {
+        "one_settled_spend": true,
+        "payee_matches": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "counters_rederive": true,
+        "exactly_one_paid_200": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-06",
+      "green": true,
+      "tx": "0xad7ac48161379482c18064cafe4989690f4405b22081bcd1021636a7ba2ad1f4",
+      "checks": {
+        "one_settled_spend": true,
+        "payee_matches": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "counters_rederive": true,
+        "exactly_one_paid_200": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-07",
+      "green": true,
+      "tx": "0x0012a12355ff1a1d2aad031e5f0d0528ae4c61eb5dfa18285d3f5090c5f5adf9",
+      "checks": {
+        "one_settled_spend": true,
+        "payee_matches": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "counters_rederive": true,
+        "exactly_one_paid_200": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-08",
+      "green": true,
+      "tx": "0x223601b67905d6844db7bda98b2c989fafae3e88d4bd67e4b1ff6ccfff455293",
+      "checks": {
+        "one_settled_spend": true,
+        "payee_matches": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "counters_rederive": true,
+        "exactly_one_paid_200": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-09",
+      "green": true,
+      "tx": "0xf39629b1860de066e8429f0d47d69047cbec8053df040042ef29de385ea5150d",
+      "checks": {
+        "one_settled_spend": true,
+        "payee_matches": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "counters_rederive": true,
+        "exactly_one_paid_200": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-10",
+      "green": true,
+      "tx": "0xbc5756a7d1beda872876a7e3687dedabac5b5ab7b845324d32d9ba3060ad393c",
+      "checks": {
+        "one_settled_spend": true,
+        "payee_matches": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "counters_rederive": true,
+        "exactly_one_paid_200": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-11",
+      "green": true,
+      "tx": "0xc5b748c23e2816d0991a130b2f29fad76bef707b4fc85b8ada1e040d876bcd48",
+      "checks": {
+        "one_settled_spend": true,
+        "payee_matches": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "counters_rederive": true,
+        "exactly_one_paid_200": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-12",
+      "green": true,
+      "tx": "0x49473e7d939f09b8ae087ac3092b9675898beb62d312dba4a17414cda78a9597",
+      "checks": {
+        "one_settled_spend": true,
+        "payee_matches": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "counters_rederive": true,
+        "exactly_one_paid_200": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-13",
+      "green": true,
+      "tx": "0x0d6886ff583ae4ec8753abdc8e449edceaa6199a5c4aaf2f107fa2f9c02249d9",
+      "checks": {
+        "one_settled_spend": true,
+        "payee_matches": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "counters_rederive": true,
+        "exactly_one_paid_200": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-14",
+      "green": true,
+      "tx": "0x41cdce46231f289ac294a5c1159a96ead2ed70b655fced27aae6d299daffb9df",
+      "checks": {
+        "one_settled_spend": true,
+        "payee_matches": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "counters_rederive": true,
+        "exactly_one_paid_200": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-15",
+      "green": true,
+      "tx": "0xb3729f1e6cbbad5d975142b45a9df509aa7989f9771b6a64c54f0159e0536989",
+      "checks": {
+        "one_settled_spend": true,
+        "payee_matches": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "counters_rederive": true,
+        "exactly_one_paid_200": true,
+        "no_secret_leakage": true
+      }
+    }
+  ]
+}
