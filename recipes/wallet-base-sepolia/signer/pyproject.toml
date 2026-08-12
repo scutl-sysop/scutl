@@ -8,6 +8,7 @@ dependencies = ["eth-account>=0.11", "requests>=2.31"]
 [project.scripts]
 signer = "scutl_signer.cli:main"
 signer-approve = "scutl_signer.cli:approve"
+x402-buy = "scutl_signer.buy:main"
 
 [build-system]
 requires = ["setuptools>=68"]

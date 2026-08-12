@@ -66,12 +66,26 @@ components:
                                                     # spend log (append-only),
                                                     # counters, tombstone
     tools:
+      # `command` is the concrete invocation the lowering emits into skill
+      # bundles; `{...}` slots are filled by the agent at call time.
       - name: wallet_status   # address, network, balance, caps, spend today
-      - name: wallet_pay      # x402 payment; REFUSES over-cap in code
+        command: "signer status"
+      - name: wallet_pay      # direct x402 payment; REFUSES over-cap in code
+        command: "signer pay --payment-id {payment_id} --to {to} --amount {usdc}"
+      - name: wallet_buy      # whole x402 purchase loop (merchant-settles):
+                              # 402 offer -> cap-checked authorize -> retry
+                              # with header -> on-chain confirm -> record
+        command: "x402-buy {url} --payment-id {payment_id}"
       - name: wallet_sign     # message signing
+        command: "signer sign {message}"
       - name: wallet_admin    # keygen / backup-verify / revoke — each op
                               # requires human approval token, never callable
                               # from bare model intent
+        command: "signer admin {op}"
+        ops:
+          keygen: "signer admin keygen --cap-per-tx {cap_per_tx} --cap-daily {cap_daily}"
+          backup-verify: "signer admin backup-verify"
+          revoke: "signer admin revoke"
     invariants:
       - "Seed/private-key material is never returned by any tool, logged, or
          placed in any tool argument."
@@ -110,24 +124,35 @@ contracts:
 # ---------------------------------------------------------------------------
 # SETUP
 # ---------------------------------------------------------------------------
+# `run` states intent; `commands` are the exact invocations the lowering
+# emits (smol profile emits ONLY these, one per step).
 setup:
   - step: install-signer
     run: "signer install into state_dir; verify tools respond"
+    commands: ["pip install ./signer", "signer status"]
+    expect: "exit 2 (not-setup) before keygen is healthy; any other error is not"
   - step: keygen
     approval: human          # admin op
     run: "wallet_admin keygen; key written 0600; address reported"
+    commands: ["signer admin keygen --cap-per-tx {cap_per_tx} --cap-daily {cap_daily}"]
+    expect: "JSON with .address; on exit 4 ask the human to run signer-approve keygen, then retry once"
   - step: backup
     actor: human             # agent never moves key material
     instructions: >
       Copy the encrypted keyfile from the state dir to offline storage.
       Then tell the agent to verify.
     verify: "wallet_admin backup-verify — checks backup marker + checksum"
+    commands: ["signer admin backup-verify"]
+    expect: "JSON with .backup_verified true (approval token required, as keygen)"
   - step: fund
     run: "request Circle faucet for address; poll balance until USDC arrives"
+    commands: ["signer status"]
+    expect: ".balance_usdc > 0; poll every 30s, at most 20 times"
     fallback:
       trigger: [rate-limited, silent-no-delivery]
       actor: human
-      instructions: "Use the faucet in a browser for the printed address."
+      instructions: "Use the faucet in a browser for the printed address —
+        network MUST be Base Sepolia (a mainnet/eth-sepolia drip is invisible here)."
       verify: "agent polls balance; proceeds when funded"
 
 # ---------------------------------------------------------------------------
@@ -135,9 +160,13 @@ setup:
 # ---------------------------------------------------------------------------
 execute:
   loop: >
-    On a 402 response: read the x402 offer; call wallet_pay (signer enforces
-    caps); retry the request with the payment header; confirm the resource.
-  over_cap: "wallet_pay refuses; agent reports the offer and asks the human."
+    On a 402 response: call wallet_buy with the resource URL and a fresh
+    payment id (derive it from the task, e.g. task-slug-1). It reads the
+    offer, cap-checks, pays, confirms the settle tx on-chain, and records
+    the spend in one call.
+  command: "x402-buy {url} --payment-id {payment_id}"
+  over_cap: "exit 5 (cap-exceeded); agent reports the offer and asks the human."
+  transient: "exit 6; retry with the SAME payment id (idempotent, never double-pays)."
   guardrails:
     - "One payment per offer; retries must reuse the same payment id (idempotent)."
     - "Never place key material or approval tokens in tool arguments or logs."
