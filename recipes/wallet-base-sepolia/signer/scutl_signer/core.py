@@ -123,21 +123,13 @@ class Signer:
         return {"address": acct.address, "signature": sig.signature.hex()}
 
     # -- wallet_pay -----------------------------------------------------------
-    def pay(self, payment_id: str, pay_to: str, amount: Decimal,
-            valid_secs: int = 600) -> dict:
-        """x402 exact-scheme payment: EIP-3009 transferWithAuthorization.
-
-        Idempotent by payment_id: the authorization nonce derives from it,
-        so a duplicate retry re-signs the *same* authorization (the network
-        can settle it at most once), and an already-settled payment_id
-        returns the original record without paying again.
-        """
+    def _check_caps(self, payment_id: str, amount: Decimal) -> dict | None:
+        """Idempotency + cap gate shared by pay() and authorize().
+        Returns the prior settled record for a replayed payment_id."""
         self.state.check_not_revoked()
-
         prior = self.state.settled_by_payment_id(payment_id)
         if prior is not None:
-            return {**prior, "idempotent_replay": True}
-
+            return prior
         # --- cap enforcement: the only gate, and it is in code -----------
         caps = self.state.load_caps()
         if amount > caps["cap_per_tx"]:
@@ -147,7 +139,11 @@ class Signer:
         if spent + amount > caps["cap_daily"]:
             raise CapExceeded(
                 f"amount {amount} + spent {spent} exceeds daily cap {caps['cap_daily']}")
+        return None
 
+    def _build_payment(self, payment_id: str, pay_to: str, amount: Decimal,
+                       valid_secs: int) -> tuple[dict, dict]:
+        """Sign the EIP-3009 authorization; returns (payload, requirements)."""
         acct = self._load_account()
         now = int(datetime.now(timezone.utc).timestamp())
         nonce = "0x" + hashlib.sha256(payment_id.encode()).hexdigest()
@@ -200,6 +196,23 @@ class Signer:
             "payTo": pay_to,
             "asset": USDC_ADDRESS,
         }
+        return payment_payload, requirements
+
+    def pay(self, payment_id: str, pay_to: str, amount: Decimal,
+            valid_secs: int = 600) -> dict:
+        """Direct x402 payment: sign, then verify + settle via the
+        facilitator ourselves (agent-pays-endpoint flow).
+
+        Idempotent by payment_id: the authorization nonce derives from it,
+        so a duplicate retry re-signs the *same* authorization (the network
+        can settle it at most once), and an already-settled payment_id
+        returns the original record without paying again.
+        """
+        prior = self._check_caps(payment_id, amount)
+        if prior is not None:
+            return {**prior, "idempotent_replay": True}
+        payment_payload, requirements = self._build_payment(
+            payment_id, pay_to, amount, valid_secs)
 
         self.facilitator.verify(payment_payload, requirements)
         settle = self.facilitator.settle(payment_payload, requirements)
@@ -213,6 +226,42 @@ class Signer:
             "amount": str(amount),
             "tx": settle.tx_hash,
             "chain_status": confirmed,
+            "status": "settled",
+        }
+        self.state.append_spend(record)
+        return record
+
+    def authorize(self, payment_id: str, pay_to: str, amount: Decimal,
+                  valid_secs: int = 600) -> dict:
+        """Merchant-settles x402 purchase flow: cap-check and sign, return
+        the X-PAYMENT header for the caller to present; the resource server
+        settles. Caller MUST confirm on-chain and then record_settled() —
+        an authorized-but-unrecorded payment is spendable by the merchant,
+        so record on any 200, and rely on nonce-idempotency for retries."""
+        from .network import encode_payment_header
+
+        prior = self._check_caps(payment_id, amount)
+        if prior is not None:
+            return {**prior, "idempotent_replay": True}
+        payment_payload, _ = self._build_payment(
+            payment_id, pay_to, amount, valid_secs)
+        return {
+            "payment_id": payment_id,
+            "header": encode_payment_header(payment_payload),
+            "to": pay_to,
+            "amount": str(amount),
+        }
+
+    def record_settled(self, payment_id: str, pay_to: str, amount: Decimal,
+                       tx_hash: str) -> dict:
+        chain_status = self.chain.tx_status(tx_hash)
+        record = {
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "payment_id": payment_id,
+            "to": pay_to,
+            "amount": str(amount),
+            "tx": tx_hash,
+            "chain_status": chain_status,
             "status": "settled",
         }
         self.state.append_spend(record)
