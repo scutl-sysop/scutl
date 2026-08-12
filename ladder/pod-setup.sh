@@ -24,9 +24,9 @@ command -v cmake >/dev/null || {
 }
 
 # --- llama.cpp, pinned tag, CUDA build -----------------------------------
+[ -d llama.cpp ] || git clone --depth 1 --branch "$LLAMA_CPP_TAG" \
+  https://github.com/ggml-org/llama.cpp
 if [ ! -x llama.cpp/build/bin/llama-server ]; then
-  git clone --depth 1 --branch "$LLAMA_CPP_TAG" \
-    https://github.com/ggml-org/llama.cpp
   cmake -S llama.cpp -B llama.cpp/build -DGGML_CUDA=ON
   cmake --build llama.cpp/build -j"$(nproc)" --target llama-server
 fi
