@@ -1,0 +1,17 @@
+[project]
+name = "scutl-signer"
+version = "0.1.0"
+description = "scutl recipe #1 guardrail component: wallet signer with code-enforced spend caps"
+requires-python = ">=3.11"
+dependencies = ["eth-account>=0.11", "requests>=2.31"]
+
+[project.scripts]
+signer = "scutl_signer.cli:main"
+signer-approve = "scutl_signer.cli:approve"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["scutl_signer*"]
