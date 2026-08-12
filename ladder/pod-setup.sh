@@ -18,6 +18,9 @@ WORK="${WORK:-/workspace/ladder}"
 
 mkdir -p "$WORK" && cd "$WORK"
 
+# nvcc lives off-PATH in non-login shells on runpod images
+[ -d /usr/local/cuda/bin ] && export PATH="/usr/local/cuda/bin:$PATH"
+
 # --- build deps (runpod images don't all ship cmake) ---------------------
 command -v cmake >/dev/null || {
   apt-get update -qq && apt-get install -y -qq cmake build-essential >/dev/null
