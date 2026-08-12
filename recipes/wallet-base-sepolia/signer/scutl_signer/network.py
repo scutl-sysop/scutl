@@ -17,6 +17,9 @@ import requests
 # bindings.live — Base Sepolia (chain_id 84532), the only blessed network.
 CHAIN_ID = 84532
 RPC_URL = "https://sepolia.base.org"
+# Same chain (84532), independent operator — sepolia.base.org 502s in
+# windows (contract failure mode rpc-timeout, observed live 2026-08-12).
+RPC_FALLBACK = "https://base-sepolia-rpc.publicnode.com"
 FACILITATOR_URL = "https://x402.org/facilitator"
 # Circle USDC on Base Sepolia; 6 decimals.
 USDC_ADDRESS = "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
@@ -42,20 +45,27 @@ class PermanentError(Exception):
 class ChainClient:
     """contracts.chain: balance(address), tx_status(hash)."""
 
-    def __init__(self, rpc_url: str = RPC_URL, timeout: float = 15.0):
-        self.rpc_url = rpc_url
+    def __init__(self, rpc_url: str = RPC_URL, timeout: float = 15.0,
+                 fallback_url: str | None = RPC_FALLBACK):
+        self.rpc_urls = [rpc_url] + ([fallback_url] if fallback_url else [])
         self.timeout = timeout
 
     def _rpc(self, method: str, params: list) -> dict | str | None:
-        try:
-            resp = requests.post(
-                self.rpc_url,
-                json={"jsonrpc": "2.0", "id": 1, "method": method, "params": params},
-                timeout=self.timeout,
-            )
-            resp.raise_for_status()
-        except requests.RequestException as e:
-            raise TransientError(f"rpc-timeout: {e}") from e
+        last: Exception | None = None
+        for url in self.rpc_urls:
+            try:
+                resp = requests.post(
+                    url,
+                    json={"jsonrpc": "2.0", "id": 1,
+                          "method": method, "params": params},
+                    timeout=self.timeout,
+                )
+                resp.raise_for_status()
+                break
+            except requests.RequestException as e:
+                last = e
+        else:
+            raise TransientError(f"rpc-timeout: {last}") from last
         body = resp.json()
         if "error" in body:
             raise PermanentError(f"rpc error: {body['error']}")
