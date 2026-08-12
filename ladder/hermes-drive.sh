@@ -14,6 +14,14 @@ set -euo pipefail
 
 REP="$1"
 
+# The bundle's commands (signer, x402-buy) must resolve from PATH: the
+# recipe's install step normally guarantees this, but ladder reps pre-stage
+# setup, so the driver provides the installed environment. Without this a
+# rep can fail on "tools don't exist" — a harness bug, not a model failure
+# (found live: reference rung attempt 1, rep-06, 2026-08-12).
+SCUTL_VENV="${SCUTL_VENV:-$HOME/scutl/.venv}"
+export PATH="$SCUTL_VENV/bin:$PATH"
+
 HERMES_BIN="${HERMES_BIN:-hermes}"
 # llama-server reports its loaded model id at /v1/models.
 POD_BASE_URL="${POD_BASE_URL:-$($HERMES_BIN config get model.base_url)}"
