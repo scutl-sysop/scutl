@@ -36,7 +36,11 @@ printf '{"pay_to": "%s", "amount": "0.010000"}\n' "$PAY_TO" > "$REP/expected.jso
 export SCUTL_STATE="$REP/state"
 export RESOURCE_URL="http://127.0.0.1:$PORT/haiku"
 export BUNDLE="$BUNDLE/SKILL.md"
-export PAYMENT_ID="rep-$(basename "$REP")"
+# Unique across rung ATTEMPTS, not just reps: the EIP-3009 nonce derives
+# from payment_id + key, and rep state dirs are forked copies — a reused
+# id replays a spent nonce with no local record to catch it (found live:
+# reference rung attempt 2, 2026-08-12).
+export PAYMENT_ID="rep-$(basename "$REP")-$(date +%s)"
 
 "${LADDER_DRIVER:?set LADDER_DRIVER to the agent driver command}" "$REP" || true
 
