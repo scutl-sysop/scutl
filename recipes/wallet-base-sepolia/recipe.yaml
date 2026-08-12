@@ -10,7 +10,7 @@ recipe:
     Stand up an agent-operated crypto wallet that can hold testnet USDC and
     pay for x402-priced resources, with spend caps enforced in code and key
     material that never enters model context.
-  status: reference-green  # draft | reference-green | shipped (receipt: receipts/wallet/1/reference.json)
+  status: shipped  # draft | reference-green | shipped (receipts: receipts/wallet/1/{reference,headline}.json)
   maintainer: first-party  # curated distro: no community recipes
 
 # ---------------------------------------------------------------------------
