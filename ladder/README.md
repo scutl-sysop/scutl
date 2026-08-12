@@ -50,6 +50,12 @@ block cannot be replayed is not a receipt.
 
 - `pod-setup.sh` — run ON the pod: installs pinned llama.cpp, downloads
   the model, starts `llama-server`, writes `env.json`.
+  Used for the reference rung (source build mirrors the modal local
+  user). Decision 2026-08-12 (Conway + Star): subsequent pods pin the
+  official prebuilt image `ghcr.io/ggml-org/llama.cpp:server-cuda-<tag>`
+  as the pod container image instead — the whole serving environment
+  pins to one image digest in the receipt, no on-pod build. Model comes
+  from the `scutl-ladder-models` network volume (EU-RO-1, id jo8roirsw9).
 - `run-rep.sh` — run from the controller: one repetition (fresh state,
   fixture up, driver in, grade out).
 - `grade.py` — machine verdict for one rep; JSON on stdout, exit 0 green.
