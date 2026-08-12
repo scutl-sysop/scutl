@@ -14,6 +14,7 @@ from __future__ import annotations
 import base64
 import json
 import sys
+import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import requests
@@ -73,15 +74,30 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         for endpoint in ("/verify", "/settle"):
-            resp = requests.post(
-                FACILITATOR + endpoint,
-                json={"x402Version": 1, "paymentPayload": payload,
-                      "paymentRequirements": reqs},
-                timeout=60,
-            )
-            body = resp.json()
-            ok = body.get("isValid") if endpoint == "/verify" else body.get("success")
-            if not (resp.ok and ok):
+            # The live facilitator flakes in multi-minute windows
+            # (contract failure mode: transient-timeout). A merchant
+            # retries 5xx/timeouts with backoff; a 200 with a rejection
+            # body is a real verdict and is NOT retried.
+            body, ok = None, False
+            for delay in (0, 10, 30, 60):
+                if delay:
+                    time.sleep(delay)
+                try:
+                    resp = requests.post(
+                        FACILITATOR + endpoint,
+                        json={"x402Version": 1, "paymentPayload": payload,
+                              "paymentRequirements": reqs},
+                        timeout=60,
+                    )
+                except requests.RequestException:
+                    continue
+                if resp.status_code >= 500:
+                    continue
+                body = resp.json()
+                ok = (body.get("isValid") if endpoint == "/verify"
+                      else body.get("success"))
+                break
+            if not ok:
                 self._json(402, {"x402Version": 1, "accepts": [reqs],
                                  "error": f"{endpoint} failed: {body}"})
                 return
