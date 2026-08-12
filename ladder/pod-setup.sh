@@ -18,6 +18,11 @@ WORK="${WORK:-/workspace/ladder}"
 
 mkdir -p "$WORK" && cd "$WORK"
 
+# --- build deps (runpod images don't all ship cmake) ---------------------
+command -v cmake >/dev/null || {
+  apt-get update -qq && apt-get install -y -qq cmake build-essential >/dev/null
+}
+
 # --- llama.cpp, pinned tag, CUDA build -----------------------------------
 if [ ! -x llama.cpp/build/bin/llama-server ]; then
   git clone --depth 1 --branch "$LLAMA_CPP_TAG" \
