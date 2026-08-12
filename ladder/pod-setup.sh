@@ -29,8 +29,10 @@ BUILD_HASH=$(git -C llama.cpp rev-parse HEAD)
 
 # --- model, pinned by sha256 ---------------------------------------------
 if [ ! -f "$MODEL_FILE" ]; then
-  pip install -q "huggingface_hub[cli]"
-  hf download "$MODEL_REPO" "$MODEL_FILE" --local-dir .
+  pip install -q "huggingface_hub[cli]" hf_transfer
+  # hf_transfer: parallel Rust downloader — saturates the pod link.
+  # HF_TOKEN (optional, via env) lifts anonymous-tier throttling.
+  HF_HUB_ENABLE_HF_TRANSFER=1 hf download "$MODEL_REPO" "$MODEL_FILE" --local-dir .
 fi
 MODEL_SHA=$(sha256sum "$MODEL_FILE" | cut -d' ' -f1)
 
