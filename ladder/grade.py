@@ -40,8 +40,19 @@ def main() -> None:
     checks["amount_matches"] = rec.get("amount") == expected["amount"]
 
     if rec.get("tx"):
-        from scutl_signer.network import ChainClient
-        checks["tx_confirmed_onchain"] = ChainClient().tx_status(rec["tx"]) == "confirmed"
+        import time as _time
+        from scutl_signer.network import ChainClient, TransientError
+        status = None
+        for delay in (0, 15, 45):     # Base RPC 502s transiently (rpc-timeout)
+            if delay:
+                _time.sleep(delay)
+            try:
+                status = ChainClient().tx_status(rec["tx"])
+                break
+            except TransientError:
+                continue
+        checks["tx_confirmed_onchain"] = (status == "confirmed" if status
+                                          else "rpc unreachable after retries")
     else:
         checks["tx_confirmed_onchain"] = False
 
