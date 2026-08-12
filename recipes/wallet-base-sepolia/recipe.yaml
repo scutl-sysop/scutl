@@ -1,0 +1,185 @@
+# SCUTL recipe manifest — DRAFT 0 (authored by example; schema follows in cst-8ih.2)
+# Recipe #1: "Give my agent a wallet"
+# Design record: bead cst-8ih.1 (Decide-tree rulings, 2026-08-11), epic cst-8ih.
+
+recipe:
+  id: wallet
+  rev: 1
+  title: "Give my agent a wallet"
+  summary: >
+    Stand up an agent-operated crypto wallet that can hold testnet USDC and
+    pay for x402-priced resources, with spend caps enforced in code and key
+    material that never enters model context.
+  status: draft            # draft | reference-green | shipped
+  maintainer: first-party  # curated distro: no community recipes
+
+# ---------------------------------------------------------------------------
+# DECIDE — questions the recipe asks its installer. Every reachable leaf is a
+# blessed configuration; a leaf we haven't tested does not appear in the tree.
+# ---------------------------------------------------------------------------
+decide:
+  - id: custody
+    question: "Where does the wallet key live?"
+    options:
+      - id: local-keyfile
+        label: "Local keyfile managed by the signer tool (only option in rev 1)"
+        blessed: true
+    deferred-options: [import-existing-key, hardware, watch-only]
+
+  - id: attendance
+    question: "May the agent pay without asking, under a cap?"
+    options:
+      - id: unattended-under-cap
+        label: "Yes — auto-execute under per-tx cap; approval above it and for all admin ops"
+        blessed: true
+        asks: [cap_per_tx, cap_daily]
+    # 'approve-everything' deliberately not offered in rev 1: it deletes the
+    # unattended branch this recipe exists to make safe.
+
+  - id: network
+    question: "Which network?"
+    options:
+      - id: base-sepolia
+        label: "Base Sepolia (testnet; free, real payment flow)"
+        blessed: true
+    deferred-options: [base-mainnet]   # arrives as a bindings rev, see bindings.stub
+
+parameters:
+  cap_per_tx:
+    type: decimal-usdc
+    prompt: "Maximum single payment the agent may make without approval"
+    default: "0.10"
+  cap_daily:
+    type: decimal-usdc
+    prompt: "Maximum total spend per rolling 24h"
+    default: "1.00"
+
+# ---------------------------------------------------------------------------
+# COMPONENTS — code the recipe ships. The signer is the guardrail: caps and
+# key handling live here, in code, not in prompts.
+# ---------------------------------------------------------------------------
+components:
+  signer:
+    kind: typed-tool          # MCP/typed boundary; no shell access to keys
+    source: ./signer/
+    state_dir: "${SCUTL_STATE:-~/.scutl/wallet}"   # key (0600), caps.json,
+                                                    # spend log (append-only),
+                                                    # counters, tombstone
+    tools:
+      - name: wallet_status   # address, network, balance, caps, spend today
+      - name: wallet_pay      # x402 payment; REFUSES over-cap in code
+      - name: wallet_sign     # message signing
+      - name: wallet_admin    # keygen / backup-verify / revoke — each op
+                              # requires human approval token, never callable
+                              # from bare model intent
+    invariants:
+      - "Seed/private-key material is never returned by any tool, logged, or
+         placed in any tool argument."
+      - "Cap enforcement happens inside wallet_pay; the model cannot lift it."
+      - "Spend log is append-only; counters derive from it on restart."
+
+# ---------------------------------------------------------------------------
+# BINDINGS — live provider specifics, isolated so (a) mainnet is a rev of this
+# block only and (b) SMUTbench can derive mocks from the contracts alone.
+# ---------------------------------------------------------------------------
+bindings:
+  live:
+    chain:      { provider: base-sepolia, chain_id: 84532 }
+    facilitator: { provider: x402.org, url: "https://x402.org/facilitator", auth: none }
+    faucet:     { provider: circle-usdc-faucet, network: base-sepolia }
+  stub:
+    base-mainnet: >
+      Present to prove the layering; not blessed, not tested, refuses to load.
+      Shipping it is a future recipe rev and re-runs the full ladder.
+
+# Behavioral contracts: what each dependency PROMISES, provider-agnostically.
+# SMUTbench generates mock services from these (bead cst-8ih.4).
+contracts:
+  facilitator:
+    ops:
+      - "verify(payment) -> accepted | rejected(reason)"
+      - "settle(payment) -> txhash | error(transient|permanent)"
+    failure_modes: [transient-timeout, changed-price, false-success]
+  faucet:
+    ops: ["request(address) -> queued | rate-limited | error"]
+    failure_modes: [rate-limited, silent-no-delivery]
+  chain:
+    ops: ["balance(address)", "tx_status(hash) -> pending|confirmed|failed"]
+    failure_modes: [reorg-delay, rpc-timeout]
+
+# ---------------------------------------------------------------------------
+# SETUP
+# ---------------------------------------------------------------------------
+setup:
+  - step: install-signer
+    run: "signer install into state_dir; verify tools respond"
+  - step: keygen
+    approval: human          # admin op
+    run: "wallet_admin keygen; key written 0600; address reported"
+  - step: backup
+    actor: human             # agent never moves key material
+    instructions: >
+      Copy the encrypted keyfile from the state dir to offline storage.
+      Then tell the agent to verify.
+    verify: "wallet_admin backup-verify — checks backup marker + checksum"
+  - step: fund
+    run: "request Circle faucet for address; poll balance until USDC arrives"
+    fallback:
+      trigger: [rate-limited, silent-no-delivery]
+      actor: human
+      instructions: "Use the faucet in a browser for the printed address."
+      verify: "agent polls balance; proceeds when funded"
+
+# ---------------------------------------------------------------------------
+# EXECUTE — the steady-state loop the emitted skill teaches.
+# ---------------------------------------------------------------------------
+execute:
+  loop: >
+    On a 402 response: read the x402 offer; call wallet_pay (signer enforces
+    caps); retry the request with the payment header; confirm the resource.
+  over_cap: "wallet_pay refuses; agent reports the offer and asks the human."
+  guardrails:
+    - "One payment per offer; retries must reuse the same payment id (idempotent)."
+    - "Never place key material or approval tokens in tool arguments or logs."
+
+# ---------------------------------------------------------------------------
+# VERIFY — acceptance: the recipe is not 'installed' until this passes.
+# ---------------------------------------------------------------------------
+verify:
+  - "wallet_status shows funded address on chain_id 84532"
+  - "wallet_sign round-trip: signature recovers to wallet address"
+  - "real x402 payment: pay a test resource through the live facilitator,
+     confirm settle txhash on-chain, confirm spend log entry matches"
+  - "over-cap probe: a payment above cap_per_tx is refused in code"
+  - "restart probe: kill signer, restart, counters and address unchanged"
+
+# ---------------------------------------------------------------------------
+# RECOVER
+# ---------------------------------------------------------------------------
+recover:
+  restore:
+    actor: human
+    instructions: "Place backed-up keyfile into state_dir."
+    verify: "agent confirms wallet_status address matches tombstone-free record"
+  revoke:
+    approval: human          # zero decisions beyond 'shut it down'
+    run: >
+      wallet_admin revoke: signer refuses all further ops, key material
+      shredded, tombstone written (address + timestamp). No sweep — funds
+      remain recoverable by the human via the backup, out of band.
+    later-rev: "mainnet rev may add sweep with human-typed destination"
+
+# ---------------------------------------------------------------------------
+# LOWERING — target profiles (the ladder). Receipts per cst-8ih.3.
+# ---------------------------------------------------------------------------
+targets:
+  frontier: { role: recipe-debug, model-class: "Fable/Opus seat" }
+  reference:
+    role: must-be-green
+    model-class: "Qwen 3.6 27B q4"
+    harness: hermes
+  headline:
+    role: honest-smol-test    # may be yellow; failures are lowering bugs
+    model-class: "9B dense / a3b MoE"
+    profile: smol             # one resolved path, exact tool calls, one action
+                              # at a time, state outside context
