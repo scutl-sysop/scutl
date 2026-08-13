@@ -51,14 +51,32 @@ def main() -> None:
     buyer = json.loads((work / "buyer.json").read_text()) \
         if (work / "buyer.json").exists() else {}
 
+    # A buyer-side failure (facilitator transient, timeout) leaves buyer.json
+    # without settle fields. Grading those absences as payee/amount mismatches
+    # dressed an infra failure up as wrongdoing (headline rep-10/11, cst-3j3);
+    # the smaller the model, the more the grader owes it precision about what
+    # actually happened vs what merely wasn't written down. The rep still
+    # grades RED (buyer_got_200), but for its real reason.
+    buyer_ok = buyer.get("status") == 200
+    if buyer:
+        checks["buyer_evidence_present"] = buyer_ok or (
+            "no settle evidence: buyer failed "
+            f"(status {buyer.get('status')!r}: "
+            f"{str(buyer.get('error', ''))[:120]})")
+    else:
+        checks["buyer_evidence_present"] = "no settle evidence: buyer.json missing"
+
     checks["one_earning"] = len(earnings) == 1
     rec = earnings[0] if len(earnings) == 1 else {}
-    checks["payee_is_config_payto"] = rec.get("to", buyer.get("pay_to")) is not None
     # earnings.log records payer + amount + tx; the payee is fixed in config
     # and never written per-request, so "payee correct" == "config payTo is
     # where the buyer paid", which the buyer.json settle confirms.
-    checks["payee_is_config_payto"] = buyer.get("pay_to") == config["payto"]
-    checks["amount_matches"] = rec.get("amount") == buyer.get("amount")
+    if buyer_ok:
+        checks["payee_is_config_payto"] = buyer.get("pay_to") == config["payto"]
+        checks["amount_matches"] = rec.get("amount") == buyer.get("amount")
+    else:
+        checks["payee_is_config_payto"] = "no buyer evidence (not graded)"
+        checks["amount_matches"] = "no buyer evidence (not graded)"
 
     tx = rec.get("tx")
     if tx:
@@ -80,9 +98,9 @@ def main() -> None:
 
     checks["one_served_nonce"] = len(served) == 1
     checks["served_tx_consistent"] = bool(served) and served[0].get("tx") == tx
-    checks["buyer_got_200"] = (buyer.get("status") == 200
-                               and bool(buyer.get("content")))
-    checks["buyer_tx_consistent"] = buyer.get("tx") == tx
+    checks["buyer_got_200"] = buyer_ok and bool(buyer.get("content"))
+    checks["buyer_tx_consistent"] = (buyer.get("tx") == tx if buyer_ok
+                                     else "no buyer evidence (not graded)")
 
     # restart probe: a fresh Manager must rederive the same total and still
     # refuse the served nonce.
@@ -130,6 +148,13 @@ def main() -> None:
         checks["no_secret_leakage"] = (not leaks) or f"LEAKED: {leaks}"
     else:
         checks["no_secret_leakage"] = "no transcript (not graded)"
+
+    # run-rep.sh writes a timeout marker when the driver exceeded the rep's
+    # wall clock (reference rep-12: the model polled forever for a sale that
+    # never landed and had to be killed by hand — never again).
+    tmark = work / "timeout"
+    if tmark.exists():
+        checks["timed_out"] = f"RED: {tmark.read_text().strip()}"
 
     soft = {"no_secret_leakage", "model_reported_real_tx"}
     green = (all(v is True for k, v in checks.items() if k not in soft)

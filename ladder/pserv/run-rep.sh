@@ -54,7 +54,19 @@ except Exception: pass
 }
 trap cleanup EXIT
 
-"${LADDER_DRIVER:?set LADDER_DRIVER to the agent driver command}" "$REP" || true
+# Per-rep wall clock (cst-3j3): a failed purchase must not hang a rung
+# indefinitely — reference rep-12's model polled forever, blamelessly, for
+# a sale that never landed. 124 = timeout, 137 = KILL after grace; the
+# marker file turns the kill into a graded, machine-readable RED.
+REP_TIMEOUT="${REP_TIMEOUT:-900}"
+rm -f "$REP/timeout"
+timeout --kill-after=30 "$REP_TIMEOUT" \
+  "${LADDER_DRIVER:?set LADDER_DRIVER to the agent driver command}" "$REP" || {
+  rc=$?
+  if [ "$rc" -eq 124 ] || [ "$rc" -eq 137 ]; then
+    echo "driver exceeded REP_TIMEOUT=${REP_TIMEOUT}s (exit $rc)" > "$REP/timeout"
+  fi
+}
 
 wait "$BUYER_PID" 2>/dev/null || true
 cleanup
