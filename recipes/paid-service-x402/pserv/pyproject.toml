@@ -1,0 +1,17 @@
+[project]
+name = "scutl-pserv"
+version = "0.1.0"
+description = "scutl recipe #2 guardrail component: x402 merchant daemon with code-enforced verify-before-serve"
+requires-python = ">=3.11"
+dependencies = ["requests>=2.31"]
+
+[project.scripts]
+pserv = "scutl_pserv.cli:main"
+pserv-approve = "scutl_pserv.cli:approve"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["scutl_pserv*"]
