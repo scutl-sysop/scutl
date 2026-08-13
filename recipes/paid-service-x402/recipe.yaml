@@ -181,7 +181,9 @@ execute:
     Periodically (or when asked): service_status. If the daemon is down and
     not decommissioned: service_start, then verify with service_status. When
     reporting income: service_earnings, and quote totals ONLY from it —
-    never estimate earnings from memory of requests seen.
+    copy the total and settle tx verbatim into the report (the digits
+    themselves must appear; narrating that they were reported does not
+    count) — never estimate earnings from memory of requests seen.
   command: "pserv status"
   crashed: "service_start once; if it dies again within a minute, stop and report to the human — do not flap."
   guardrails:
@@ -246,8 +248,15 @@ smol:
       Periodically, or when the human asks, check the service. Run exactly:
     command: "pserv status"
     notes:
-      - "When asked about income: run `pserv earnings` and quote ONLY its
-         numbers. Never estimate earnings from memory of requests seen."
+      - "When asked about income, or when reporting a sale: run
+         `pserv earnings`, then copy the total and the settle transaction
+         hash character-for-character from its JSON output into your
+         report. Saying you reported a value does not count as reporting
+         it — the digits themselves must appear in your reply. Never write
+         N/A, None, or a placeholder where a value belongs; if a value is
+         missing from the output, paste the entire JSON line instead and
+         say it was missing. Never estimate earnings from memory of
+         requests seen."
       - "Never edit config.json, earnings.log, or served.log directly; the
          typed tools are the only interface."
   emergency:
