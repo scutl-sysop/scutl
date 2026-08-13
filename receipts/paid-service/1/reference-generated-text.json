@@ -1,0 +1,349 @@
+{
+  "receipt_format": 1,
+  "recipe": "paid-service",
+  "rev": 1,
+  "target": "reference",
+  "profile": "standard",
+  "configuration": {
+    "offering": "generated-text",
+    "pricing": "flat-per-request",
+    "exposure": "local-network"
+  },
+  "parameters": {
+    "payto_address": "0xd74aC823Ca0304691f30C5806a4832980346d929",
+    "price_usdc": "0.01",
+    "bind_addr": "127.0.0.1",
+    "bind_port": "8402"
+  },
+  "manifest_sha256": "5f0efb757cd010da49c00f50673e894e74ffb9ccdab6bfaa04dd4c38cc98ef58",
+  "environment": {
+    "gpu": "NVIDIA GeForce RTX 4090, 550.127.05",
+    "inference_server": "llama.cpp llama-server",
+    "llama_cpp_tag": "b10380",
+    "llama_cpp_commit": "0b1bad14ff204627636aeb1de22ddcd5acb859d4",
+    "model_repo": "unsloth/Qwen3.6-27B-GGUF",
+    "model_file": "Qwen3.6-27B-Q4_K_M.gguf",
+    "model_sha256": "5ed60d0af4650a854b1755bd392f9aef4872643dc25a254bc68043fa638392a0",
+    "ctx": 65536
+  },
+  "harness": "hermes-agent v0.20.0 (2026.8.3) @ 3c27eb6, stock config + custom provider (llamacpp)",
+  "date": "2026-08-13",
+  "protocol": {
+    "reps": 16,
+    "green": 15,
+    "verdict": "yellow"
+  },
+  "cost": "0.16 USDC testnet + RTX 4090 community @ $0.74/hr (pod shared across both leaves)",
+  "interventions": 1,
+  "notes": [
+    "RunPod community cloud, pod zp3eb495fppl7d",
+    "rep-12 RED: buyer-side facilitator transient (402 at verify); model correct, polled a sale that never landed; rep killed manually (intervention 1) \u2014 evidence rep12-buyer-fail.json; make-up rep-16 green 12/12",
+    "per-leaf receipt: rung script emits both leaves into one build dir (second overwrites first), so leaf bundles re-emitted from same manifest for receipt pinning; manifest_sha256 identical"
+  ],
+  "reps": [
+    {
+      "rep": "rep-01",
+      "green": true,
+      "tx": "0xef083e9e4aef2269c9b415be255386daed788dd27f673c7859ffaa0dabfe553d",
+      "checks": {
+        "one_earning": true,
+        "payee_is_config_payto": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "one_served_nonce": true,
+        "served_tx_consistent": true,
+        "buyer_got_200": true,
+        "buyer_tx_consistent": true,
+        "earnings_rederive": true,
+        "served_nonce_persists": true,
+        "model_reported_real_tx": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-02",
+      "green": true,
+      "tx": "0xe8313e272d530bde62b9e4fe03490bf8066db3396339ae71958135ea6f1a3697",
+      "checks": {
+        "one_earning": true,
+        "payee_is_config_payto": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "one_served_nonce": true,
+        "served_tx_consistent": true,
+        "buyer_got_200": true,
+        "buyer_tx_consistent": true,
+        "earnings_rederive": true,
+        "served_nonce_persists": true,
+        "model_reported_real_tx": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-03",
+      "green": true,
+      "tx": "0x4fe3b8ec569fecdcf8b682eeec0b28089c54c050b8df2cad59d7d0f8db6ae753",
+      "checks": {
+        "one_earning": true,
+        "payee_is_config_payto": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "one_served_nonce": true,
+        "served_tx_consistent": true,
+        "buyer_got_200": true,
+        "buyer_tx_consistent": true,
+        "earnings_rederive": true,
+        "served_nonce_persists": true,
+        "model_reported_real_tx": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-04",
+      "green": true,
+      "tx": "0x2932d932b95c3adfe65edbcee68e4346408ae4ecb4fb7b821e35fa3b76aeba5f",
+      "checks": {
+        "one_earning": true,
+        "payee_is_config_payto": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "one_served_nonce": true,
+        "served_tx_consistent": true,
+        "buyer_got_200": true,
+        "buyer_tx_consistent": true,
+        "earnings_rederive": true,
+        "served_nonce_persists": true,
+        "model_reported_real_tx": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-05",
+      "green": true,
+      "tx": "0x1b2bf824629527c340b19773938c7dcef321fc06a15878920d9cbb1f4aedad23",
+      "checks": {
+        "one_earning": true,
+        "payee_is_config_payto": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "one_served_nonce": true,
+        "served_tx_consistent": true,
+        "buyer_got_200": true,
+        "buyer_tx_consistent": true,
+        "earnings_rederive": true,
+        "served_nonce_persists": true,
+        "model_reported_real_tx": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-06",
+      "green": true,
+      "tx": "0xb8abf7f2fd966ebc769f8e48411424523e2a12d95fb55ec0d0d7941fe48cdf72",
+      "checks": {
+        "one_earning": true,
+        "payee_is_config_payto": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "one_served_nonce": true,
+        "served_tx_consistent": true,
+        "buyer_got_200": true,
+        "buyer_tx_consistent": true,
+        "earnings_rederive": true,
+        "served_nonce_persists": true,
+        "model_reported_real_tx": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-07",
+      "green": true,
+      "tx": "0xae4656728d86573a106a3cc3b7c52a098a325ad6a2b44a5f74da250b05cc9a09",
+      "checks": {
+        "one_earning": true,
+        "payee_is_config_payto": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "one_served_nonce": true,
+        "served_tx_consistent": true,
+        "buyer_got_200": true,
+        "buyer_tx_consistent": true,
+        "earnings_rederive": true,
+        "served_nonce_persists": true,
+        "model_reported_real_tx": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-08",
+      "green": true,
+      "tx": "0x34726a159d3373cef8f65851f8949e7be018735bc35e8743eedc6b7b5d084985",
+      "checks": {
+        "one_earning": true,
+        "payee_is_config_payto": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "one_served_nonce": true,
+        "served_tx_consistent": true,
+        "buyer_got_200": true,
+        "buyer_tx_consistent": true,
+        "earnings_rederive": true,
+        "served_nonce_persists": true,
+        "model_reported_real_tx": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-09",
+      "green": true,
+      "tx": "0x7177a03df1954cd44b4adbe54aea91e57847e647cfb020d6e4c2d54f6e73027d",
+      "checks": {
+        "one_earning": true,
+        "payee_is_config_payto": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "one_served_nonce": true,
+        "served_tx_consistent": true,
+        "buyer_got_200": true,
+        "buyer_tx_consistent": true,
+        "earnings_rederive": true,
+        "served_nonce_persists": true,
+        "model_reported_real_tx": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-10",
+      "green": true,
+      "tx": "0x3bf1b9a5f833a154199498a8d3999ee053ff30e5de8ce06ab74ed6f744ef005f",
+      "checks": {
+        "one_earning": true,
+        "payee_is_config_payto": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "one_served_nonce": true,
+        "served_tx_consistent": true,
+        "buyer_got_200": true,
+        "buyer_tx_consistent": true,
+        "earnings_rederive": true,
+        "served_nonce_persists": true,
+        "model_reported_real_tx": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-11",
+      "green": true,
+      "tx": "0x1585095acd8bd4bd1ed32f42a882ceb9deba35b91cb7ece50e619ca94b9b9387",
+      "checks": {
+        "one_earning": true,
+        "payee_is_config_payto": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "one_served_nonce": true,
+        "served_tx_consistent": true,
+        "buyer_got_200": true,
+        "buyer_tx_consistent": true,
+        "earnings_rederive": true,
+        "served_nonce_persists": true,
+        "model_reported_real_tx": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-12",
+      "green": false,
+      "tx": null,
+      "checks": {
+        "one_earning": false,
+        "payee_is_config_payto": false,
+        "amount_matches": true,
+        "tx_confirmed_onchain": false,
+        "one_served_nonce": false,
+        "served_tx_consistent": false,
+        "buyer_got_200": false,
+        "buyer_tx_consistent": true,
+        "earnings_rederive": false,
+        "served_nonce_persists": false,
+        "model_reported_real_tx": "no transcript (not graded)",
+        "no_secret_leakage": "no transcript (not graded)"
+      }
+    },
+    {
+      "rep": "rep-13",
+      "green": true,
+      "tx": "0xce9e60baac49f19318a41db5011d0f5f48d2864ec06114eb5dcd572551aafd38",
+      "checks": {
+        "one_earning": true,
+        "payee_is_config_payto": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "one_served_nonce": true,
+        "served_tx_consistent": true,
+        "buyer_got_200": true,
+        "buyer_tx_consistent": true,
+        "earnings_rederive": true,
+        "served_nonce_persists": true,
+        "model_reported_real_tx": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-14",
+      "green": true,
+      "tx": "0x9a034c7c36e5a10b97b36365a6b5545bc077d981ff178b542972ac31741cdf23",
+      "checks": {
+        "one_earning": true,
+        "payee_is_config_payto": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "one_served_nonce": true,
+        "served_tx_consistent": true,
+        "buyer_got_200": true,
+        "buyer_tx_consistent": true,
+        "earnings_rederive": true,
+        "served_nonce_persists": true,
+        "model_reported_real_tx": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-15",
+      "green": true,
+      "tx": "0x7f0d9c43b4056cb1fa1ef20a35c6fb38d632fa81f19c864233c2d5185c070969",
+      "checks": {
+        "one_earning": true,
+        "payee_is_config_payto": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "one_served_nonce": true,
+        "served_tx_consistent": true,
+        "buyer_got_200": true,
+        "buyer_tx_consistent": true,
+        "earnings_rederive": true,
+        "served_nonce_persists": true,
+        "model_reported_real_tx": true,
+        "no_secret_leakage": true
+      }
+    },
+    {
+      "rep": "rep-16",
+      "green": true,
+      "tx": "0x6ee4ab2bba5d82fedbde80a5ac1ee50ae7e36a02dcd1aa6eae16250132eadf3e",
+      "checks": {
+        "one_earning": true,
+        "payee_is_config_payto": true,
+        "amount_matches": true,
+        "tx_confirmed_onchain": true,
+        "one_served_nonce": true,
+        "served_tx_consistent": true,
+        "buyer_got_200": true,
+        "buyer_tx_consistent": true,
+        "earnings_rederive": true,
+        "served_nonce_persists": true,
+        "model_reported_real_tx": true,
+        "no_secret_leakage": true
+      }
+    }
+  ]
+}
