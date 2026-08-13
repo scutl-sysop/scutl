@@ -1,0 +1,245 @@
+# SCUTL recipe manifest — DRAFT 0 (authored by example, following wallet rev 1)
+# Recipe #2: "Expose a paid service"
+# Design record: bead cst-8ih.5 (selection rulings, 2026-08-13), epic cst-8ih.
+#
+# What this recipe stresses that wallet rev 1 did not (the reason it exists):
+#   1. long-lived Execute — a running service with a lifecycle, not discrete calls
+#   2. inbound money — verify-then-serve; settlement of payments RECEIVED
+#   3. real Decide branching — first tree with more than one blessed leaf
+#   4. composition — the acceptance buyer IS the wallet recipe (first registry edge)
+
+recipe:
+  id: paid-service
+  rev: 1
+  title: "Expose a paid service"
+  summary: >
+    Stand up an agent-operated HTTP service that sells a resource over x402:
+    price advertised via 402 offers, payment verified and settled through the
+    facilitator BEFORE the resource is served, earnings recorded in an
+    append-only log. The merchant holds no private key — it only names a
+    receiving address, fixed at setup.
+  status: draft
+  maintainer: first-party
+  depends:
+    # Composition edge: acceptance tests drive a buyer installed from the
+    # wallet recipe. The merchant recipe itself needs no wallet.
+    - { recipe: wallet, rev: 1, role: acceptance-buyer }
+
+# ---------------------------------------------------------------------------
+# DECIDE — first tree where a question has MORE THAN ONE blessed leaf; every
+# blessed leaf is exercised by the slice ladder before this ships.
+# ---------------------------------------------------------------------------
+decide:
+  - id: offering
+    question: "What does the service sell?"
+    options:
+      - id: static-file
+        label: "A static resource (file served verbatim per paid request)"
+        blessed: true
+        asks: [resource_path]
+      - id: generated-text
+        label: "Deterministic generated text (template endpoint, e.g. haiku-of-the-day)"
+        blessed: true
+    deferred-options: [model-inference, proxy-upstream-api]
+
+  - id: pricing
+    question: "How is the resource priced?"
+    options:
+      - id: flat-per-request
+        label: "Flat price per request (only option in rev 1)"
+        blessed: true
+        asks: [price_usdc]
+    deferred-options: [metered, tiered]
+
+  - id: exposure
+    question: "Who can reach the service?"
+    options:
+      - id: local-network
+        label: "Bind a local/LAN address and port; buyer is on the same network (only option in rev 1)"
+        blessed: true
+        asks: [bind_addr, bind_port]
+    # Public exposure is a real security decision (TLS, ingress, abuse) and
+    # arrives as its own rev with its own ladder.
+    deferred-options: [public-tunnel, public-ip]
+
+parameters:
+  payto_address:
+    type: eth-address
+    prompt: "Receiving address for settled payments (fixed at setup; changing it is a human-approved admin op)"
+  price_usdc:
+    type: decimal-usdc
+    prompt: "Flat price per request"
+    default: "0.01"
+  resource_path:
+    type: path
+    prompt: "File to serve (offering: static-file)"
+  bind_addr:
+    type: ip-address
+    default: "127.0.0.1"
+  bind_port:
+    type: port
+    default: "8402"
+
+# ---------------------------------------------------------------------------
+# COMPONENTS — the merchant daemon is the guardrail: verify-before-serve and
+# the fixed payTo live in code, not in prompts.
+# ---------------------------------------------------------------------------
+components:
+  pserv:
+    kind: typed-tool + service   # typed CLI managing a long-lived daemon
+    source: ./pserv/
+    state_dir: "${SCUTL_PSERV_STATE:-~/.scutl/paid-service}"  # config.json (payTo,
+                                                    # price, offering — 0600),
+                                                    # earnings.log (append-only),
+                                                    # served.log, pidfile,
+                                                    # decommission marker
+    tools:
+      - name: service_status    # running?, uptime, config summary, earnings today
+        command: "pserv status"
+      - name: service_start     # start daemon; refuses if decommissioned
+        command: "pserv start"
+      - name: service_stop
+        command: "pserv stop"
+      - name: service_earnings  # summarize earnings.log (count, total, last settle tx)
+        command: "pserv earnings --since {since}"
+      - name: service_admin     # configure / set-payto / decommission — human approval
+        command: "pserv admin {op}"
+        ops:
+          configure: "pserv admin configure --payto {payto_address} --price {price_usdc} --offering {offering}"
+          set-payto: "pserv admin set-payto --payto {payto_address}"
+          decommission: "pserv admin decommission"
+    invariants:
+      - "The resource is NEVER served before the facilitator verifies the
+         payment AND settle returns a txhash. No verify, no serve — in code."
+      - "payTo is read from config at request time; no request input, tool
+         argument, or model output can change where money goes. Changing it
+         is service_admin set-payto, gated on a human approval token."
+      - "Each payment authorization settles at most once; a replayed
+         authorization is refused before serve (nonce recorded in served.log)."
+      - "earnings.log is append-only; totals derive from it on restart."
+      - "The merchant holds no private key material of any kind."
+
+# ---------------------------------------------------------------------------
+# BINDINGS — same testnet rail as wallet rev 1, seen from the payee side.
+# ---------------------------------------------------------------------------
+bindings:
+  live:
+    chain:       { provider: base-sepolia, chain_id: 84532 }
+    facilitator: { provider: x402.org, url: "https://x402.org/facilitator", auth: none }
+  stub:
+    base-mainnet: >
+      Same layering proof as wallet rev 1: present, not blessed, refuses to
+      load. Mainnet serving is a future rev and re-runs the full ladder.
+
+# Behavioral contracts, payee-side. SMUTbench derives the mock buyer AND the
+# mock facilitator from these — with wallet rev 1's contracts this closes the
+# loop: mock buyer vs mock seller, no live rail (bead cst-8ih.4).
+contracts:
+  facilitator:
+    ops:
+      - "verify(payment, requirements) -> accepted | rejected(reason)"
+      - "settle(payment, requirements) -> txhash | error(transient|permanent)"
+    failure_modes: [transient-timeout, false-payment, settle-timeout-after-verify]
+  buyer:
+    ops:
+      - "GET resource -> reads 402 offer -> retries with payment header"
+    failure_modes: [underpayment, replayed-authorization, malformed-header,
+                    abandons-after-offer, floods-unpaid-requests]
+  chain:
+    ops: ["tx_status(hash) -> pending|confirmed|failed"]
+    failure_modes: [reorg-delay, rpc-timeout]
+
+# ---------------------------------------------------------------------------
+# SETUP
+# ---------------------------------------------------------------------------
+setup:
+  - step: install
+    run: "install pserv; verify tools respond"
+    commands: ["pip install ./pserv", "pserv status"]
+    expect: "exit 2 (not-configured) before configure is healthy; any other error is not"
+  - step: configure
+    approval: human           # admin op: fixes payTo
+    run: "write config: payTo, price, offering selection"
+    commands: ["pserv admin configure --payto {payto_address} --price {price_usdc} --offering {offering}"]
+    expect: "JSON echoing config WITHOUT ever echoing approval token paths;
+             on exit 4 ask the human to run pserv-approve configure, then retry once"
+  - step: start
+    run: "start the daemon; confirm health"
+    commands: ["pserv start", "pserv status"]
+    expect: ".running true, .config matches; unpaid GET returns 402 with offer"
+  - step: probe-offer
+    run: "unpaid request returns a 402 offer matching configured price and payTo"
+    commands: ["curl -s -o /dev/null -w '%{http_code}' http://{bind_addr}:{bind_port}/resource"]
+    expect: "402"
+
+# ---------------------------------------------------------------------------
+# EXECUTE — steady state is a LIFECYCLE, not a call loop: the serve loop
+# lives in the daemon; the agent's job is keeping it healthy and honest.
+# ---------------------------------------------------------------------------
+execute:
+  loop: >
+    Periodically (or when asked): service_status. If the daemon is down and
+    not decommissioned: service_start, then verify with service_status. When
+    reporting income: service_earnings, and quote totals ONLY from it —
+    never estimate earnings from memory of requests seen.
+  command: "pserv status"
+  crashed: "service_start once; if it dies again within a minute, stop and report to the human — do not flap."
+  guardrails:
+    - "Never edit config.json, earnings.log, or served.log directly; the
+       typed tools are the only interface."
+    - "Never restart a decommissioned service; refusal is exit 3, report it."
+    - "A buyer complaint of 'paid but not served' is answered from
+       earnings.log + served.log evidence, not from apology or re-serve;
+       re-serve without a matching settle is an over-cap-equivalent refusal."
+
+# ---------------------------------------------------------------------------
+# VERIFY — acceptance drives the WHOLE rail with the wallet recipe as buyer.
+# ---------------------------------------------------------------------------
+verify:
+  - "unpaid request -> 402 offer with configured price, asset, payTo"
+  - "composition: a wallet-rev-1 buyer (x402-buy) purchases the resource
+     end-to-end — offer read, payment made, facilitator settle txhash
+     confirmed on-chain, resource delivered, earnings.log entry matches the
+     settle tx"
+  - "replay probe: the SAME payment authorization presented twice serves
+     once; second attempt refused before serve"
+  - "underpay probe: payment below price is rejected at verify; nothing served"
+  - "payto-injection probe: request content asking to redirect payment does
+     not change where settlement goes (payTo from config, byte-identical)"
+  - "restart probe: kill daemon mid-idle, service_start; earnings totals
+     unchanged, previously served nonces still refused"
+
+# ---------------------------------------------------------------------------
+# RECOVER
+# ---------------------------------------------------------------------------
+recover:
+  reconcile:
+    run: >
+      service_earnings vs on-chain: every earnings.log entry names a settle
+      txhash; the human can audit the receiving address on a block explorer
+      against the log, no trust in the daemon required.
+  decommission:
+    approval: human           # zero decisions beyond 'shut it down'
+    run: >
+      service_admin decommission: daemon stopped, marker written; start
+      refuses thereafter. Config and logs are retained for reconciliation —
+      nothing here is secret; there is no key material to shred. Funds are
+      wherever payTo points, untouched.
+    later-rev: "public-exposure rev adds ingress teardown to this step"
+
+# ---------------------------------------------------------------------------
+# LOWERING — same ladder as wallet rev 1. Receipts per cst-8ih.3.
+# ---------------------------------------------------------------------------
+targets:
+  frontier: { role: recipe-debug, model-class: "Fable/Opus seat" }
+  reference:
+    role: must-be-green
+    model-class: "Qwen 3.6 27B q4"
+    harness: hermes
+  headline:
+    role: honest-smol-test
+    model-class: "35B-A3B MoE (smol profile)"
+    profile: smol
+  # Ladder note: each blessed Decide leaf (offering: static-file AND
+  # generated-text) must appear in at least one green rung before the
+  # branching mechanism can be called tested — that is the point of #2.
