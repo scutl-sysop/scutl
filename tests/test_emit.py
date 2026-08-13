@@ -90,3 +90,78 @@ def test_bundle_metadata(bundles):
         assert len(b["meta"]["manifest_sha256"]) == 64
     assert (bundles["standard"]["meta"]["manifest_sha256"]
             == bundles["smol"]["meta"]["manifest_sha256"])
+
+
+# ---------------------------------------------------------------------------
+# Recipe #2 (paid-service): multi-leaf Decide, global parameters, smol block
+# ---------------------------------------------------------------------------
+
+PS_DIR = REPO / "recipes" / "paid-service-x402"
+PS = yaml.safe_load((PS_DIR / "recipe.yaml").read_bytes())
+PAYTO = "0x1111111111111111111111111111111111111111"
+
+
+def test_multi_leaf_requires_answer_and_global_param():
+    with pytest.raises(emit.LoweringError, match="2 blessed options"):
+        emit.resolve(PS, {}, {"payto_address": PAYTO})
+    # payto_address is asked by no option: recipe-global, no default -> required
+    with pytest.raises(emit.LoweringError, match="payto_address"):
+        emit.resolve(PS, {"offering": "generated-text"}, {})
+
+
+def test_global_params_and_choice_slots():
+    cfg = emit.resolve(PS, {"offering": "generated-text"},
+                       {"payto_address": PAYTO})
+    assert cfg["parameters"]["payto_address"] == PAYTO
+    assert cfg["parameters"]["bind_port"] == "8402"      # global default
+    assert "resource_path" not in cfg["parameters"]       # unchosen leaf's ask
+    assert cfg["slots"]["offering"] == "generated-text"   # decide choice fills
+
+
+def test_leaf_param_without_default_required():
+    with pytest.raises(emit.LoweringError, match="resource_path"):
+        emit.resolve(PS, {"offering": "static-file"}, {"payto_address": PAYTO})
+
+
+@pytest.fixture()
+def ps_bundles(tmp_path):
+    out = {}
+    for offering in ("generated-text", "static-file"):
+        params = {"payto_address": PAYTO}
+        if offering == "static-file":
+            params["resource_path"] = "/srv/paid/report.pdf"
+        for prof in emit.PROFILES:
+            d = emit.emit(PS_DIR, tmp_path / offering, prof,
+                          {"offering": offering}, params)
+            out[(offering, prof)] = (d / "SKILL.md").read_text()
+    return out
+
+
+def test_ps_setup_fully_resolved_both_leaves(ps_bundles):
+    for (offering, prof), skill in ps_bundles.items():
+        setup = skill.split("## Keeping" if prof == "smol" else "## Execute")[0]
+        for slot in ("{payto_address}", "{offering}", "{bind_addr}",
+                     "{bind_port}", "{resource_path}", "["):
+            assert slot not in setup, (offering, prof, slot)
+        assert f"--offering {offering}" in setup
+
+
+def test_ps_optional_segment_per_leaf(ps_bundles):
+    assert "--resource-path /srv/paid/report.pdf" in ps_bundles[("static-file", "smol")]
+    assert "--resource-path" not in ps_bundles[("generated-text", "smol")]
+
+
+def test_ps_execute_annotations_render():
+    cfg = emit.resolve(PS, {"offering": "generated-text"},
+                       {"payto_address": PAYTO})
+    std = emit.render_standard(PS, cfg)
+    assert "- Crashed: service_start once" in std
+
+
+def test_ps_smol_from_manifest(ps_bundles):
+    smol = ps_bundles[("generated-text", "smol")]
+    assert "ONE step at a time" in smol
+    assert "pserv admin decommission" in smol            # emergency stop
+    assert "signer" not in smol                          # nothing wallet-shaped
+    assert "Failure modes" not in smol
+    assert "Exit codes: 2 not-configured" in smol

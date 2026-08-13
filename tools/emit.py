@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -58,27 +59,58 @@ def resolve(manifest: dict, answers: dict[str, str],
                 f"decide {q['id']} has {len(opts)} blessed options; "
                 f"pass --answer {q['id']}=<option>")
 
-    values: dict[str, str] = {}
     declared = manifest.get("parameters", {})
+    # A parameter belongs to this configuration if a chosen option asks for
+    # it, or if no option anywhere asks for it (recipe-global, e.g. a payTo
+    # address every leaf needs). Parameters asked only by unchosen options
+    # stay out.
+    asked_by_any: set[str] = set()
+    for q in manifest["decide"]:
+        for o in q["options"]:
+            for pid in o.get("asks", []):
+                if pid not in declared:
+                    raise LoweringError(
+                        f"option asks undeclared parameter {pid!r}")
+                asked_by_any.add(pid)
+    wanted = [pid for pid in declared if pid not in asked_by_any]
     for opt in chosen.values():
-        for pid in opt.get("asks", []):
-            if pid not in declared:
-                raise LoweringError(f"option asks undeclared parameter {pid!r}")
-            values[pid] = params.get(pid, declared[pid]["default"])
+        wanted += [p for p in opt.get("asks", []) if p not in wanted]
+
+    values: dict[str, str] = {}
+    for pid in wanted:
+        if pid in params:
+            values[pid] = params[pid]
+        elif "default" in declared[pid]:
+            values[pid] = declared[pid]["default"]
+        else:
+            raise LoweringError(
+                f"parameter {pid!r} has no default; pass --param {pid}=<value>")
     for pid in params:
         if pid not in values:
             raise LoweringError(f"--param {pid} not asked by any chosen option")
 
-    return {"choices": {k: v["id"] for k, v in chosen.items()},
+    choices = {k: v["id"] for k, v in chosen.items()}
+    return {"choices": choices,
             "labels": {k: v["label"] for k, v in chosen.items()},
-            "parameters": values}
+            "parameters": values,
+            # Lowering-time template slots: parameter values plus decide
+            # choices, so commands may reference e.g. {offering}.
+            "slots": {**choices, **values}}
+
+
+_OPTIONAL = re.compile(r"\[([^][]*)\]")
 
 
 def fill(template: str, values: dict[str, str]) -> str:
+    # `[...]` marks an optional segment: kept (brackets stripped) when its
+    # slots resolved, dropped whole when one didn't — so a command can carry
+    # an argument only some Decide leaves ask for, e.g.
+    # `configure ...[ --resource-path {resource_path}]`.
     out = template
     for k, v in values.items():
         out = out.replace("{" + k + "}", str(v))
-    return out
+    return _OPTIONAL.sub(
+        lambda m: "" if "{" in m.group(1) else m.group(1), out)
 
 
 # --------------------------------------------------------------------------
@@ -135,13 +167,25 @@ def _setup_lines(manifest: dict, values: dict[str, str], smol: bool) -> list[str
     return lines
 
 
+_EXECUTE_LABELS = {"over_cap": "Over cap", "transient": "Transient error"}
+
+
+def _execute_notes(ex: dict) -> list[tuple[str, str]]:
+    # Every scalar annotation on execute renders as a bullet, in manifest
+    # order; loop/command/guardrails have their own structure above.
+    return [(_EXECUTE_LABELS.get(k, k.replace("_", " ").capitalize()),
+             " ".join(str(v).split()))
+            for k, v in ex.items()
+            if k not in ("loop", "command", "guardrails")]
+
+
 # --------------------------------------------------------------------------
 # Profiles
 # --------------------------------------------------------------------------
 
 def render_standard(manifest: dict, config: dict) -> str:
     r = manifest["recipe"]
-    v = config["parameters"]
+    v = config["slots"]
     L: list[str] = []
     L += [f"# {r['title']} — skill bundle (standard profile)", ""]
     L += [f"Recipe `{r['id']}` rev {r['rev']} · status {r['status']} · "
@@ -151,7 +195,7 @@ def render_standard(manifest: dict, config: dict) -> str:
     L += ["## Configuration", ""]
     for qid, label in config["labels"].items():
         L.append(f"- **{qid}**: {label}")
-    for pid, val in v.items():
+    for pid, val in config["parameters"].items():
         L.append(f"- **{pid}**: {val}")
     L += [""]
 
@@ -174,9 +218,8 @@ def render_standard(manifest: dict, config: dict) -> str:
     L += ["## Execute (steady state)", "", " ".join(ex["loop"].split()), ""]
     if ex.get("command"):
         L += ["```", ex["command"], "```", ""]
-    L += [f"- Over cap: {ex['over_cap']}"]
-    if ex.get("transient"):
-        L.append(f"- Transient error: {ex['transient']}")
+    for key, note in _execute_notes(ex):
+        L.append(f"- {key}: {note}")
     for g in ex.get("guardrails", []):
         L.append(f"- {' '.join(g.split())}")
     L += [""]
@@ -207,8 +250,70 @@ def render_standard(manifest: dict, config: dict) -> str:
 
 
 def render_smol(manifest: dict, config: dict) -> str:
+    if "smol" in manifest:
+        return _render_smol_from_manifest(manifest, config)
+    return _render_smol_wallet_legacy(manifest, config)
+
+
+def _render_smol_from_manifest(manifest: dict, config: dict) -> str:
+    """Manifest-driven smol profile (recipes with a top-level `smol:` block).
+
+    The recipe-specific single path — exit codes, the steady-state action,
+    the emergency stop — comes from the manifest, so nothing recipe-shaped
+    lives in this renderer. Block shape:
+
+        smol:
+          state_rule: <what never to remember; which command re-reads state>
+          exit_codes: <one line, code -> action>
+          action: { heading, intro, command?, notes: [..] }
+          emergency: { trigger, command, after }
+    """
     r = manifest["recipe"]
-    v = config["parameters"]
+    v = config["slots"]
+    ex = manifest["execute"]
+    s = manifest["smol"]
+    L: list[str] = []
+    L += [f"# {r['title']} — skill bundle (smol profile)", ""]
+    L += [f"Recipe `{r['id']}` rev {r['rev']} · lowered from the scutl "
+          f"manifest — do not hand-edit; re-emit.", ""]
+    rules = [
+        "Do ONE step at a time. Run one command, read its output, "
+        "then decide the single next step.",
+        " ".join(s["state_rule"].split()),
+        "Never print, ask for, or copy key material or approval tokens.",
+        "If a command exits nonzero and no rule below covers it, STOP "
+        "and show the human the exact JSON error.",
+        "Exit codes: " + " ".join(s["exit_codes"].split()),
+    ]
+    L += ["## Rules — read first", ""]
+    L += [f"{i}. {rule}" for i, rule in enumerate(rules, 1)]
+    L += [""]
+    L += ["## Setup — run once, in order", ""]
+    L += _setup_lines(manifest, v, smol=True)
+    act = s["action"]
+    L += [f"## {act['heading']}", "",
+          " ".join(act["intro"].split()), ""]
+    if act.get("command", ex.get("command")):
+        L += ["```", fill(act.get("command", ex.get("command")), v), "```", ""]
+    for note in act.get("notes", []):
+        L.append(f"- {' '.join(note.split())}")
+    for key, note in _execute_notes(ex):
+        L.append(f"- {key}: {note}")
+    L += [""]
+    em = s["emergency"]
+    L += ["## Emergency stop", "",
+          f"{' '.join(em['trigger'].split())} run exactly:", "",
+          "```", fill(em["command"], v), "```", "",
+          " ".join(em["after"].split()), ""]
+    return "\n".join(L)
+
+
+def _render_smol_wallet_legacy(manifest: dict, config: dict) -> str:
+    # Wallet rev 1 predates the `smol:` manifest block, and its manifest is
+    # frozen by pinned receipt hashes — this renderer keeps its bundles
+    # byte-stable. New recipes declare `smol:` instead.
+    r = manifest["recipe"]
+    v = config["slots"]
     ex = manifest["execute"]
     L: list[str] = []
     L += [f"# {r['title']} — skill bundle (smol profile)", ""]
