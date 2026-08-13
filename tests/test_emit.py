@@ -106,11 +106,13 @@ def test_multi_leaf_requires_answer_and_global_param():
         emit.resolve(PS, {}, {"payto_address": PAYTO})
     # payto_address is asked by no option: recipe-global, no default -> required
     with pytest.raises(emit.LoweringError, match="payto_address"):
-        emit.resolve(PS, {"offering": "generated-text"}, {})
+        emit.resolve(PS, {"offering": "generated-text",
+                          "exposure": "lan-plaintext"}, {})
 
 
 def test_global_params_and_choice_slots():
-    cfg = emit.resolve(PS, {"offering": "generated-text"},
+    cfg = emit.resolve(PS, {"offering": "generated-text",
+                            "exposure": "lan-plaintext"},
                        {"payto_address": PAYTO})
     assert cfg["parameters"]["payto_address"] == PAYTO
     assert cfg["parameters"]["bind_port"] == "8402"      # global default
@@ -120,7 +122,9 @@ def test_global_params_and_choice_slots():
 
 def test_leaf_param_without_default_required():
     with pytest.raises(emit.LoweringError, match="resource_path"):
-        emit.resolve(PS, {"offering": "static-file"}, {"payto_address": PAYTO})
+        emit.resolve(PS, {"offering": "static-file",
+                          "exposure": "lan-plaintext"},
+                     {"payto_address": PAYTO})
 
 
 @pytest.fixture()
@@ -132,7 +136,8 @@ def ps_bundles(tmp_path):
             params["resource_path"] = "/srv/paid/report.pdf"
         for prof in emit.PROFILES:
             d = emit.emit(PS_DIR, tmp_path / offering, prof,
-                          {"offering": offering}, params)
+                          {"offering": offering, "exposure": "lan-plaintext"},
+                          params)
             out[(offering, prof)] = (d / "SKILL.md").read_text()
     return out
 
@@ -152,10 +157,47 @@ def test_ps_optional_segment_per_leaf(ps_bundles):
 
 
 def test_ps_execute_annotations_render():
-    cfg = emit.resolve(PS, {"offering": "generated-text"},
+    cfg = emit.resolve(PS, {"offering": "generated-text",
+                            "exposure": "lan-plaintext"},
                        {"payto_address": PAYTO})
     std = emit.render_standard(PS, cfg)
     assert "- Crashed: service_start once" in std
+
+
+PS_TLS_ANSWERS = {"offering": "static-file", "exposure": "public-tls"}
+PS_TLS_PARAMS = {"payto_address": PAYTO, "resource_path": "/srv/paid/report.pdf",
+                 "public_hostname": "pay.scutl.example"}
+
+
+def test_ps_when_gates_setup_and_verify_per_exposure_leaf(ps_bundles):
+    # lan-plaintext (rev-1 behavior): no ingress steps, no public probes
+    for prof in emit.PROFILES:
+        skill = ps_bundles[("static-file", prof)]
+        assert "install-proxy" not in skill
+        assert "dns-record" not in skill
+        assert "public_hostname" not in skill
+    cfg = emit.resolve(PS, PS_TLS_ANSWERS, PS_TLS_PARAMS)
+    std = emit.render_standard(PS, cfg)
+    # public-tls: ingress steps present, resolved, human-actored
+    assert "dns-record" in std and "install-proxy" in std
+    assert "https://pay.scutl.example/resource" in std
+    assert "{public_hostname}" not in std
+    # bind_addr not asked on this leaf; optional segment must drop cleanly
+    assert "--bind-addr" not in std
+    assert "--bind-port 8402" in std
+    # public-side verify checks render only here
+    assert "containment: pserv's loopback port" in std
+    assert "plaintext downgrade" in std
+    lan = emit.render_standard(
+        PS, emit.resolve(PS, {"offering": "generated-text",
+                              "exposure": "lan-plaintext"},
+                         {"payto_address": PAYTO}))
+    assert "containment" not in lan
+
+
+def test_when_unknown_decide_id_rejected():
+    with pytest.raises(emit.LoweringError, match="unknown decide id"):
+        emit.applies({"when": {"nonsense": "x"}}, {"exposure": "public-tls"})
 
 
 def test_ps_smol_from_manifest(ps_bundles):

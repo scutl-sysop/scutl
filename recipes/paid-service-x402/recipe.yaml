@@ -1,6 +1,7 @@
-# SCUTL recipe manifest — DRAFT 0 (authored by example, following wallet rev 1)
+# SCUTL recipe manifest — rev 2: public ingress (the registry's first revision)
 # Recipe #2: "Expose a paid service"
-# Design record: bead cst-8ih.5 (selection rulings, 2026-08-13), epic cst-8ih.
+# Design records: bead cst-8ih.5 (rev 1 rulings), cst-8ih.7 (rev 2 rulings,
+# 2026-08-13), epic cst-8ih.
 #
 # What this recipe stresses that wallet rev 1 did not (the reason it exists):
 #   1. long-lived Execute — a running service with a lifecycle, not discrete calls
@@ -10,14 +11,16 @@
 
 recipe:
   id: paid-service
-  rev: 1
+  rev: 2
   title: "Expose a paid service"
   summary: >
     Stand up an agent-operated HTTP service that sells a resource over x402:
     price advertised via 402 offers, payment verified and settled through the
     facilitator BEFORE the resource is served, earnings recorded in an
     append-only log. The merchant holds no private key — it only names a
-    receiving address, fixed at setup.
+    receiving address, fixed at setup. Rev 2 adds a public-tls exposure
+    leaf: a Caddy reverse proxy terminates TLS as the only public listener;
+    the merchant daemon stays on loopback and still holds no key material.
   status: draft
   maintainer: first-party
   depends:
@@ -54,12 +57,16 @@ decide:
   - id: exposure
     question: "Who can reach the service?"
     options:
-      - id: local-network
-        label: "Bind a local/LAN address and port; buyer is on the same network (only option in rev 1)"
+      - id: lan-plaintext
+        label: "Bind a local/LAN address and port; buyer is on the same network (rev 1 behavior, carried forward)"
         blessed: true
         asks: [bind_addr, bind_port]
-    # Public exposure is a real security decision (TLS, ingress, abuse) and
-    # arrives as its own rev with its own ladder.
+      - id: public-tls
+        label: "Public HTTPS behind a Caddy reverse proxy; merchant daemon stays on loopback"
+        blessed: true
+        asks: [public_hostname, bind_port]
+    # public-ip stays deferred: ACME will not issue for bare IPs, and a
+    # self-signed leaf trains the acceptance buyer to skip TLS verification.
     deferred-options: [public-tunnel, public-ip]
 
 parameters:
@@ -79,6 +86,10 @@ parameters:
   bind_port:
     type: port
     default: "8402"
+  public_hostname:
+    type: fqdn
+    prompt: "Public FQDN for the service (exposure: public-tls); a subdomain
+             the human points at this host BEFORE setup continues"
 
 # ---------------------------------------------------------------------------
 # COMPONENTS — the merchant daemon is the guardrail: verify-before-serve and
@@ -105,7 +116,7 @@ components:
       - name: service_admin     # configure / set-payto / decommission — human approval
         command: "pserv admin {op}"
         ops:
-          configure: "pserv admin configure --payto {payto_address} --price {price_usdc} --offering {offering} --bind-addr {bind_addr} --bind-port {bind_port}[ --resource-path {resource_path}]"
+          configure: "pserv admin configure --payto {payto_address} --price {price_usdc} --offering {offering}[ --bind-addr {bind_addr}] --bind-port {bind_port}[ --resource-path {resource_path}]"
           set-payto: "pserv admin set-payto --payto {payto_address}"
           decommission: "pserv admin decommission"
     invariants:
@@ -117,7 +128,24 @@ components:
       - "Each payment authorization settles at most once; a replayed
          authorization is refused before serve (nonce recorded in served.log)."
       - "earnings.log is append-only; totals derive from it on restart."
-      - "The merchant holds no private key material of any kind."
+      - "The merchant daemon holds no key material of any kind; TLS keys
+         belong to the ingress component and are outside every tool's reach."
+      - "On the public-tls leaf pserv binds 127.0.0.1 only; the proxy is
+         the sole public listener."
+
+  caddy-ingress:
+    # exposure: public-tls only. Not a typed tool — an infrastructure
+    # component the HUMAN provisions during setup; no agent-facing tools.
+    kind: ingress-service
+    source: ./ingress/Caddyfile
+    invariants:
+      - "TLS termination and cert custody live here: Caddy's ACME storage,
+         owned by the caddy system user. Neither pserv, nor the agent, nor
+         any typed tool can read the private key."
+      - "The proxy forwards to pserv on loopback and applies rate limiting;
+         no request reaches pserv except through it on this leaf."
+      - "Issuance and renewal are HTTP-01 ACME: no DNS-provider credential
+         ever resides on the merchant host."
 
 # ---------------------------------------------------------------------------
 # BINDINGS — same testnet rail as wallet rev 1, seen from the payee side.
@@ -160,7 +188,7 @@ setup:
   - step: configure
     approval: human           # admin op: fixes payTo
     run: "write config: payTo, price, offering selection, bind address"
-    commands: ["pserv admin configure --payto {payto_address} --price {price_usdc} --offering {offering} --bind-addr {bind_addr} --bind-port {bind_port}[ --resource-path {resource_path}]"]
+    commands: ["pserv admin configure --payto {payto_address} --price {price_usdc} --offering {offering}[ --bind-addr {bind_addr}] --bind-port {bind_port}[ --resource-path {resource_path}]"]
     expect: "JSON echoing config WITHOUT ever echoing approval token paths;
              on exit 4 ask the human to run pserv-approve configure, then retry once"
   - step: start
@@ -168,9 +196,39 @@ setup:
     commands: ["pserv start", "pserv status"]
     expect: ".running true, .config matches; unpaid GET returns 402 with offer"
   - step: probe-offer
+    when: { exposure: lan-plaintext }
     run: "unpaid request returns a 402 offer matching configured price and payTo"
     commands: ["curl -s -o /dev/null -w '%{http_code}' http://{bind_addr}:{bind_port}/resource"]
     expect: "402"
+  - step: probe-offer-local
+    when: { exposure: public-tls }
+    run: "before ingress exists: unpaid request on loopback returns the 402 offer"
+    commands: ["curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:{bind_port}/resource"]
+    expect: "402"
+  - step: dns-record
+    when: { exposure: public-tls }
+    actor: human
+    instructions: >
+      Create an A record pointing {public_hostname} at this host's public
+      address (e.g. via the Cloudflare dashboard or API — the credential
+      stays with you and never lands on this host), then confirm it
+      resolves: dig +short {public_hostname}
+    verify: "dig +short {public_hostname} returns this host's public address"
+  - step: install-proxy
+    when: { exposure: public-tls }
+    actor: human
+    instructions: >
+      Install Caddy from the distro/official package, deploy the recipe's
+      Caddyfile with {public_hostname} and the pserv loopback port
+      {bind_port} filled in, open ports 80/443 in the host firewall, and
+      start the caddy service. Caddy obtains and renews the certificate
+      itself via HTTP-01 ACME.
+    verify: "systemctl is-active caddy; curl -s -o /dev/null -w '%{http_code}' https://{public_hostname}/resource returns 402"
+  - step: verify-ingress
+    when: { exposure: public-tls }
+    run: "confirm the public path terminates TLS and reaches pserv"
+    commands: ["curl -s -o /dev/null -w '%{http_code}' https://{public_hostname}/resource"]
+    expect: "402 with the configured offer; certificate validates for {public_hostname}"
 
 # ---------------------------------------------------------------------------
 # EXECUTE — steady state is a LIFECYCLE, not a call loop: the serve loop
@@ -193,6 +251,9 @@ execute:
     - "A buyer complaint of 'paid but not served' is answered from
        earnings.log + served.log evidence, not from apology or re-serve;
        re-serve without a matching settle is an over-cap-equivalent refusal."
+    - "Never modify proxy config, firewall rules, DNS, or certificates —
+       those are human-provisioned infrastructure. The agent operates
+       strictly behind already-provisioned ingress."
 
 # ---------------------------------------------------------------------------
 # VERIFY — acceptance drives the WHOLE rail with the wallet recipe as buyer.
@@ -210,6 +271,20 @@ verify:
      not change where settlement goes (payTo from config, byte-identical)"
   - "restart probe: kill daemon mid-idle, service_start; earnings totals
      unchanged, previously served nonces still refused"
+  - check: "public offer probe: from a box that is neither merchant nor the
+            acceptance buyer, unpaid GET https://{public_hostname}/resource
+            returns the 402 offer with configured price and payTo, and the
+            certificate chain validates for {public_hostname}"
+    when: { exposure: public-tls }
+  - check: "public-side safety probes: replay, underpay, and payto-injection
+            probes re-run against the public endpoint hold identically"
+    when: { exposure: public-tls }
+  - check: "plaintext downgrade: http://{public_hostname} redirects to https
+            and never serves the resource"
+    when: { exposure: public-tls }
+  - check: "containment: pserv's loopback port is NOT reachable from outside
+            the merchant host (the rev-1 bind is an internal detail now)"
+    when: { exposure: public-tls }
 
 # ---------------------------------------------------------------------------
 # RECOVER
@@ -220,14 +295,41 @@ recover:
       service_earnings vs on-chain: every earnings.log entry names a settle
       txhash; the human can audit the receiving address on a block explorer
       against the log, no trust in the daemon required.
+  close-ingress:
+    actor: human              # incident branch, new in rev 2: reversible
+    instructions: >
+      On stranger-traffic trouble (abuse, flood, suspected exploit): stop
+      the caddy service or close 80/443 at the firewall. The service and
+      its earnings stay intact; no decommission; reopening is the same
+      human action in reverse. The agent's part is detection and report —
+      pserv keeps answering on loopback for status and earnings throughout.
   decommission:
     approval: human           # zero decisions beyond 'shut it down'
     run: >
       service_admin decommission: daemon stopped, marker written; start
       refuses thereafter. Config and logs are retained for reconciliation —
       nothing here is secret; there is no key material to shred. Funds are
-      wherever payTo points, untouched.
-    later-rev: "public-exposure rev adds ingress teardown to this step"
+      wherever payTo points, untouched. On the public-tls leaf the human
+      additionally tears down ingress: stop caddy, close 80/443, delete
+      the DNS record.
+
+# ---------------------------------------------------------------------------
+# MIGRATE — first exercise of registry revision mechanics (cst-8ih.7).
+# A rev is superseded, never invalidated: rev-1 receipts stand, keyed by
+# (recipe, rev, manifest_sha).
+# ---------------------------------------------------------------------------
+migrate:
+  from-rev: 1
+  identity: >
+    A rev-1 deployment IS a rev-2 deployment on the lan-plaintext leaf
+    (local-network renamed; same asks, same behavior, same state on disk).
+    Nothing to run; config.json, earnings.log, served.log are untouched.
+  to-public-tls: >
+    Re-answer the exposure question, then run only the delta setup steps
+    (dns-record, install-proxy, verify-ingress) and rebind pserv to
+    loopback via service_admin configure with no --bind-addr (the 127.0.0.1
+    default; human approval, as any admin op). Earnings history carries across; the ladder for the new leaf must
+    be green before the migrated deployment is called blessed.
 
 # ---------------------------------------------------------------------------
 # SMOL — recipe-specific single path for the smol profile (manifest-driven;
@@ -285,3 +387,8 @@ targets:
   # Ladder note: each blessed Decide leaf (offering: static-file AND
   # generated-text) must appear in at least one green rung before the
   # branching mechanism can be called tested — that is the point of #2.
+  # Rev 2 ladder note: BOTH exposure leaves must green. lan-plaintext is
+  # the rev-1 regression rung (the existing ladder, unchanged). public-tls
+  # acceptance runs on a rented pod as merchant, with the buyer on a
+  # different box, through https://{public_hostname} — doubling as the live
+  # test of the cst-9cr quote-verbatim hardening (owner ruling, cst-8ih.7).

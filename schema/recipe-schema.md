@@ -9,7 +9,7 @@ unless marked optional:
 
 ```
 recipe · decide · parameters? · components · bindings · contracts
-setup · execute · verify · recover · targets
+setup · execute · verify · recover · migrate? · targets
 ```
 
 ## Design invariants (apply to every section)
@@ -57,8 +57,11 @@ does not define arithmetic — components consume and enforce them.
 
 ### `components`
 Code the recipe ships. Each component:
-- `kind`: `typed-tool` is the only kind in rev 1 (MCP/typed boundary; a
-  component MUST NOT be a shell script the model composes freely).
+- `kind`: `typed-tool` (MCP/typed boundary; a component MUST NOT be a
+  shell script the model composes freely) or `ingress-service` (added by
+  paid-service rev 2: human-provisioned infrastructure such as a reverse
+  proxy — it exposes NO agent-facing tools, and its `invariants` are
+  custody statements, e.g. who holds TLS key material).
 - `source`: path within the recipe.
 - `state_dir`: where the component owns durable state. Component state is
   the single source of truth for anything safety-relevant; the model's
@@ -87,14 +90,21 @@ The four phases lowered into the emitted skill.
 - `setup`: ordered steps. Each step has `run` (agent instruction) or
   `instructions` (human instruction), plus optionally `verify` and
   `fallback` (`trigger:` names contract failure modes; the fallback body is
-  a blessed alternate path, not an improvisation license).
+  a blessed alternate path, not an improvisation license). A step MAY carry
+  `when: {decide_id: option_id, ...}` — it is lowered only into
+  configurations where every named question resolved to that option
+  (added by paid-service rev 2; naming an unknown decide id is a lowering
+  error, not a silent skip). Parameter slots in step prose (`run`,
+  `instructions`, `expect`, `verify`) are filled at lowering time, same as
+  in `commands`.
 - `execute`: `loop` (the steady-state behavior), boundary behaviors
   (e.g. `over_cap`), and `guardrails[]` (restatements of component
   invariants plus behavioral rules like idempotent retry).
 - `verify`: acceptance checks. The recipe is not installed until all pass.
   MUST include at least: one end-to-end exercise of the real flow, one
   negative probe per safety invariant (e.g. over-cap refusal), and one
-  restart/resume probe.
+  restart/resume probe. A check MAY be `{check: "...", when: {...}}` to
+  gate it to a configuration, with the same `when:` semantics as setup.
 - `recover`: named procedures (`restore`, `revoke`, ...). Emergency
   procedures SHOULD carry zero decisions beyond invoking them (ratified
   principle, cst-8ih epic comment 2026-08-11).
@@ -109,6 +119,16 @@ The four phases lowered into the emitted skill.
 Default when neither appears: the agent acts autonomously within component
 invariants. Approval friction is NOT a safety mechanism (see epic
 principle); reserve `approval:` for genuinely irreversible operations.
+
+### `migrate` (optional; added by paid-service rev 2)
+Revision mechanics, present from rev 2 of any recipe onward. A rev is
+superseded, never invalidated: receipts are keyed by
+(recipe, rev, manifest_sha) and STAND when a new rev lands. Fields:
+- `from-rev`: the rev this block migrates from.
+- `identity`: when an old-rev deployment already IS a valid configuration
+  of the new rev (e.g. a renamed Decide leaf), say so — nothing to run.
+- one prose entry per migration path (e.g. `to-public-tls`): the Decide
+  re-answer plus the delta setup steps, and what state carries across.
 
 ### `targets`
 The lowering ladder (design: cst-8ih.1). Roles are fixed:

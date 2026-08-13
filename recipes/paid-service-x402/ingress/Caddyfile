@@ -1,0 +1,28 @@
+# scutl paid-service rev 2 — public-tls ingress (cst-8ih.7)
+#
+# Deployed BY THE HUMAN during the install-proxy setup step, with the two
+# placeholders filled in. Caddy obtains and renews the certificate itself
+# via HTTP-01 ACME; the private key lives in Caddy's storage (the caddy
+# system user's home), readable by no typed tool and no agent.
+#
+# pserv binds 127.0.0.1:{bind_port}; this proxy is the only public listener.
+
+{public_hostname} {
+	# Conservative per-IP rate limit for stranger traffic; paid buyers make
+	# a handful of requests, not hundreds. Requires the caddy rate_limit
+	# module (caddy list-modules | grep rate_limit); if absent, install the
+	# module or apply an equivalent limit at the firewall.
+	rate_limit {
+		zone strangers {
+			key {remote_host}
+			events 30
+			window 1m
+		}
+	}
+
+	reverse_proxy 127.0.0.1:{bind_port}
+}
+
+# Port 80 stays open for HTTP-01 ACME challenges; Caddy serves the
+# challenge and redirects everything else to https automatically. The
+# resource is never served over plaintext.

@@ -98,6 +98,18 @@ def resolve(manifest: dict, answers: dict[str, str],
             "slots": {**choices, **values}}
 
 
+def applies(item: dict, choices: dict[str, str]) -> bool:
+    # `when: {decide_id: option_id, ...}` gates a setup step or verify check
+    # to configurations where every named question resolved to that option.
+    # Unknown decide ids are a manifest bug, not a silent skip.
+    for qid, oid in item.get("when", {}).items():
+        if qid not in choices:
+            raise LoweringError(f"when: unknown decide id {qid!r}")
+        if choices[qid] != oid:
+            return False
+    return True
+
+
 _OPTIONAL = re.compile(r"\[([^][]*)\]")
 
 
@@ -122,7 +134,7 @@ def _tool_rows(manifest: dict, values: dict[str, str]) -> list[tuple[str, str]]:
     # slots like {url} legitimately remain for the agent to fill.
     rows = []
     for comp in manifest["components"].values():
-        for t in comp["tools"]:
+        for t in comp.get("tools", []):
             if "ops" in t:
                 for op, cmd in t["ops"].items():
                     rows.append((f"{t['name']} {op}", fill(cmd, values)))
@@ -131,9 +143,12 @@ def _tool_rows(manifest: dict, values: dict[str, str]) -> list[tuple[str, str]]:
     return rows
 
 
-def _setup_lines(manifest: dict, values: dict[str, str], smol: bool) -> list[str]:
+def _setup_lines(manifest: dict, values: dict[str, str], smol: bool,
+                 choices: dict[str, str] | None = None) -> list[str]:
     lines = []
-    for i, step in enumerate(manifest["setup"], 1):
+    steps = [s for s in manifest["setup"]
+             if choices is None or applies(s, choices)]
+    for i, step in enumerate(steps, 1):
         who = ("HUMAN" if step.get("actor") == "human"
                else "agent, human approval" if step.get("approval") == "human"
                else "agent")
@@ -141,15 +156,15 @@ def _setup_lines(manifest: dict, values: dict[str, str], smol: bool) -> list[str
         lines.append("")
         if step.get("actor") == "human":
             lines.append(f"Ask the human to do this, then wait: "
-                         f"{' '.join(step['instructions'].split())}")
+                         f"{fill(' '.join(step['instructions'].split()), values)}")
         elif not smol:
-            lines.append(" ".join(step["run"].split()))
+            lines.append(fill(" ".join(step["run"].split()), values))
         for cmd in step.get("commands", []):
             lines.append("```\n" + fill(cmd, values) + "\n```")
         if step.get("expect"):
-            lines.append(f"Expected: {step['expect']}")
+            lines.append(f"Expected: {fill(step['expect'], values)}")
         if step.get("verify"):
-            lines.append(f"Verify: {step['verify']}")
+            lines.append(f"Verify: {fill(step['verify'], values)}")
         fb = step.get("fallback")
         if fb:
             if smol:
@@ -212,7 +227,7 @@ def render_standard(manifest: dict, config: dict) -> str:
     L += [""]
 
     L += ["## Setup", ""]
-    L += _setup_lines(manifest, v, smol=False)
+    L += _setup_lines(manifest, v, smol=False, choices=config["choices"])
 
     ex = manifest["execute"]
     L += ["## Execute (steady state)", "", " ".join(ex["loop"].split()), ""]
@@ -226,7 +241,12 @@ def render_standard(manifest: dict, config: dict) -> str:
 
     L += ["## Verify (acceptance — the recipe is not installed until all pass)", ""]
     for chk in manifest["verify"]:
-        L.append(f"- [ ] {' '.join(chk.split())}")
+        # A check may be a plain string or {check: ..., when: {...}}.
+        if isinstance(chk, dict):
+            if not applies(chk, config["choices"]):
+                continue
+            chk = chk["check"]
+        L.append(f"- [ ] {fill(' '.join(chk.split()), v)}")
     L += [""]
 
     L += ["## Recover", ""]
@@ -289,7 +309,7 @@ def _render_smol_from_manifest(manifest: dict, config: dict) -> str:
     L += [f"{i}. {rule}" for i, rule in enumerate(rules, 1)]
     L += [""]
     L += ["## Setup — run once, in order", ""]
-    L += _setup_lines(manifest, v, smol=True)
+    L += _setup_lines(manifest, v, smol=True, choices=config["choices"])
     act = s["action"]
     L += [f"## {act['heading']}", "",
           " ".join(act["intro"].split()), ""]
@@ -333,7 +353,7 @@ def _render_smol_wallet_legacy(manifest: dict, config: dict) -> str:
           "6 transient (retry SAME payment id, max 3 tries) · 7 permanent (stop).",
           ""]
     L += ["## Setup — run once, in order", ""]
-    L += _setup_lines(manifest, v, smol=True)
+    L += _setup_lines(manifest, v, smol=True, choices=config["choices"])
     L += ["## Paying for a resource", "",
           "When a request returns HTTP 402, run exactly:", "",
           "```", ex["command"], "```", "",
