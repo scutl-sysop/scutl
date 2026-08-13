@@ -147,12 +147,15 @@ class Signer:
         acct = self._load_account()
         now = int(datetime.now(timezone.utc).timestamp())
         nonce = "0x" + hashlib.sha256(payment_id.encode()).hexdigest()
+        value = usdc_to_atomic(amount)
+        valid_after = now - 60
+        valid_before = now + valid_secs
         authorization = {
             "from": acct.address,
             "to": pay_to,
-            "value": str(usdc_to_atomic(amount)),
-            "validAfter": str(now - 60),
-            "validBefore": str(now + valid_secs),
+            "value": value,
+            "validAfter": valid_after,
+            "validBefore": valid_before,
             "nonce": nonce,
         }
         typed = {
@@ -175,10 +178,7 @@ class Signer:
             "primaryType": "TransferWithAuthorization",
             "domain": {"name": "USDC", "version": "2",
                        "chainId": CHAIN_ID, "verifyingContract": USDC_ADDRESS},
-            "message": {**authorization,
-                        "value": int(authorization["value"]),
-                        "validAfter": int(authorization["validAfter"]),
-                        "validBefore": int(authorization["validBefore"])},
+            "message": authorization,
         }
         signature = acct.sign_message(encode_typed_data(full_message=typed))
 
@@ -186,15 +186,18 @@ class Signer:
             "x402Version": 1,
             "scheme": "exact",
             "network": "base-sepolia",
+            "domain": typed["domain"],
+            "types": typed["types"],
             "payload": {"signature": "0x" + signature.signature.hex(),
                         "authorization": authorization},
         }
         requirements = {
             "scheme": "exact",
             "network": "base-sepolia",
-            "maxAmountRequired": authorization["value"],
+            "maxAmountRequired": str(value),
             "payTo": pay_to,
             "asset": USDC_ADDRESS,
+            "extra": {"name": "USDC", "version": "2"},
         }
         return payment_payload, requirements
 
