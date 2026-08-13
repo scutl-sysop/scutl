@@ -30,7 +30,7 @@ def main() -> None:
     p.add_argument("--bundle", type=Path, required=True)
     p.add_argument("--env", type=Path, required=True)
     p.add_argument("--target", required=True,
-                   choices=("frontier", "reference", "headline"))
+                   choices=("frontier", "reference", "headline", "experimental"))
     p.add_argument("--harness", required=True)
     p.add_argument("--date", required=True, help="run date, YYYY-MM-DD")
     p.add_argument("--cost", default=None,
