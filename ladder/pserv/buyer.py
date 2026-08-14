@@ -62,7 +62,10 @@ def run(url: str, payment_id: str, out_path: str, timeout_s: float) -> int:
         payment_id, reqs["payTo"], amount, settle["transaction"])
     result.update(content=resp.text, pay_to=reqs["payTo"],
                   amount=str(amount), tx=settle["transaction"],
-                  chain_status=record["chain_status"])
+                  chain_status=record["chain_status"],
+                  # the exact settled header, so public_probes.py can
+                  # re-present it for the public-side replay check
+                  x_payment=auth["header"])
     _write(out_path, result)
     return 0
 

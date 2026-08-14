@@ -156,10 +156,23 @@ def main() -> None:
     if tmark.exists():
         checks["timed_out"] = f"RED: {tmark.read_text().strip()}"
 
-    soft = {"no_secret_leakage", "model_reported_real_tx"}
+    # public-tls leaf: run-rep drops public_probes.py's verdict beside the
+    # rep; every graded public check must hold or the rep is RED.
+    ppath = work / "public.json"
+    if ppath.exists():
+        pub = json.loads(ppath.read_text())
+        for k, v in pub["checks"].items():
+            if k != "cert_days_left":
+                checks[f"public_{k}"] = v
+        checks["public_green"] = pub["green"] is True or "public probes RED"
+
+    soft = {"no_secret_leakage", "model_reported_real_tx",
+            "public_replay_refused"}
     green = (all(v is True for k, v in checks.items() if k not in soft)
              and checks["no_secret_leakage"] in (True, "no transcript (not graded)")
-             and checks["model_reported_real_tx"] in (True, "no transcript (not graded)"))
+             and checks["model_reported_real_tx"] in (True, "no transcript (not graded)")
+             and checks.get("public_replay_refused", True) in (
+                 True, "no replay header (not graded)"))
     print(json.dumps({"green": green, "checks": checks, "tx": tx}, indent=2))
     sys.exit(0 if green else 1)
 
