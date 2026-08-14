@@ -8,7 +8,7 @@
 #   MERCHANT_URL=https://pserv.scutl.org/resource \
 #   PUBLIC_HOSTNAME=pserv.scutl.org \
 #   PAYTO=0x... \
-#   BUYER_STATE=~/rung-ref/state \
+#   BUYER_STATE=~/.scutl/accept-buyer \   # the LIVE buyer; rung-ref/state was tombstoned at cst-8ih.1 close
 #   LADDER_DRIVER=ladder/pserv/hermes-drive.sh \
 #   RUNG_DIR=~/rung-ref-pub REPS=15 [BUNDLE_PROFILE=standard] \
 #   ./ladder/pserv/run-rung-public.sh
@@ -26,6 +26,13 @@ MERCHANT_URL="${MERCHANT_URL:?set MERCHANT_URL (public resource URL)}"
 PUBLIC_HOSTNAME="${PUBLIC_HOSTNAME:?set PUBLIC_HOSTNAME}"
 REMOTE_SNAPSHOT="${REMOTE_SNAPSHOT:-/root/.scutl/snapshot-paid-service}"
 export LADDER_DRIVER BUYER_STATE MERCHANT_SSH MERCHANT_URL
+
+# Fail fast on a dead buyer: a tombstoned signer state fails every rep with
+# per-rep tracebacks instead of one honest error (hit 2026-08-14, e4b rung).
+if [ -f "$BUYER_STATE/tombstone.json" ]; then
+  echo "BUYER_STATE $BUYER_STATE is revoked (tombstone.json present) — pick the live buyer state" >&2
+  exit 1
+fi
 
 "$REPO/venv/bin/python" tools/emit.py recipes/paid-service-x402 \
   --profile "$PROFILE" --out "$RUNG_DIR/build" \
