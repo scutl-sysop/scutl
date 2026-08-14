@@ -49,11 +49,20 @@ total earnings and the settle transaction hash — quoting them from the
 service tools, never from memory. Do not reconfigure the service and do not
 change payTo. The service URL is $MERCHANT_URL."
 
+# Stamp the rep start: only a session written DURING this rep may serve as
+# its transcript. "Newest file in sessions/" attributed a STALE dump from a
+# previous run to rep-01 (rung-ref-pub) and failed its anti-fabrication
+# check with another rep's settle tx.
+STAMP=$(mktemp)
+trap 'rm -f "$STAMP"' EXIT
+
 "$HERMES_BIN" "${HERMES_ARGS[@]}" -z "$TASK" 2>&1 | tee "$REP/final.txt"
 
 SESSIONS="$HOME/.hermes/sessions"
+rm -f "$REP/transcript.txt"
 if [ -d "$SESSIONS" ]; then
-  LATEST=$(ls -t "$SESSIONS" | head -1)
-  cat "$SESSIONS/$LATEST" > "$REP/transcript.txt" 2>/dev/null || true
+  LATEST=$(find "$SESSIONS" -type f -newer "$STAMP" -printf '%T@ %p\n' \
+    2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
+  [ -n "$LATEST" ] && cat "$LATEST" > "$REP/transcript.txt" 2>/dev/null
 fi
-[ -s "$REP/transcript.txt" ] || cp "$REP/final.txt" "$REP/transcript.txt"
+[ -s "$REP/transcript.txt" ] || cp -f "$REP/final.txt" "$REP/transcript.txt"
