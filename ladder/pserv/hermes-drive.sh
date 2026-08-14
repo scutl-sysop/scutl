@@ -17,6 +17,12 @@ REP="$1"
 SCUTL_VENV="${SCUTL_VENV:-$HOME/scutl/venv}"
 export PATH="$SCUTL_VENV/bin:$PATH"
 
+# Remote merchant (public-tls rungs): the shim's `pserv` runs on the box
+# over ssh; it must shadow any local install, so it goes in front.
+if [ -n "${MERCHANT_SSH:-}" ]; then
+  export PATH="$(cd "$(dirname "$0")" && pwd)/remote-shim:$PATH"
+fi
+
 HERMES_BIN="${HERMES_BIN:-hermes}"
 POD_BASE_URL="${POD_BASE_URL:-$($HERMES_BIN config get model.base_url)}"
 POD_MODEL="${POD_MODEL:-$(curl -s "$POD_BASE_URL/models" \

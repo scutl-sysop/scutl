@@ -11,6 +11,11 @@ REP="$1"
 SCUTL_VENV="${SCUTL_VENV:-$HOME/scutl/venv}"
 export PATH="$SCUTL_VENV/bin:$PATH"
 
+# Remote merchant (public-tls rungs): same shim-first rule as hermes-drive.
+if [ -n "${MERCHANT_SSH:-}" ]; then
+  export PATH="$(cd "$(dirname "$0")" && pwd)/remote-shim:$PATH"
+fi
+
 {
   echo "[scripted] start service"
   pserv start

@@ -25,13 +25,31 @@ BUYER_STATE="${BUYER_STATE:?set BUYER_STATE to a funded recipe-#1 signer state d
 
 mkdir -p "$REP"
 rm -rf "$REP/state"
-cp -a "$SNAPSHOT" "$REP/state"
-chmod 700 "$REP/state"
-export SCUTL_PSERV_STATE="$REP/state"
 
-PORT=$("$PY" -c "import json; print(json.load(open('$REP/state/config.json'))['bind_port'])")
-ADDR=$("$PY" -c "import json; print(json.load(open('$REP/state/config.json'))['bind_addr'])")
-MERCHANT_URL="http://$ADDR:$PORT/resource"
+# Remote mode (public-tls rungs): MERCHANT_SSH names the merchant box; the
+# rep's live state is REMOTE, reset from a remote snapshot (SNAPSHOT here is
+# the remote dir remote-snapshot.sh produced), and pulled back after the
+# driver so grade.py runs verbatim on a local copy. MERCHANT_URL must be the
+# public resource URL — the merchant's bind is loopback-only behind the
+# proxy, so it cannot be derived from config the way the local mode does.
+if [ -n "${MERCHANT_SSH:-}" ]; then
+  MERCHANT_URL="${MERCHANT_URL:?remote mode: set MERCHANT_URL to the public resource URL}"
+  MERCHANT_STATE="${MERCHANT_STATE:-/root/.scutl/paid-service}"
+  export MERCHANT_SSH
+  ssh -o BatchMode=yes "$MERCHANT_SSH" "
+    set -euo pipefail
+    pserv stop >/dev/null 2>&1 || true
+    rm -rf '$MERCHANT_STATE'
+    cp -a '$SNAPSHOT' '$MERCHANT_STATE'
+    chmod 700 '$MERCHANT_STATE'"
+else
+  cp -a "$SNAPSHOT" "$REP/state"
+  chmod 700 "$REP/state"
+  export SCUTL_PSERV_STATE="$REP/state"
+  PORT=$("$PY" -c "import json; print(json.load(open('$REP/state/config.json'))['bind_port'])")
+  ADDR=$("$PY" -c "import json; print(json.load(open('$REP/state/config.json'))['bind_addr'])")
+  MERCHANT_URL="http://$ADDR:$PORT/resource"
+fi
 export MERCHANT_URL BUNDLE="$BUNDLE/SKILL.md"
 
 # Unique across rung ATTEMPTS, not just reps — the EIP-3009 nonce derives
@@ -45,6 +63,10 @@ BUYER_PID=$!
 
 cleanup() {
   kill "$BUYER_PID" 2>/dev/null || true
+  if [ -n "${MERCHANT_SSH:-}" ]; then
+    ssh -o BatchMode=yes "$MERCHANT_SSH" "pserv stop" >/dev/null 2>&1 || true
+    return
+  fi
   "$PY" -c "
 import os, scutl_pserv.core as c
 os.environ['SCUTL_PSERV_STATE']=os.environ['SCUTL_PSERV_STATE']
@@ -69,7 +91,43 @@ timeout --kill-after=30 "$REP_TIMEOUT" \
 }
 
 wait "$BUYER_PID" 2>/dev/null || true
+
+if [ -n "${MERCHANT_SSH:-}" ]; then
+  # Pull the rep's evidence home; grade.py (restart probe included) is
+  # file-level, so the pulled copy grades exactly like local state.
+  rsync -a -e "ssh -o BatchMode=yes" \
+    "$MERCHANT_SSH:$MERCHANT_STATE/" "$REP/state/"
+  chmod 700 "$REP/state"
+
+  # public-tls leaf: off-box probes against the public origin, replaying the
+  # buyer's real settled header when the purchase landed. Runs BEFORE cleanup
+  # — every probe is answered by the live merchant (all refusals; none writes
+  # state). grade.py folds public.json into the verdict.
+  case "$MERCHANT_URL" in https://*)
+    ORIGIN=$("$PY" -c "from urllib.parse import urlparse; u=urlparse('$MERCHANT_URL'); print(f'{u.scheme}://{u.netloc}')")
+    PROBE_ARGS=()
+    if "$PY" -c "import json,sys; sys.exit(0 if json.load(open('$REP/buyer.json')).get('x_payment') else 1)" 2>/dev/null; then
+      "$PY" -c "import json; open('$REP/x_payment.txt','w').write(json.load(open('$REP/buyer.json'))['x_payment'])"
+      PROBE_ARGS+=(--replay-header "$REP/x_payment.txt")
+    fi
+    "$PY" "$REPO/ladder/pserv/public_probes.py" "$ORIGIN" \
+      --payto "$("$PY" -c "import json; print(json.load(open('$REP/state/config.json'))['payto'])")" \
+      --price "$("$PY" -c "import json; print(json.load(open('$REP/state/config.json'))['price_usdc'])")" \
+      --bind-port "$("$PY" -c "import json; print(json.load(open('$REP/state/config.json'))['bind_port'])")" \
+      --out "$REP/public.json" "${PROBE_ARGS[@]}" \
+      > "$REP/public.log" 2>&1 || true
+  ;; esac
+fi
+
 cleanup
 trap - EXIT
+
+if [ -n "${MERCHANT_SSH:-}" ]; then
+  # Re-pull after the stop: cheap incremental sync, and the graded state
+  # reflects the merchant at rest (matches local mode, which grades after
+  # its own cleanup stop).
+  rsync -a -e "ssh -o BatchMode=yes" \
+    "$MERCHANT_SSH:$MERCHANT_STATE/" "$REP/state/"
+fi
 
 "$PY" "$REPO/ladder/pserv/grade.py" "$REP" | tee "$REP/grade.json"

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# PATH shim: the bundle's `pserv` command, executed on the remote merchant
+# box over ssh (public-tls rungs — the merchant is not the driver box).
+# The model under test sees an ordinary `pserv`; only the harness knows the
+# state lives at $MERCHANT_SSH. There is deliberately NO pserv-approve shim:
+# reps start from a snapshot whose approvals are already consumed, and the
+# harness must never let the model mint one.
+set -euo pipefail
+: "${MERCHANT_SSH:?remote-shim requires MERCHANT_SSH (ssh host alias)}"
+
+args=()
+for a in "$@"; do args+=("$(printf %q "$a")"); done
+exec ssh -o BatchMode=yes "$MERCHANT_SSH" pserv "${args[@]}"
