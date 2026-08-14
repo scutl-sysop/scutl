@@ -17,10 +17,18 @@ REP="$1"
 SCUTL_VENV="${SCUTL_VENV:-$HOME/scutl/venv}"
 export PATH="$SCUTL_VENV/bin:$PATH"
 
-# Remote merchant (public-tls rungs): the shim's `pserv` runs on the box
-# over ssh; it must shadow any local install, so it goes in front.
+# hermes tool shells re-source the login profile and REBUILD PATH, so a
+# PATH prepend here never reaches the model's commands (rung-ref-pub
+# rep-01: the model drove a leftover ~/.local/bin/pserv against container
+# state). ~/.local/bin is first on the profile PATH, so the binding is
+# installed THERE: the ssh shim for a remote merchant, the venv CLI for a
+# local one. pserv-approve is never exposed to the model.
+mkdir -p "$HOME/.local/bin"
+rm -f "$HOME/.local/bin/pserv-approve"
 if [ -n "${MERCHANT_SSH:-}" ]; then
-  export PATH="$(cd "$(dirname "$0")" && pwd)/remote-shim:$PATH"
+  cp -f "$(cd "$(dirname "$0")" && pwd)/remote-shim/pserv" "$HOME/.local/bin/pserv"
+else
+  ln -sfn "$SCUTL_VENV/bin/pserv" "$HOME/.local/bin/pserv"
 fi
 
 HERMES_BIN="${HERMES_BIN:-hermes}"
