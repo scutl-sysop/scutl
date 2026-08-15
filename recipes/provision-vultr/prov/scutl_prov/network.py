@@ -31,9 +31,13 @@ class PermanentError(Exception):
 
 
 class VultrClient:
-    def __init__(self, state, base: str = API_BASE, timeout: int = 30):
+    def __init__(self, state, base: str | None = None, timeout: int = 30):
+        import os
+        # SCUTL_PROV_API points ladder rungs at the mock provider; the
+        # live default is the real API. Same pattern as the facilitator
+        # override in recipes #1/#2.
         self.state = state
-        self.base = base
+        self.base = base or os.environ.get("SCUTL_PROV_API") or API_BASE
         self.timeout = timeout
 
     # -- transport -----------------------------------------------------
