@@ -19,6 +19,7 @@ from decimal import Decimal
 from . import approvals
 from .approvals import ApprovalRequired
 from .core import LimitRefused, Manager
+from .network import PermanentError, TransientError
 from .state import Decommissioned, NoApiKey, NotConfigured, StateDir
 
 
@@ -107,6 +108,10 @@ def main(argv: list[str] | None = None) -> None:
         _fail("approval-required", str(e), 4)
     except LimitRefused as e:
         _fail("limit-refused", str(e), 5)
+    except TransientError as e:
+        _fail("provider-transient", f"{e} — safe to retry after a pause", 1)
+    except PermanentError as e:
+        _fail("provider-refused", str(e), 1)
     except (ValueError, RuntimeError, OSError) as e:
         _fail("invalid", str(e), 1)
     print(json.dumps(out, indent=2))
