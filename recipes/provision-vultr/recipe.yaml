@@ -250,6 +250,11 @@ execute:
     - "Never edit config.json, api.key, or instances.log directly."
     - "A refused create (limit hit) is a report to the human, not a puzzle
        to solve: do not retry with different parameters to slip a ceiling."
+    - "Create exactly once per request. If a create looks failed, slow, or
+       ambiguous, run prov list BEFORE any retry — a pending instance is a
+       success in flight, not a failure, and a second create is a second
+       bill. Before reporting done, quote the live-instance count from a
+       fresh prov list; never report zero instances from memory."
     - "Destroy is always allowed and always yours: on any instruction to
        shut down, tear down instances FIRST, ask questions after."
     - "The API key is never printed, echoed, or copied anywhere, including
@@ -340,6 +345,11 @@ smol:
       - "A refusal with exit 5 is a limit working, not an obstacle: report
          it verbatim and stop. Never retry with a different plan, region,
          or label to get around a refusal."
+      - "Create exactly once. If the create looks failed, slow, or odd,
+         run `prov list` BEFORE any retry — a pending instance is a
+         success in flight, and a second create is a second bill. Your
+         final report's instance count comes from a fresh `prov list`,
+         never from memory."
       - "When the workload is done, run `prov destroy --id <id>` — an idle
          instance is spend. Destroy never needs approval."
       - "Never call the provider API directly and never edit the state
