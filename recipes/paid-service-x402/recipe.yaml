@@ -1,7 +1,10 @@
-# SCUTL recipe manifest — rev 2: public ingress (the registry's first revision)
+# SCUTL recipe manifest — rev 3: verify-then-proceed smol checkpoints
 # Recipe #2: "Expose a paid service"
 # Design records: bead cst-8ih.5 (rev 1 rulings), cst-8ih.7 (rev 2 rulings,
-# 2026-08-13), epic cst-8ih.
+# 2026-08-13), cst-8ih.9 (rev 3 reword ruling, 2026-08-14), epic cst-8ih.
+# Rev 3 delta: human-actored setup steps in the smol bundle render as
+# verify-then-proceed (scutl 2faa349) instead of stop-and-ask; the recipe
+# body is otherwise unchanged from rev 2.
 #
 # What this recipe stresses that wallet rev 1 did not (the reason it exists):
 #   1. long-lived Execute — a running service with a lifecycle, not discrete calls
@@ -11,7 +14,7 @@
 
 recipe:
   id: paid-service
-  rev: 2
+  rev: 3
   title: "Expose a paid service"
   summary: >
     Stand up an agent-operated HTTP service that sells a resource over x402:
@@ -319,8 +322,13 @@ recover:
 # (recipe, rev, manifest_sha).
 # ---------------------------------------------------------------------------
 migrate:
-  from-rev: 1
+  from-rev: 2
   identity: >
+    A rev-2 deployment IS a rev-3 deployment on every leaf. Rev 3 changes
+    only the smol-bundle wording of human-actored setup steps
+    (verify-then-proceed, cst-8ih.9); nothing deployment-side moves.
+    Nothing to run; config.json, earnings.log, served.log are untouched.
+  from-rev-1-identity: >
     A rev-1 deployment IS a rev-2 deployment on the lan-plaintext leaf
     (local-network renamed; same asks, same behavior, same state on disk).
     Nothing to run; config.json, earnings.log, served.log are untouched.
