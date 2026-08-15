@@ -82,6 +82,9 @@ trap cleanup EXIT
 # marker file turns the kill into a graded, machine-readable RED.
 REP_TIMEOUT="${REP_TIMEOUT:-900}"
 rm -f "$REP/timeout"
+# Wall-clock stamps (cst-8ih.10): span the driver run only — buyer launch
+# and evidence pulls are harness overhead the audience shouldn't be billed.
+REP_STARTED=$(date +%s)
 timeout --kill-after=30 "$REP_TIMEOUT" \
   "${LADDER_DRIVER:?set LADDER_DRIVER to the agent driver command}" "$REP" || {
   rc=$?
@@ -89,6 +92,9 @@ timeout --kill-after=30 "$REP_TIMEOUT" \
     echo "driver exceeded REP_TIMEOUT=${REP_TIMEOUT}s (exit $rc)" > "$REP/timeout"
   fi
 }
+REP_ENDED=$(date +%s)
+printf '{"started": %s, "ended": %s, "duration_s": %s}\n' \
+  "$REP_STARTED" "$REP_ENDED" "$((REP_ENDED - REP_STARTED))" > "$REP/timing.json"
 
 wait "$BUYER_PID" 2>/dev/null || true
 

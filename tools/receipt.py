@@ -21,7 +21,29 @@ from __future__ import annotations
 
 import argparse
 import json
+import statistics
 from pathlib import Path
+
+
+def _rep_duration(rep_dir: Path) -> tuple[int | None, str | None]:
+    """Wall-clock seconds for one rep, and how we know (cst-8ih.10).
+
+    Exact from timing.json (run-rep.sh stamps, spans the driver run).
+    Backfill for pre-stamp rungs: approximate from evidence mtimes —
+    earliest harness-created log to transcript.txt. state/ is excluded:
+    it is cp -a'd from the snapshot and keeps the snapshot's mtimes.
+    """
+    tpath = rep_dir / "timing.json"
+    if tpath.exists():
+        return json.loads(tpath.read_text())["duration_s"], "stamped"
+    starts = [p.stat().st_mtime for p in
+              (rep_dir / "server.log", rep_dir / "expected.json",
+               rep_dir / "buyer.log")
+              if p.exists()]
+    end = rep_dir / "transcript.txt"
+    if not starts or not end.exists():
+        return None, None
+    return max(0, round(end.stat().st_mtime - min(starts))), "mtime-approx"
 
 
 def main() -> None:
@@ -40,15 +62,30 @@ def main() -> None:
 
     bundle = json.loads((args.bundle / "bundle.json").read_text())
     reps = []
+    timing_sources: set[str] = set()
     for rep_dir in sorted(args.rung_dir.glob("rep-*")):
         gpath = rep_dir / "grade.json"
         if not gpath.exists():
             continue
         g = json.loads(gpath.read_text())
+        duration, source = _rep_duration(rep_dir)
         reps.append({"rep": rep_dir.name, "green": g["green"],
+                     "duration_s": duration,
                      "tx": g.get("tx"), "checks": g["checks"]})
+        if source:
+            timing_sources.add(source)
 
     n_green = sum(r["green"] for r in reps)
+    durations = [r["duration_s"] for r in reps if r["duration_s"] is not None]
+    # Owner direction (cst-8ih.10): wall time is the accessibility story —
+    # median goes in the protocol block, not buried in per-rep detail.
+    wall_time = {
+        "median_rep_s": round(statistics.median(durations)) if durations else None,
+        "total_s": sum(durations) if durations else None,
+        "reps_timed": len(durations),
+        "source": ("mixed" if len(timing_sources) > 1
+                   else next(iter(timing_sources)) if timing_sources else None),
+    }
     receipt = {
         "receipt_format": 1,
         "recipe": bundle["recipe"],
@@ -63,7 +100,8 @@ def main() -> None:
         "date": args.date,
         "protocol": {"reps": len(reps), "green": n_green,
                      "verdict": "green" if reps and n_green == len(reps)
-                                else "yellow" if n_green else "red"},
+                                else "yellow" if n_green else "red",
+                     "wall_time": wall_time},
         "cost": args.cost,
         "interventions": 0,   # bump manually if a human touched a rep
         "notes": args.note,

@@ -42,7 +42,12 @@ export BUNDLE="$BUNDLE/SKILL.md"
 # reference rung attempt 2, 2026-08-12).
 export PAYMENT_ID="rep-$(basename "$REP")-$(date +%s)"
 
+# Wall-clock stamps (cst-8ih.10): span the driver run only.
+REP_STARTED=$(date +%s)
 "${LADDER_DRIVER:?set LADDER_DRIVER to the agent driver command}" "$REP" || true
+REP_ENDED=$(date +%s)
+printf '{"started": %s, "ended": %s, "duration_s": %s}\n' \
+  "$REP_STARTED" "$REP_ENDED" "$((REP_ENDED - REP_STARTED))" > "$REP/timing.json"
 
 kill "$SERVER_PID" 2>/dev/null || true
 trap - EXIT
