@@ -6,6 +6,7 @@ The mocks honor the contracts in recipe.yaml — they're the seed of the
 SMUTbench mock services (cst-8ih.4).
 """
 
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 import pytest
@@ -103,7 +104,11 @@ def test_transient_failure_retry_reuses_same_nonce(tmp_path):
     s.keygen(Decimal("0.10"), Decimal("1.00"))
     with pytest.raises(TransientError):
         s.pay("pmt-retry", "0x" + "11" * 20, Decimal("0.05"))
-    assert state.read_spends() == []  # failed attempt not logged as spend
+    # Failed attempt logs no SETTLED spend — but keeps its reservation:
+    # the authorization was signed and handed to the facilitator, so it
+    # is still spendable and must count against the cap (cst-8ih.6).
+    assert [r["status"] for r in state.read_spends()] == ["authorized"]
+    assert state.settled_by_payment_id("pmt-retry") is None
     s.pay("pmt-retry", "0x" + "11" * 20, Decimal("0.05"))
     assert len(facil.settled_nonces) == 1
 
@@ -152,3 +157,41 @@ def test_keygen_refuses_to_overwrite(signer):
     approvals.grant(signer.state, "keygen")
     with pytest.raises(RuntimeError):
         signer.keygen(Decimal("0.10"), Decimal("1.00"))
+
+
+# -- cst-8ih.6: the daily cap counts outstanding authorizations ------------
+
+def test_batched_authorize_cannot_jointly_exceed_daily_cap(signer):
+    # The TOCTOU: N authorize() calls before any record_settled() used to
+    # each read the same stale spent_last_24h and all pass. Now each call
+    # reserves; the 11th 0.10 authorization against a 1.00 daily cap fails
+    # even though NOTHING has settled.
+    for i in range(10):
+        signer.authorize(f"pmt-{i}", "0x" + "11" * 20, Decimal("0.10"))
+    with pytest.raises(CapExceeded, match="spent/reserved"):
+        signer.authorize("pmt-10", "0x" + "11" * 20, Decimal("0.10"))
+
+
+def test_replayed_authorize_does_not_double_count_itself(signer):
+    # Same payment_id re-signs the same nonce (at most one settles), so a
+    # retry must not consume a second slice of the cap.
+    for _ in range(3):
+        signer.authorize("pmt-a", "0x" + "11" * 20, Decimal("0.10"))
+    assert signer.state.cap_exposure() == Decimal("0.10")
+
+
+def test_settled_record_supersedes_its_reservation(signer):
+    signer.authorize("pmt-b", "0x" + "11" * 20, Decimal("0.10"))
+    signer.record_settled("pmt-b", "0x" + "11" * 20, Decimal("0.10"),
+                          "0x" + "ab" * 32)
+    assert signer.state.cap_exposure() == Decimal("0.10")  # once, not twice
+
+
+def test_expired_reservation_frees_the_cap(signer):
+    signer.authorize("pmt-c", "0x" + "11" * 20, Decimal("0.10"),
+                     valid_secs=600)
+    now = datetime.now(timezone.utc)
+    assert signer.state.cap_exposure(now) == Decimal("0.10")
+    # past validBefore + slack the merchant can no longer settle it
+    assert signer.state.cap_exposure(
+        now + timedelta(seconds=700)) == Decimal("0")

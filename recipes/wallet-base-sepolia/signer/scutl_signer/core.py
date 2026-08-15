@@ -1,7 +1,9 @@
 """Signer operations. Every manifest tool (wallet_status / wallet_sign /
 wallet_pay / wallet_admin) maps to one method here.
 
-Cap enforcement lives in pay() and nowhere else can lift it. Key material
+Cap enforcement lives in _reserve(), shared by pay() and authorize(),
+and nowhere else can lift it: the daily cap counts settled spend plus
+outstanding signed authorizations, reserved under a lock before signing. Key material
 is loaded, used, and dropped inside a method; it is never part of any
 return value or log record.
 """
@@ -112,6 +114,8 @@ class Signer:
             "usdc_balance": str(self.chain.usdc_balance(self.address())),
             "caps": {k: str(v) for k, v in caps.items()},
             "spent_last_24h": str(self.state.spent_last_24h()),
+            "reserved_outstanding": str(
+                self.state.cap_exposure() - self.state.spent_last_24h()),
             "backup_verified": self.state.backup_marker.exists(),
         }
 
@@ -123,22 +127,46 @@ class Signer:
         return {"address": acct.address, "signature": "0x" + sig.signature.hex()}
 
     # -- wallet_pay -----------------------------------------------------------
-    def _check_caps(self, payment_id: str, amount: Decimal) -> dict | None:
-        """Idempotency + cap gate shared by pay() and authorize().
-        Returns the prior settled record for a replayed payment_id."""
+    def _reserve(self, payment_id: str, pay_to: str, amount: Decimal,
+                 valid_secs: int) -> dict | None:
+        """Idempotency + cap gate shared by pay() and authorize(), with a
+        spend reservation (cst-8ih.6). Returns the prior settled record for
+        a replayed payment_id.
+
+        Under the cap lock: the daily cap is measured against settled spend
+        PLUS outstanding signed authorizations, and an 'authorized' record
+        is appended before the signature exists — so N calls before any
+        record_settled() each see the previous calls' reservations, and
+        cannot jointly sign past cap_daily. The reservation expires with
+        the authorization's validBefore (plus clock slack) and is
+        superseded by its payment_id's settled record."""
         self.state.check_not_revoked()
-        prior = self.state.settled_by_payment_id(payment_id)
-        if prior is not None:
-            return prior
         # --- cap enforcement: the only gate, and it is in code -----------
-        caps = self.state.load_caps()
-        if amount > caps["cap_per_tx"]:
-            raise CapExceeded(
-                f"amount {amount} exceeds per-tx cap {caps['cap_per_tx']}")
-        spent = self.state.spent_last_24h()
-        if spent + amount > caps["cap_daily"]:
-            raise CapExceeded(
-                f"amount {amount} + spent {spent} exceeds daily cap {caps['cap_daily']}")
+        with self.state.cap_lock():
+            prior = self.state.settled_by_payment_id(payment_id)
+            if prior is not None:
+                return prior
+            caps = self.state.load_caps()
+            if amount > caps["cap_per_tx"]:
+                raise CapExceeded(
+                    f"amount {amount} exceeds per-tx cap {caps['cap_per_tx']}")
+            now = datetime.now(timezone.utc)
+            exposure = self.state.cap_exposure(
+                now, exclude_payment_id=payment_id)
+            if exposure + amount > caps["cap_daily"]:
+                raise CapExceeded(
+                    f"amount {amount} + spent/reserved {exposure} exceeds "
+                    f"daily cap {caps['cap_daily']}")
+            self.state.append_spend({
+                "ts": now.isoformat(),
+                "payment_id": payment_id,
+                "to": pay_to,
+                "amount": str(amount),
+                "status": "authorized",
+                # _build_payment stamps its own validBefore moments later;
+                # the slack keeps the reservation alive at least as long.
+                "valid_before": int(now.timestamp()) + valid_secs + 60,
+            })
         return None
 
     def _build_payment(self, payment_id: str, pay_to: str, amount: Decimal,
@@ -211,7 +239,7 @@ class Signer:
         can settle it at most once), and an already-settled payment_id
         returns the original record without paying again.
         """
-        prior = self._check_caps(payment_id, amount)
+        prior = self._reserve(payment_id, pay_to, amount, valid_secs)
         if prior is not None:
             return {**prior, "idempotent_replay": True}
         payment_payload, requirements = self._build_payment(
@@ -243,7 +271,7 @@ class Signer:
         so record on any 200, and rely on nonce-idempotency for retries."""
         from .network import encode_payment_header
 
-        prior = self._check_caps(payment_id, amount)
+        prior = self._reserve(payment_id, pay_to, amount, valid_secs)
         if prior is not None:
             return {**prior, "idempotent_replay": True}
         payment_payload, _ = self._build_payment(

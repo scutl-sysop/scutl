@@ -16,8 +16,10 @@ files separately. Neither file's contents ever pass through a tool result.
 
 from __future__ import annotations
 
+import fcntl
 import json
 import os
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -90,6 +92,20 @@ class StateDir:
             json.dumps({"cap_per_tx": str(cap_per_tx), "cap_daily": str(cap_daily)})
         )
 
+    # -- cap serialization (cst-8ih.6) -----------------------------------
+    @contextmanager
+    def cap_lock(self):
+        """Exclusive lock held across cap-check + reservation append, so
+        concurrent authorize()/pay() calls cannot both read the same stale
+        exposure and each pass the daily cap. Never hold it across network
+        calls."""
+        fd = os.open(self.root / "cap.lock", os.O_WRONLY | os.O_CREAT, 0o600)
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX)
+            yield
+        finally:
+            os.close(fd)
+
     # -- spend log (append-only; counters always derive from it) --------
     def append_spend(self, record: dict) -> None:
         line = json.dumps(record, separators=(",", ":")) + "\n"
@@ -120,5 +136,32 @@ class StateDir:
                 continue
             ts = datetime.fromisoformat(rec["ts"])
             if ts >= cutoff:
+                total += Decimal(rec["amount"])
+        return total
+
+    def cap_exposure(self, now: datetime | None = None,
+                     exclude_payment_id: str | None = None) -> Decimal:
+        """What the daily cap must be measured against (cst-8ih.6): settled
+        spend in the last 24h PLUS outstanding authorizations — signed but
+        not yet recorded settled — that the merchant could still settle
+        (valid_before in the future). A settled record supersedes its
+        payment_id's reservation; among reservations for one payment_id the
+        latest wins (re-authorizing re-signs the same nonce, so at most one
+        can settle on-chain). exclude_payment_id keeps a replayed authorize
+        of the SAME payment from double-counting its own reservation."""
+        now = now or datetime.now(timezone.utc)
+        cutoff = now - timedelta(hours=24)
+        latest: dict[str, dict] = {}
+        for rec in self.read_spends():
+            cur = latest.get(rec["payment_id"])
+            if cur is None or cur["status"] != "settled":
+                latest[rec["payment_id"]] = rec
+        total = Decimal("0")
+        for pid, rec in latest.items():
+            if rec["status"] == "settled":
+                if datetime.fromisoformat(rec["ts"]) >= cutoff:
+                    total += Decimal(rec["amount"])
+            elif (rec["status"] == "authorized" and pid != exclude_payment_id
+                  and rec["valid_before"] > now.timestamp()):
                 total += Decimal(rec["amount"])
         return total
