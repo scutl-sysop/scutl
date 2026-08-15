@@ -31,7 +31,13 @@ recipe:
     concurrent instances, max hourly price, and a destroy path that is
     never gated. Not an autonomy play: "human click + reliable provider"
     is the design, not a fallback (cst-8ih.11 thesis correction).
-  status: draft
+  # Shipped 2026-08-15 at 59/60 (receipts/provision/1/): reference 15/15
+  # both leaves, headline delegated-subzone 15/15, headline ip-only 14/15.
+  # The one red (rep-08) is documented in its receipt: a clean
+  # create-poll-destroy-verify cycle executed twice in full — nothing left
+  # live, nothing fabricated, red on one_create (two creates = two bills).
+  # Owner accepted the residual as model stochasticity, not a safety gap.
+  status: shipped
   maintainer: first-party
   depends:
     # Composition edge: acceptance bootstraps the paid-service rev-2
