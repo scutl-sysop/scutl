@@ -207,3 +207,24 @@ def test_ps_smol_from_manifest(ps_bundles):
     assert "signer" not in smol                          # nothing wallet-shaped
     assert "Failure modes" not in smol
     assert "Exit codes: 2 not-configured" in smol
+
+
+def test_ps_human_steps_render_verify_then_proceed():
+    # cst-8ih.9: "Ask the human... then wait" makes small models stall at
+    # already-provisioned DNS/proxy checkpoints. Human steps with a verify
+    # field must render verify-first, proceed-if-green.
+    cfg = emit.resolve(PS, PS_TLS_ANSWERS, PS_TLS_PARAMS)
+    for skill in (emit.render_standard(PS, cfg), emit.render_smol(PS, cfg)):
+        ingress = skill.split("dns-record", 1)[1].split("verify-ingress")[0]
+        assert "Ask the human to do this, then wait" not in ingress
+        assert ingress.count("Verify first — this may already be provisioned") == 2
+        assert ingress.count("proceed to the next step without asking") == 2
+        # the check itself and the human instructions both survive
+        assert "dig +short pay.scutl.example" in ingress
+        assert "Install Caddy" in ingress
+
+
+def test_wallet_legacy_smol_stays_byte_stable_on_human_steps(bundles):
+    # The rev-1 legacy renderer opts out of verify-then-proceed wording.
+    assert "Verify first — this may already be provisioned" \
+        not in bundles["smol"]["skill"]

@@ -144,17 +144,37 @@ def _tool_rows(manifest: dict, values: dict[str, str]) -> list[tuple[str, str]]:
 
 
 def _setup_lines(manifest: dict, values: dict[str, str], smol: bool,
-                 choices: dict[str, str] | None = None) -> list[str]:
+                 choices: dict[str, str] | None = None,
+                 verify_first: bool = True) -> list[str]:
+    # verify_first: human-provisioned steps with a `verify` field render as
+    # verify-then-proceed — the agent checks the prerequisite itself and only
+    # stops for the human if the check fails. Rationale: small models read
+    # "Ask the human to do this, then wait" literally and stall on
+    # already-provisioned infrastructure (cst-8ih.9, rev-2 e4b receipt).
+    # The wallet rev-1 legacy renderer passes False to stay byte-stable.
     lines = []
     steps = [s for s in manifest["setup"]
              if choices is None or applies(s, choices)]
     for i, step in enumerate(steps, 1):
-        who = ("HUMAN" if step.get("actor") == "human"
+        human_verifiable = (verify_first and step.get("actor") == "human"
+                            and step.get("verify"))
+        who = (("human-provisioned; agent verifies" if human_verifiable
+                else "HUMAN") if step.get("actor") == "human"
                else "agent, human approval" if step.get("approval") == "human"
                else "agent")
         lines.append(f"### Step {i}: {step['step']}  ({who})")
         lines.append("")
-        if step.get("actor") == "human":
+        if human_verifiable:
+            lines.append(
+                f"Verify first — this may already be provisioned. Check: "
+                f"{fill(' '.join(step['verify'].split()), values)}")
+            lines.append(
+                f"If the check passes, this step is done: proceed to the "
+                f"next step without asking. Only if the check fails, ask "
+                f"the human to do this: "
+                f"{fill(' '.join(step['instructions'].split()), values)} "
+                f"Then re-run the check and proceed once it passes.")
+        elif step.get("actor") == "human":
             lines.append(f"Ask the human to do this, then wait: "
                          f"{fill(' '.join(step['instructions'].split()), values)}")
         elif not smol:
@@ -163,7 +183,7 @@ def _setup_lines(manifest: dict, values: dict[str, str], smol: bool,
             lines.append("```\n" + fill(cmd, values) + "\n```")
         if step.get("expect"):
             lines.append(f"Expected: {fill(step['expect'], values)}")
-        if step.get("verify"):
+        if step.get("verify") and not human_verifiable:
             lines.append(f"Verify: {fill(step['verify'], values)}")
         fb = step.get("fallback")
         if fb:
@@ -353,7 +373,8 @@ def _render_smol_wallet_legacy(manifest: dict, config: dict) -> str:
           "6 transient (retry SAME payment id, max 3 tries) · 7 permanent (stop).",
           ""]
     L += ["## Setup — run once, in order", ""]
-    L += _setup_lines(manifest, v, smol=True, choices=config["choices"])
+    L += _setup_lines(manifest, v, smol=True, choices=config["choices"],
+                      verify_first=False)
     L += ["## Paying for a resource", "",
           "When a request returns HTTP 402, run exactly:", "",
           "```", ex["command"], "```", "",
