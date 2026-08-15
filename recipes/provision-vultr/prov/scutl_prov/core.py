@@ -84,7 +84,8 @@ class Manager:
         return self._reconcile()
 
     # -- create: every limit checked before the API call -----------------
-    def create(self, plan: str, region: str, label: str) -> dict:
+    def create(self, plan: str, region: str, label: str,
+               ssh_pubkey_file: str | None = None) -> dict:
         self.state.check_not_decommissioned()
         config = self.state.load_config()
         if plan not in config["plans"]:
@@ -104,7 +105,16 @@ class Manager:
                 f"{live['live_instances']} instances live, "
                 f"max_instances is {config['max_instances']}")
 
-        instance = self.client.create_instance(plan, region, label)
+        user_data = None
+        if ssh_pubkey_file:
+            # PUBLIC key only, injected via cloud-init; private material
+            # never passes through this tool.
+            pubkey = open(ssh_pubkey_file).read().strip()
+            user_data = ("#cloud-config\n"
+                         "ssh_authorized_keys:\n"
+                         f"  - {pubkey}\n")
+        instance = self.client.create_instance(plan, region, label,
+                                               user_data=user_data)
         # Log before returning: a created-but-unlogged instance would be
         # invisible to destroy-all and to the reconciliation report.
         self.state.append_instance_event({

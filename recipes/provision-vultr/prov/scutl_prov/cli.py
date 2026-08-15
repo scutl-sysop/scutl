@@ -39,6 +39,8 @@ def main(argv: list[str] | None = None) -> None:
     cp.add_argument("--plan", required=True)
     cp.add_argument("--region", required=True)
     cp.add_argument("--label", required=True)
+    cp.add_argument("--ssh-pubkey-file", default=None,
+                    help="PUBLIC key file to inject via cloud-init")
 
     dp = sub.add_parser("destroy")
     dp.add_argument("--id", required=True, dest="instance_id")
@@ -77,7 +79,8 @@ def main(argv: list[str] | None = None) -> None:
         elif args.cmd == "list":
             out = manager.list()
         elif args.cmd == "create":
-            out = manager.create(args.plan, args.region, args.label)
+            out = manager.create(args.plan, args.region, args.label,
+                                 args.ssh_pubkey_file)
         elif args.cmd == "destroy":
             out = manager.destroy(args.instance_id)
         elif args.cmd == "destroy-all":

@@ -37,7 +37,7 @@ class MockVultr:
     def plans(self):
         return [dict(p) for p in self.PLANS]
 
-    def create_instance(self, plan, region, label, os_id=2136):
+    def create_instance(self, plan, region, label, os_id=2136, user_data=None):
         self.calls.append(("create", plan, region, label))
         self._n += 1
         inst = {"id": f"vm-{self._n}", "plan": plan, "region": region,

@@ -77,10 +77,13 @@ class VultrClient:
 
     # -- instances -----------------------------------------------------
     def create_instance(self, plan: str, region: str, label: str,
-                        os_id: int = DEFAULT_OS_ID) -> dict:
-        return self._request("POST", "/instances", {
-            "plan": plan, "region": region, "label": label, "os_id": os_id,
-        }).get("instance", {})
+                        os_id: int = DEFAULT_OS_ID,
+                        user_data: str | None = None) -> dict:
+        body = {"plan": plan, "region": region, "label": label, "os_id": os_id}
+        if user_data is not None:
+            import base64
+            body["user_data"] = base64.b64encode(user_data.encode()).decode()
+        return self._request("POST", "/instances", body).get("instance", {})
 
     def list_instances(self) -> list[dict]:
         return self._request("GET", "/instances?per_page=500").get("instances", [])
