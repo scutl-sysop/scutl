@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scutl-prov"
+version = "0.1.0"
+description = "scutl provision recipe rev 1: typed tool renting compute under code-enforced limits (Vultr)"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+prov = "scutl_prov.cli:main"
+prov-approve = "scutl_prov.cli:approve"
+
+[tool.setuptools.packages.find]
+include = ["scutl_prov*"]

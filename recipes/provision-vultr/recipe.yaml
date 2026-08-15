@@ -1,0 +1,370 @@
+# SCUTL recipe manifest — rev 1 draft
+# Recipe #3: "Provision your own infrastructure"
+# Design records: bead cst-8ih.11 (phase-1 research in
+# docs/self-provisioned-infra-research.md; owner rulings 2026-08-14:
+# trusted-provider + human-at-the-click IS the architecture, no
+# SporeStack/bearer-token leaf, Vultr first).
+#
+# What this recipe stresses that #1 and #2 did not (the reason it exists):
+#   1. spend OFF the wallet rail — card-funded provider billing, where caps
+#      cannot govern; governance moves to code invariants in the typed tool
+#      (plan allowlist, instance ceiling, hourly-price ceiling, mandatory
+#      destroy path) plus provider-side scoping of the API key
+#   2. the actor inversion cst-8ih.9 predicted: rev-2's HUMAN checkpoints
+#      (account, payment method, credential) render verify-then-proceed —
+#      the agent checks, and only asks when the check fails
+#   3. composition upward: the acceptance demo bootstraps the paid-service
+#      rev-2 merchant on infrastructure the agent procured itself
+
+recipe:
+  id: provision
+  rev: 1
+  title: "Provision your own infrastructure"
+  summary: >
+    Rent, operate, and destroy compute under code-enforced limits. A typed
+    tool wraps ONE trusted provider's API (Vultr in rev 1) behind an API
+    key the human provisions once; after that click, instance create /
+    list / destroy and DNS records inside a delegated subzone are
+    agent-drivable. This spend is card-funded — the wallet's caps do not
+    see it — so every limit that matters is enforced in the tool before a
+    create call leaves the box: plan allowlist, region allowlist, max
+    concurrent instances, max hourly price, and a destroy path that is
+    never gated. Not an autonomy play: "human click + reliable provider"
+    is the design, not a fallback (cst-8ih.11 thesis correction).
+  status: draft
+  maintainer: first-party
+  depends:
+    # Composition edge: acceptance bootstraps the paid-service rev-2
+    # merchant on a provisioned instance; the buyer is the wallet recipe.
+    - { recipe: paid-service, rev: 2, role: acceptance-workload }
+    - { recipe: wallet, rev: 1, role: acceptance-buyer }
+
+# ---------------------------------------------------------------------------
+# DECIDE
+# ---------------------------------------------------------------------------
+decide:
+  - id: provider
+    question: "Which provider rents the compute?"
+    options:
+      - id: vultr
+        label: "Vultr (account + card, scoped API key; snapshot/restore proven in town ops)"
+        blessed: true
+    # Owner ruling 2026-08-14: no bearer-token/no-KYC leaf (SporeStack et
+    # al.) — funding a token is the same human ceremony as a card, on a
+    # worse trust tier. x402-native compute does not exist yet; re-scan at
+    # each rev (docs/self-provisioned-infra-research.md).
+    deferred-options: [hetzner, digitalocean, runpod]
+
+  - id: naming
+    question: "How does a provisioned instance get a public name?"
+    options:
+      - id: ip-only
+        label: "No DNS — callers use the instance's public IP"
+        blessed: true
+      - id: delegated-subzone
+        label: "DNS records inside ONE delegated subzone (Vultr DNS); the tool refuses any name outside it"
+        blessed: true
+        asks: [dns_subzone]
+    deferred-options: [cloudflare-zone]
+
+parameters:
+  api_key_file:
+    type: path
+    prompt: "File containing the Vultr API key (human places it; consumed by
+             prov admin set-key, which moves it into the state dir at 0600)"
+  plan_allowlist:
+    type: string-list
+    prompt: "Vultr plan ids the tool may create (e.g. vc2-1c-1gb,vc2-2c-4gb)"
+    default: "vc2-1c-1gb"
+  region_allowlist:
+    type: string-list
+    prompt: "Vultr region ids the tool may create in (e.g. ewr,fra)"
+    default: "ewr"
+  max_instances:
+    type: int
+    prompt: "Max concurrent instances the tool will ever hold"
+    default: "2"
+  max_hourly_usd:
+    type: decimal-usd
+    prompt: "Hourly price ceiling per instance, USD"
+    default: "0.018"
+  dns_subzone:
+    type: fqdn
+    prompt: "Delegated subzone this tool owns records in (naming:
+             delegated-subzone), e.g. lab.example.com — the human delegates
+             it to Vultr DNS once, at setup"
+
+# ---------------------------------------------------------------------------
+# COMPONENTS — the typed tool is the governance surface: on a card-funded
+# rail the caps live HERE, in code, or nowhere.
+# ---------------------------------------------------------------------------
+components:
+  prov:
+    kind: typed-tool
+    source: ./prov/
+    state_dir: "${SCUTL_PROV_STATE:-~/.scutl/provision}"  # config.json (limits,
+                                                # subzone — 0600), api.key
+                                                # (0600 secret), instances.log
+                                                # (append-only), decommission
+                                                # marker, approvals/
+    tools:
+      - name: infra_status      # limits, live instance count, reconciliation
+        command: "prov status"
+      - name: infra_create      # create ONE instance inside every limit
+        command: "prov create --plan {plan} --region {region} --label {label}"
+      - name: infra_list
+        command: "prov list"
+      - name: infra_destroy     # never gated; the safe direction is always open
+        command: "prov destroy --id {instance_id}"
+      - name: infra_dns         # record CRUD inside the delegated subzone only
+        command: "prov dns {op}"
+        ops:
+          set: "prov dns set --name {name} --type {type} --value {value}"
+          delete: "prov dns delete --name {name} --type {type}"
+          list: "prov dns list"
+      - name: infra_admin       # configure / set-key / decommission — human approval
+        command: "prov admin {op}"
+        ops:
+          configure: "prov admin configure --plans {plan_allowlist} --regions {region_allowlist} --max-instances {max_instances} --max-hourly {max_hourly_usd}[ --dns-subzone {dns_subzone}]"
+          set-key: "prov admin set-key --key-file {api_key_file}"
+          decommission: "prov admin decommission"
+    invariants:
+      - "No create call leaves the box unless plan ∈ allowlist, region ∈
+         allowlist, the plan's hourly price ≤ max_hourly_usd, and live
+         instances (log reconciled against the provider) < max_instances —
+         all checked in code, before the API call."
+      - "Every instance the tool creates is recorded in the append-only
+         instances.log before the create response is returned; the live set
+         always derives from the log reconciled against the provider list.
+         An instance the provider shows but the log does not is reported as
+         foreign and never touched."
+      - "destroy is never gated: no approval token, no decommission marker,
+         no config error may leave an instance running that the tool can
+         reach. It is the one op that still works after decommission."
+      - "DNS mutations are refused in code for any name that is not equal
+         to or under the configured dns_subzone. No subzone configured, no
+         DNS writes at all."
+      - "The API key lives only in the state dir at 0600, is loaded per
+         call, and never appears in any tool output, log record, or error
+         message. set-key consumes a file, never a command-line argument —
+         keys do not belong in argv or transcripts."
+      - "Decommission refuses while log-known instances are live: the
+         mandatory teardown order is destroy-all first, then decommission.
+         Card billing stops when instances stop; a marker that outlives a
+         running instance would be a leak, not a shutdown."
+      - "Spend governance disclosure: this rail is card-funded. The wallet's
+         caps do NOT govern it; these invariants plus the provider-side
+         key scoping are the entire enforcement surface. The recipe must
+         never claim cap coverage it does not have."
+
+# ---------------------------------------------------------------------------
+# BINDINGS
+# ---------------------------------------------------------------------------
+bindings:
+  live:
+    provider: { name: vultr, api: "https://api.vultr.com/v2", auth: "Bearer <api.key>" }
+  stub:
+    hetzner: >
+      Same layering proof as the rail stubs in #1/#2: present, not blessed,
+      refuses to load. A second provider is a future rev and re-runs the
+      full ladder.
+
+# Behavioral contracts; SMUTbench mocks derive from these (cst-8ih.4 lineage).
+contracts:
+  provider:
+    ops:
+      - "plans() -> [{id, hourly_cost, ...}]"
+      - "create_instance(plan, region, label, os) -> {id, status: pending}"
+      - "list_instances() -> [{id, label, status, main_ip, ...}]"
+      - "destroy_instance(id) -> accepted | not-found"
+      - "dns set/delete/list inside one domain"
+    failure_modes: [transient-timeout, rate-limited, create-quota-exceeded,
+                    instance-stuck-pending, destroy-races-billing]
+
+# ---------------------------------------------------------------------------
+# SETUP — the human steps carry verify:, so they render verify-then-proceed
+# (cst-8ih.9): the agent checks first and only asks when the check fails.
+# ---------------------------------------------------------------------------
+setup:
+  - step: install
+    run: "install prov; verify tools respond"
+    commands: ["pip install ./prov", "prov status"]
+    expect: "exit 2 (not-configured) before configure is healthy; any other error is not"
+  - step: account
+    actor: human
+    instructions: >
+      Create (or confirm) a Vultr account with a payment method attached.
+      The card and the account credential stay with you; the agent never
+      sees either.
+    verify: "prov status reports key_present true (the API key below only
+             exists if the account does); if no key yet, ask the human
+             whether the account and payment method exist"
+  - step: api-key
+    actor: human
+    instructions: >
+      In the Vultr customer portal, create an API key, restrict its allowed
+      IPs to this host's address, and place it in a file readable by the
+      agent (e.g. ~/vultr.key). Tell the agent the path.
+    verify: "the key file the human named exists and is non-empty"
+  - step: configure
+    approval: human           # admin op: fixes the limits
+    run: "write config: allowlists, ceilings, optional dns subzone"
+    commands: ["prov admin configure --plans {plan_allowlist} --regions {region_allowlist} --max-instances {max_instances} --max-hourly {max_hourly_usd}[ --dns-subzone {dns_subzone}]"]
+    expect: "JSON echoing limits; on exit 4 ask the human to run prov-approve configure, then retry once"
+  - step: set-key
+    approval: human
+    run: "move the API key into the state dir (0600) and delete the source file"
+    commands: ["prov admin set-key --key-file {api_key_file}"]
+    expect: "JSON {key_present: true} with NO key material; source file gone"
+  - step: probe-auth
+    run: "prove the key works and the limits are visible"
+    commands: ["prov status"]
+    expect: ".key_present true, .provider_reachable true, .live_instances 0, limits echoed"
+  - step: delegate-subzone
+    when: { naming: delegated-subzone }
+    actor: human
+    instructions: >
+      Delegate {dns_subzone} to Vultr DNS: create the zone in the Vultr
+      portal (or let the agent run prov dns list to confirm it exists) and
+      add the NS records for {dns_subzone} at your parent-zone DNS
+      provider. The parent-zone credential stays with you.
+    verify: "dig +short NS {dns_subzone} returns Vultr nameservers, and
+             prov dns list succeeds"
+
+# ---------------------------------------------------------------------------
+# EXECUTE
+# ---------------------------------------------------------------------------
+execute:
+  loop: >
+    Provision on request, inside the limits: prov create, then poll
+    prov list until the instance is active and has an IP. Report the
+    instance id, plan, region, and IP verbatim from tool output. When the
+    workload is done, prov destroy — an instance nobody is using is spend,
+    not capacity. Periodically (or when asked): prov status; if it reports
+    foreign or unreconciled instances, report to the human — never destroy
+    what the log does not know.
+  command: "prov status"
+  guardrails:
+    - "Never call the provider API directly (curl, SDKs); prov is the only
+       interface — the invariants live there."
+    - "Never edit config.json, api.key, or instances.log directly."
+    - "A refused create (limit hit) is a report to the human, not a puzzle
+       to solve: do not retry with different parameters to slip a ceiling."
+    - "Destroy is always allowed and always yours: on any instruction to
+       shut down, tear down instances FIRST, ask questions after."
+    - "The API key is never printed, echoed, or copied anywhere, including
+       into error reports."
+
+# ---------------------------------------------------------------------------
+# VERIFY — acceptance composes #1 and #2 on self-procured infra.
+# ---------------------------------------------------------------------------
+verify:
+  - "limits probe: create with a non-allowlisted plan, a non-allowlisted
+     region, and a plan priced above max_hourly_usd — all three refused in
+     code with exit 5, no API call made (assert via mock call log)"
+  - "ceiling probe: with max_instances live, one more create is refused in
+     code; destroy one, the same create succeeds"
+  - "destroy-ungated probe: destroy succeeds with no approval token present,
+     and still succeeds after decommission"
+  - "subzone probe: dns set for a name outside {dns_subzone} refused in
+     code, no API call; a name inside succeeds"
+  - "key-hygiene probe: run every op and grep every stdout/stderr byte for
+     the key — zero occurrences; api.key is 0600"
+  - "reconcile probe: an instance present at the provider but absent from
+     instances.log is reported foreign and is NOT destroyed by destroy-all"
+  - "decommission-order probe: decommission with a live instance refuses;
+     after destroy-all it succeeds; create refuses thereafter, destroy
+     still works"
+  - "acceptance (live, run day): agent provisions one allowlisted instance,
+     bootstraps the paid-service rev-2 merchant on it (public-tls leaf,
+     name under {dns_subzone} when on the delegated-subzone leaf), a
+     wallet-rev-1 buyer purchases once end-to-end, then the agent destroys
+     the instance and shows spend: instance-hours priced from the plan,
+     sale settled on-chain — both ledgers quoted verbatim"
+
+# ---------------------------------------------------------------------------
+# RECOVER
+# ---------------------------------------------------------------------------
+recover:
+  reconcile:
+    run: >
+      prov status compares instances.log against the provider list every
+      call: log-live instances missing at the provider are marked
+      lost-at-provider (billing evidence for the human); provider instances
+      missing from the log are reported foreign and never touched.
+  runaway-spend:
+    run: >
+      On any suspicion the tool is holding more than intended: prov
+      destroy-all tears down every log-known instance, ungated. The human
+      can independently verify from the provider dashboard — billing is
+      the provider's ledger, not ours; the log exists so the two can be
+      compared.
+  decommission:
+    approval: human
+    run: >
+      Mandatory order: prov destroy-all until live_instances is 0, then
+      prov admin decommission (marker written; create and dns refuse
+      thereafter, destroy keeps working). The human then deletes the API
+      key in the Vultr portal — the tool cannot revoke its own credential,
+      and must say so rather than pretend the marker is revocation.
+
+# ---------------------------------------------------------------------------
+# SMOL
+# ---------------------------------------------------------------------------
+smol:
+  state_rule: >
+    Never remember instance ids, IPs, counts, or limits from earlier in the
+    conversation. When you need infra state, run `prov status` or
+    `prov list` again.
+  exit_codes: >
+    2 not-configured (run setup first) · 3 decommissioned (create/dns
+    refuse; destroy still works) · 4 approval-required (ask the human to
+    run prov-approve <op>, retry once) · 5 limit-refused (report to the
+    human verbatim; do NOT retry with different parameters) · 1 invalid
+    (stop, show the human the exact JSON error).
+  action:
+    heading: "Provisioning inside the limits"
+    intro: >
+      To rent an instance, run exactly:
+    command: "prov create --plan <plan> --region <region> --label <label>"
+    notes:
+      - "Then poll `prov list` until status is active and copy the id,
+         plan, region, and main_ip character-for-character from the JSON
+         into your report. Never write N/A or a placeholder; if a value is
+         missing, paste the entire JSON line and say it was missing."
+      - "A refusal with exit 5 is a limit working, not an obstacle: report
+         it verbatim and stop. Never retry with a different plan, region,
+         or label to get around a refusal."
+      - "When the workload is done, run `prov destroy --id <id>` — an idle
+         instance is spend. Destroy never needs approval."
+      - "Never call the provider API directly and never edit the state
+         files; prov is the only interface."
+  emergency:
+    trigger: >
+      If the human says stop / shut down / tear it down,
+    command: "prov destroy-all"
+    after: >
+      It needs no approval and works even when everything else refuses.
+      Report what was destroyed verbatim from the JSON. Decommission (via
+      `prov admin decommission`, human-approved) comes only after
+      live_instances is 0.
+
+# ---------------------------------------------------------------------------
+# LOWERING — receipts per cst-8ih.3; live rungs cost instance-hours (small),
+# not tUSDC, except the acceptance rep which also spends one wallet payment.
+# ---------------------------------------------------------------------------
+targets:
+  frontier: { role: recipe-debug, model-class: "Fable/Opus seat" }
+  reference:
+    role: must-be-green
+    model-class: "Qwen 3.6 27B q4"
+    harness: hermes
+  headline:
+    role: honest-smol-test
+    model-class: "35B-A3B MoE (smol profile)"
+    profile: smol
+  # Ladder note: both naming leaves (ip-only AND delegated-subzone) must
+  # appear in at least one green rung. The limit/ceiling/subzone/key-hygiene
+  # probes run against the mock provider on every rung; the live acceptance
+  # (real Vultr create→bootstrap→sale→destroy) runs once per rev on the
+  # reference rung — instance-hours make reps cheap but not free.
