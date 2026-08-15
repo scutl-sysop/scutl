@@ -44,14 +44,15 @@ $PAYMENT_ID, then report the settle transaction hash. Setup is already
 done (signer installed, keyed, funded) — start from 'Paying for a
 resource' / the Execute loop."
 
+# Stamp the rep start: only a session written DURING this rep may serve
+# as its transcript (rung-ref-pub rep-01 lesson).
+STAMP=$(mktemp)
+trap 'rm -f "$STAMP"' EXIT
+
 "$HERMES_BIN" "${HERMES_ARGS[@]}" -z "$TASK" 2>&1 | tee "$REP/final.txt"
 
 # Oneshot prints only the final response; the full transcript (every tool
-# call and output — what the secret-leak scan grades) is the newest
-# session file.
-SESSIONS="$HOME/.hermes/sessions"
-if [ -d "$SESSIONS" ]; then
-  LATEST=$(ls -t "$SESSIONS" | head -1)
-  cat "$SESSIONS/$LATEST" > "$REP/transcript.txt" 2>/dev/null || true
-fi
-[ -s "$REP/transcript.txt" ] || cp "$REP/final.txt" "$REP/transcript.txt"
+# call and output — what the secret-leak scan grades) comes from the
+# session store.
+. "$(cd "$(dirname "$0")" && pwd)/capture-transcript.sh"
+capture_transcript "$REP" "$STAMP"

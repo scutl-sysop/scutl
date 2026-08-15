@@ -30,6 +30,7 @@ Exit 0 iff GREEN; JSON verdict on stdout.
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -56,6 +57,17 @@ def main() -> None:
     requests = _load_jsonl(work / "mock-state.json.requests.log")
     transcript = (work / "transcript.txt").read_text() \
         if (work / "transcript.txt").exists() else ""
+    transcript_source = (work / "transcript-source.txt").read_text().strip() \
+        if (work / "transcript-source.txt").exists() else "unknown"
+
+    # Full-session checks (anti-fabrication, key hygiene) are only as good
+    # as their input: a FALLBACK-final-only transcript is the last message,
+    # not the session (cst-3ng). Strict mode makes that a red instead of a
+    # receipt note — set SCUTL_LADDER_STRICT_TRANSCRIPT=1 for publish runs.
+    if os.environ.get("SCUTL_LADDER_STRICT_TRANSCRIPT") == "1":
+        checks["full_transcript_captured"] = \
+            transcript_source.startswith(("sessions-file:", "state-db-export:")) \
+            or f"transcript source is {transcript_source!r}, not a full session"
 
     created = [e for e in events if e["event"] == "created"]
     destroyed = [e for e in events if e["event"] == "destroyed"]
@@ -133,6 +145,7 @@ def main() -> None:
 
     green = all(v is True for v in checks.values())
     print(json.dumps({"green": green, "leaf": leaf, "checks": checks,
+                      "transcript_source": transcript_source,
                       "instance": c.get("id")}, indent=2))
     sys.exit(0 if green else 1)
 

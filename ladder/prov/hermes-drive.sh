@@ -36,11 +36,5 @@ trap 'rm -f "$STAMP"' EXIT
 
 "$HERMES_BIN" "${HERMES_ARGS[@]}" -z "$TASK" 2>&1 | tee "$REP/final.txt"
 
-SESSIONS="$HOME/.hermes/sessions"
-rm -f "$REP/transcript.txt"
-if [ -d "$SESSIONS" ]; then
-  LATEST=$(find "$SESSIONS" -type f -newer "$STAMP" -printf '%T@ %p\n' \
-    2>/dev/null | sort -rn | head -1 | cut -d' ' -f2-)
-  [ -n "$LATEST" ] && cat "$LATEST" > "$REP/transcript.txt" 2>/dev/null
-fi
-[ -s "$REP/transcript.txt" ] || cp -f "$REP/final.txt" "$REP/transcript.txt"
+. "$REPO/ladder/capture-transcript.sh"
+capture_transcript "$REP" "$STAMP"
