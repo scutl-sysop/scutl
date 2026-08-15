@@ -102,7 +102,7 @@ scp -o BatchMode=yes -P <pod-ssh-port> root@<pod-ssh-host>:/workspace/ladder/env
 
 ## Status
 
-Runbook + `pod-up.sh` written 2026-08-14 from run-night evidence;
-`pod-up.sh` is shellcheck-clean but has NOT yet run on a live pod —
-first task of the next run day is to bring the pod up with it and
-strike this line.
+Runbook + `pod-up.sh` written 2026-08-14 from run-night evidence.
+2026-08-15: `pod-up.sh` ran clean, first try, on a live pod (pod
+v3i9ijw3ciparz, prov rev-1 rungs) — volume prebuilt server + cached
+model path exercised; fallback build path still untested.
