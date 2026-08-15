@@ -220,8 +220,12 @@ def test_ps_human_steps_render_verify_then_proceed():
         assert ingress.count("Verify first — this may already be provisioned") == 2
         assert ingress.count("proceed to the next step without asking") == 2
         # the check itself and the human instructions both survive
-        assert "dig +short pay.scutl.example" in ingress
+        assert "getent hosts pay.scutl.example" in ingress
         assert "Install Caddy" in ingress
+        # rev 4 (cst-8ih.13): checks must be runnable from wherever the
+        # agent is — no dig dependency, no systemctl for a remote service
+        assert "dig" not in ingress
+        assert "systemctl" not in ingress
 
 
 def test_wallet_legacy_smol_stays_byte_stable_on_human_steps(bundles):

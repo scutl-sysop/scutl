@@ -1,10 +1,12 @@
-# SCUTL recipe manifest — rev 3: verify-then-proceed smol checkpoints
+# SCUTL recipe manifest — rev 4: environment-correct public-tls verify commands
 # Recipe #2: "Expose a paid service"
 # Design records: bead cst-8ih.5 (rev 1 rulings), cst-8ih.7 (rev 2 rulings,
 # 2026-08-13), cst-8ih.9 (rev 3 reword ruling, 2026-08-14), epic cst-8ih.
 # Rev 3 delta: human-actored setup steps in the smol bundle render as
-# verify-then-proceed (scutl 2faa349) instead of stop-and-ask; the recipe
-# body is otherwise unchanged from rev 2.
+# verify-then-proceed (scutl 2faa349) instead of stop-and-ask.
+# Rev 4 delta (cst-8ih.13): dns-record/install-proxy verify commands are
+# environment-correct — getent instead of dig, curl-only ingress proof
+# instead of systemctl for a service that may live on another host.
 #
 # What this recipe stresses that wallet rev 1 did not (the reason it exists):
 #   1. long-lived Execute — a running service with a lifecycle, not discrete calls
@@ -14,7 +16,7 @@
 
 recipe:
   id: paid-service
-  rev: 3
+  rev: 4
   title: "Expose a paid service"
   summary: >
     Stand up an agent-operated HTTP service that sells a resource over x402:
@@ -215,8 +217,8 @@ setup:
       Create an A record pointing {public_hostname} at this host's public
       address (e.g. via the Cloudflare dashboard or API — the credential
       stays with you and never lands on this host), then confirm it
-      resolves: dig +short {public_hostname}
-    verify: "dig +short {public_hostname} returns this host's public address"
+      resolves: getent hosts {public_hostname}
+    verify: "getent hosts {public_hostname} returns an address (getent is already installed everywhere — run the check from wherever you are; install nothing)"
   - step: install-proxy
     when: { exposure: public-tls }
     actor: human
@@ -226,7 +228,7 @@ setup:
       {bind_port} filled in, open ports 80/443 in the host firewall, and
       start the caddy service. Caddy obtains and renews the certificate
       itself via HTTP-01 ACME.
-    verify: "systemctl is-active caddy; curl -s -o /dev/null -w '%{http_code}' https://{public_hostname}/resource returns 402"
+    verify: "curl -s -o /dev/null -w '%{http_code}' https://{public_hostname}/resource returns 402 (a 402 offer over valid public TLS proves DNS, proxy, and certificate together; the proxy may run on another host — never check it with systemctl from where you are)"
   - step: verify-ingress
     when: { exposure: public-tls }
     run: "confirm the public path terminates TLS and reaches pserv"
@@ -322,12 +324,14 @@ recover:
 # (recipe, rev, manifest_sha).
 # ---------------------------------------------------------------------------
 migrate:
-  from-rev: 2
+  from-rev: 3
   identity: >
-    A rev-2 deployment IS a rev-3 deployment on every leaf. Rev 3 changes
-    only the smol-bundle wording of human-actored setup steps
-    (verify-then-proceed, cst-8ih.9); nothing deployment-side moves.
-    Nothing to run; config.json, earnings.log, served.log are untouched.
+    A rev-3 deployment IS a rev-4 deployment on every leaf. Rev 4 changes
+    only the verify commands of the human-actored public-tls setup steps
+    (environment-correct checks, cst-8ih.13); nothing deployment-side
+    moves. Nothing to run; config.json, earnings.log, served.log are
+    untouched. (Rev 2->3 was likewise wording-only: verify-then-proceed,
+    cst-8ih.9.)
   from-rev-1-identity: >
     A rev-1 deployment IS a rev-2 deployment on the lan-plaintext leaf
     (local-network renamed; same asks, same behavior, same state on disk).
