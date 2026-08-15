@@ -275,6 +275,11 @@ verify:
   - "decommission-order probe: decommission with a live instance refuses;
      after destroy-all it succeeds; create refuses thereafter, destroy
      still works"
+  - "firewall probe (finding, first live run 2026-08-15): provider images
+     may ship a default-deny inbound firewall (Vultr Debian 12: ufw, SSH
+     only). Workload bootstrap must open the workload's port itself,
+     scoped to the intended caller where known — and must NOT disable the
+     firewall wholesale"
   - "acceptance (live, run day): agent provisions one allowlisted instance,
      bootstraps the paid-service rev-2 merchant on it (public-tls leaf,
      name under {dns_subzone} when on the delegated-subzone leaf), a
