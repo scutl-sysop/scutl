@@ -228,7 +228,7 @@ setup:
       {bind_port} filled in, open ports 80/443 in the host firewall, and
       start the caddy service. Caddy obtains and renews the certificate
       itself via HTTP-01 ACME.
-    verify: "curl -s -o /dev/null -w '%{http_code}' https://{public_hostname}/resource returns 402 (a 402 offer over valid public TLS proves DNS, proxy, and certificate together; the proxy may run on another host — never check it with systemctl from where you are)"
+    verify: "curl -s -o /dev/null -w '%{http_code}' https://{public_hostname}/resource returns 402 (a 402 offer over valid public TLS proves DNS, proxy, and certificate together; this one probe is the entire check — the proxy may run on another host, so check nothing else about it)"
   - step: verify-ingress
     when: { exposure: public-tls }
     run: "confirm the public path terminates TLS and reaches pserv"
