@@ -1,0 +1,174 @@
+{
+    "x402Version": 2,
+    "error": "Payment required",
+    "resource": {
+        "url": "https://api.paysponge.com/v0/inboxes",
+        "description": "Service: AgentMail API (https://api.paysponge.com/v0/inboxes)",
+        "mimeType": "application/json"
+    },
+    "accepts": [
+        {
+            "scheme": "exact",
+            "network": "eip155:8453",
+            "amount": "2000000",
+            "asset": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+            "maxTimeoutSeconds": 300,
+            "extra": {
+                "name": "USD Coin",
+                "version": "2"
+            }
+        },
+        {
+            "scheme": "exact",
+            "network": "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+            "amount": "2000000",
+            "asset": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+            "payTo": "7r4e5dwNS68MDaxbw7N8jbzHq7RCMBp9z6smHFH4NXWw",
+            "maxTimeoutSeconds": 300,
+            "extra": {
+                "feePayer": "2wKupLR9q6wXYppw8Gr2NvWxKBUqm4PPJKkQfoxHDBg4"
+            }
+        },
+        {
+            "scheme": "exact",
+            "network": "eip155:43114",
+            "amount": "2000000",
+            "asset": "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+            "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+            "maxTimeoutSeconds": 300,
+            "extra": {
+                "name": "USD Coin",
+                "version": "2"
+            }
+        },
+        {
+            "scheme": "exact",
+            "network": "eip155:196",
+            "amount": "2000000",
+            "asset": "0x74b7f16337b8972027f6196a17a631ac6de26d22",
+            "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+            "maxTimeoutSeconds": 300,
+            "extra": {
+                "name": "USD Coin",
+                "version": "2"
+            }
+        },
+        {
+            "scheme": "exact",
+            "network": "eip155:137",
+            "amount": "2000000",
+            "asset": "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+            "payTo": "0x6e3184C204e596dED89E8A5693B602097F4Ab687",
+            "maxTimeoutSeconds": 300,
+            "extra": {
+                "name": "USD Coin",
+                "version": "2"
+            }
+        }
+    ],
+    "extensions": {
+        "bazaar": {
+            "info": {
+                "input": {
+                    "type": "http",
+                    "method": "POST",
+                    "bodyType": "json",
+                    "body": {
+                        "domain": "<domain>",
+                        "username": "<username>",
+                        "client_id": "<client_id>",
+                        "display_name": "<display_name>"
+                    }
+                },
+                "output": {
+                    "type": "json",
+                    "example": {}
+                }
+            },
+            "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "type": "object",
+                "properties": {
+                    "input": {
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "const": "http"
+                            },
+                            "method": {
+                                "type": "string",
+                                "enum": [
+                                    "POST",
+                                    "PUT",
+                                    "PATCH"
+                                ]
+                            },
+                            "bodyType": {
+                                "type": "string",
+                                "enum": [
+                                    "json",
+                                    "form-data",
+                                    "text"
+                                ]
+                            },
+                            "body": {
+                                "type": "object",
+                                "title": "CreateInboxRequest",
+                                "properties": {
+                                    "domain": {
+                                        "type": "string",
+                                        "description": "Domain of address. Must be verified domain. Defaults to `agentmail.to`."
+                                    },
+                                    "username": {
+                                        "type": "string",
+                                        "description": "Username of address. Randomly generated if not specified."
+                                    },
+                                    "client_id": {
+                                        "type": "string",
+                                        "title": "ClientId",
+                                        "description": "Client ID of inbox."
+                                    },
+                                    "display_name": {
+                                        "type": "string",
+                                        "title": "DisplayName",
+                                        "description": "Display name: `Display Name <username@domain.com>`."
+                                    }
+                                }
+                            }
+                        },
+                        "required": [
+                            "type",
+                            "method",
+                            "bodyType",
+                            "body"
+                        ],
+                        "additionalProperties": false
+                    },
+                    "output": {
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "const": "json"
+                            },
+                            "example": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        },
+                        "required": [
+                            "type"
+                        ],
+                        "additionalProperties": false
+                    }
+                },
+                "required": [
+                    "input"
+                ],
+                "additionalProperties": false
+            }
+        }
+    }
+}
