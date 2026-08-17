@@ -21,10 +21,12 @@ from eth_account.messages import encode_defunct, encode_typed_data
 
 from . import approvals
 from .network import (
-    CHAIN_ID,
-    USDC_ADDRESS,
+    DEFAULT_NETWORK,
     ChainClient,
     FacilitatorClient,
+    NetworkBinding,
+    PermanentError,
+    resolve_binding,
     usdc_to_atomic,
 )
 from .state import StateDir
@@ -40,10 +42,18 @@ class Signer:
         state: StateDir | None = None,
         chain: ChainClient | None = None,
         facilitator: FacilitatorClient | None = None,
+        binding: NetworkBinding | None = None,
     ):
         self.state = state or StateDir()
-        self.chain = chain or ChainClient()
-        self.facilitator = facilitator or FacilitatorClient()
+        self.binding = binding or resolve_binding(
+            self.state.load_network() or DEFAULT_NETWORK)
+        self.chain = chain or ChainClient.for_binding(self.binding)
+        if facilitator is not None:
+            self.facilitator = facilitator
+        elif self.binding.facilitator_url:
+            self.facilitator = FacilitatorClient(self.binding.facilitator_url)
+        else:
+            self.facilitator = None
 
     # -- key handling (private throughout) ------------------------------
     def _load_account(self) -> Account:
@@ -61,6 +71,8 @@ class Signer:
         approvals.consume(self.state, "keygen")
         if self.state.keystore.exists():
             raise RuntimeError("keystore already exists; refusing to overwrite")
+        # Pin the wallet to its network for life: one key, one chain.
+        self.state.save_network(self.binding.caip)
         kek = secrets.token_hex(32)
         acct = Account.create()
         keystore = Account.encrypt(acct.key, kek)
@@ -109,8 +121,10 @@ class Signer:
         caps = self.state.load_caps()
         return {
             "address": self.address(),
-            "network": "base-sepolia",
-            "chain_id": CHAIN_ID,
+            "network": self.binding.caip,
+            "network_legacy": self.binding.legacy_name,
+            "testnet": self.binding.testnet,
+            "chain_id": self.binding.chain_id,
             "usdc_balance": str(self.chain.usdc_balance(self.address())),
             "caps": {k: str(v) for k, v in caps.items()},
             "spent_last_24h": str(self.state.spent_last_24h()),
@@ -170,8 +184,17 @@ class Signer:
         return None
 
     def _build_payment(self, payment_id: str, pay_to: str, amount: Decimal,
-                       valid_secs: int) -> tuple[dict, dict]:
-        """Sign the EIP-3009 authorization; returns (payload, requirements)."""
+                       valid_secs: int, offer: dict | None = None
+                       ) -> tuple[dict, dict]:
+        """Sign the EIP-3009 authorization; returns (payload, requirements).
+
+        Without an offer this emits the rev-1 v1 wire shape (pay() and the
+        existing acceptance surface). With an offer — the dict from
+        network.select_offer() — the wire version follows the offer, and
+        for v2 the chosen requirements object is echoed verbatim as
+        `accepted` per spec. The EIP-712 domain always comes from the
+        binding; select_offer has already refused any offer that
+        disagrees with it."""
         acct = self._load_account()
         now = int(datetime.now(timezone.utc).timestamp())
         nonce = "0x" + hashlib.sha256(payment_id.encode()).hexdigest()
@@ -186,6 +209,10 @@ class Signer:
             "validBefore": valid_before,
             "nonce": nonce,
         }
+        domain_version = "2"
+        if offer is not None:
+            domain_version = (offer["requirements"].get("extra") or {}).get(
+                "version", "2")
         typed = {
             "types": {
                 "EIP712Domain": [
@@ -204,29 +231,54 @@ class Signer:
                 ],
             },
             "primaryType": "TransferWithAuthorization",
-            "domain": {"name": "USDC", "version": "2",
-                       "chainId": CHAIN_ID, "verifyingContract": USDC_ADDRESS},
+            "domain": {"name": self.binding.eip712_name,
+                       "version": domain_version,
+                       "chainId": self.binding.chain_id,
+                       "verifyingContract": self.binding.usdc_address},
             "message": authorization,
         }
         signature = acct.sign_message(encode_typed_data(full_message=typed))
 
+        if offer is not None and offer["version"] >= 2:
+            # v2: authorization values are strings on the wire; accepted
+            # echoes the offer; resource/extensions echo what was quoted.
+            payment_payload = {
+                "x402Version": 2,
+                "accepted": offer["requirements"],
+                "payload": {
+                    "signature": "0x" + signature.signature.hex(),
+                    "authorization": {
+                        **{k: str(v) for k, v in authorization.items()
+                           if k in ("value", "validAfter", "validBefore")},
+                        "from": acct.address,
+                        "to": pay_to,
+                        "nonce": nonce,
+                    },
+                },
+                "extensions": offer["extensions"],
+            }
+            if offer.get("resource"):
+                payment_payload["resource"] = offer["resource"]
+            return payment_payload, offer["requirements"]
+
         payment_payload = {
             "x402Version": 1,
             "scheme": "exact",
-            "network": "base-sepolia",
+            "network": self.binding.legacy_name,
             "domain": typed["domain"],
             "types": typed["types"],
             "payload": {"signature": "0x" + signature.signature.hex(),
                         "authorization": authorization},
         }
-        requirements = {
+        requirements = (offer["requirements"] if offer is not None else {
             "scheme": "exact",
-            "network": "base-sepolia",
+            "network": self.binding.legacy_name,
             "maxAmountRequired": str(value),
             "payTo": pay_to,
-            "asset": USDC_ADDRESS,
-            "extra": {"name": "USDC", "version": "2"},
-        }
+            "asset": self.binding.usdc_address,
+            "extra": {"name": self.binding.eip712_name,
+                      "version": domain_version},
+        })
         return payment_payload, requirements
 
     def pay(self, payment_id: str, pay_to: str, amount: Decimal,
@@ -239,6 +291,11 @@ class Signer:
         can settle it at most once), and an already-settled payment_id
         returns the original record without paying again.
         """
+        if self.facilitator is None:
+            raise PermanentError(
+                f"pay() needs a blessed facilitator and {self.binding.caip} "
+                f"has none; only merchant-settles purchases (x402-buy) run "
+                f"on this network")
         prior = self._reserve(payment_id, pay_to, amount, valid_secs)
         if prior is not None:
             return {**prior, "idempotent_replay": True}
@@ -263,35 +320,44 @@ class Signer:
         return record
 
     def authorize(self, payment_id: str, pay_to: str, amount: Decimal,
-                  valid_secs: int = 600) -> dict:
+                  valid_secs: int = 600, offer: dict | None = None) -> dict:
         """Merchant-settles x402 purchase flow: cap-check and sign, return
-        the X-PAYMENT header for the caller to present; the resource server
+        the payment header for the caller to present; the resource server
         settles. Caller MUST confirm on-chain and then record_settled() —
         an authorized-but-unrecorded payment is spendable by the merchant,
-        so record on any 200, and rely on nonce-idempotency for retries."""
+        so record on any 200, and rely on nonce-idempotency for retries.
+
+        offer (from network.select_offer) selects the wire version and, for
+        v2, the echoed `accepted` requirements. Zero-amount offers — v2's
+        wallet-as-identity calls — flow through the same reservation path;
+        a 0 reservation costs no cap headroom but keeps the payment_id
+        idempotency and the audit record."""
         from .network import encode_payment_header
 
         prior = self._reserve(payment_id, pay_to, amount, valid_secs)
         if prior is not None:
             return {**prior, "idempotent_replay": True}
         payment_payload, _ = self._build_payment(
-            payment_id, pay_to, amount, valid_secs)
+            payment_id, pay_to, amount, valid_secs, offer=offer)
         return {
             "payment_id": payment_id,
             "header": encode_payment_header(payment_payload),
+            "x402_version": payment_payload["x402Version"],
             "to": pay_to,
             "amount": str(amount),
         }
 
     def record_settled(self, payment_id: str, pay_to: str, amount: Decimal,
-                       tx_hash: str) -> dict:
-        chain_status = self.chain.tx_status(tx_hash)
+                       tx_hash: str | None) -> dict:
+        # Zero-amount identity calls may settle nothing on-chain; an empty
+        # transaction is legitimate there and there is nothing to confirm.
+        chain_status = self.chain.tx_status(tx_hash) if tx_hash else "no-tx"
         record = {
             "ts": datetime.now(timezone.utc).isoformat(),
             "payment_id": payment_id,
             "to": pay_to,
             "amount": str(amount),
-            "tx": tx_hash,
+            "tx": tx_hash or "",
             "chain_status": chain_status,
             "status": "settled",
         }

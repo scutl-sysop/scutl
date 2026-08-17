@@ -54,6 +54,10 @@ class StateDir:
         return self.root / "caps.json"
 
     @property
+    def network_file(self) -> Path:
+        return self.root / "network.json"
+
+    @property
     def spend_log(self) -> Path:
         return self.root / "spend.log"
 
@@ -91,6 +95,19 @@ class StateDir:
         self.caps_file.write_text(
             json.dumps({"cap_per_tx": str(cap_per_tx), "cap_daily": str(cap_daily)})
         )
+
+    # -- network selection (rev 2, cst-8ih.14) --------------------------
+    def load_network(self) -> str | None:
+        """Active network (CAIP-2), or None for the default. Written at
+        keygen; changing it afterwards is a human file edit by design —
+        there is deliberately no agent op that moves a wallet between
+        testnet and mainnet."""
+        if not self.network_file.exists():
+            return None
+        return json.loads(self.network_file.read_text())["network"]
+
+    def save_network(self, caip: str) -> None:
+        self.network_file.write_text(json.dumps({"network": caip}))
 
     # -- cap serialization (cst-8ih.6) -----------------------------------
     @contextmanager

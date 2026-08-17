@@ -18,7 +18,7 @@ from decimal import Decimal
 from . import approvals
 from .approvals import ApprovalRequired
 from .core import CapExceeded, Signer
-from .network import PermanentError, TransientError
+from .network import PermanentError, TransientError, resolve_binding
 from .state import Revoked, StateDir
 
 
@@ -46,11 +46,19 @@ def main(argv: list[str] | None = None) -> None:
     kg = asub.add_parser("keygen")
     kg.add_argument("--cap-per-tx", required=True)
     kg.add_argument("--cap-daily", required=True)
+    kg.add_argument("--network", default=None,
+                    help="blessed network (CAIP-2 or legacy name); default "
+                         "base-sepolia. Pins the wallet for life.")
     asub.add_parser("backup-verify")
     asub.add_parser("revoke")
 
     args = p.parse_args(argv)
-    signer = Signer()
+    try:
+        binding = (resolve_binding(args.network)
+                   if getattr(args, "network", None) else None)
+        signer = Signer(binding=binding)
+    except PermanentError as e:
+        _fail("permanent", str(e), 7)
 
     try:
         if args.cmd == "status":
