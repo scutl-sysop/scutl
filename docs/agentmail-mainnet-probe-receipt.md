@@ -40,8 +40,11 @@ signature, there is no recovery path through the merchant. Therefore:
   scutl-star@agentmail.to and any mail in it. Revoke is for compromise,
   not routine rotation.
 - **Backup is mandatory, unlike disposable testnet buyers.**
-  `backup_verified` is still **false**: owner must copy
-  `~/.scutl/mainnet-buyer/keystore.json` + `kek` off-box, then run
-  `signer admin backup-verify` (after `signer-approve backup-verify`).
+  Done 2026-08-17 (cst-8ih.15): owner copied
+  `~/.scutl/mainnet-buyer/keystore.json` + `kek` off-box, then Star ran
+  `signer admin backup-verify` — no approval token needed
+  (`backup-verify` is not in ADMIN_OPS; only keygen/revoke are gated).
+  `backup_verified` is now **true**, keystore sha256
+  `9af37ab2bfdaf08eaec132e05cb9207eb6ac53d750d319838705798bb7313692`.
 - The recipe lowering must carry this asymmetry: testnet buyer keys are
   cattle, mainnet identity keys are pets.
