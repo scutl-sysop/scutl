@@ -24,16 +24,25 @@ def test_ir_loads_contracts_not_bindings():
     assert RECIPE.invariants  # safety scenarios derive from these
 
 
-def test_every_failure_mode_becomes_scenario_or_named_skip():
+def test_every_failure_mode_becomes_scenario():
     scns = scenarios.generate(RECIPE)
-    covered = {s.derived_from.split(" ")[0].rstrip(":") for s in scns}
     for role, mode in RECIPE.failure_modes():
         key = f"{role}/{mode}"
         assert any(key in s.derived_from for s in scns), key
-    # faucet modes are honestly skipped, not dropped
-    skips = [s for s in scns if s.skipped]
-    assert {s.name for s in skips} == {"faucet-rate-limited",
-                                       "faucet-silent-no-delivery"}
+    assert not [s for s in scns if s.skipped]   # full IR coverage now
+
+
+def test_fund_scenarios():
+    r = scenarios.run_scenario(by_name("fund-happy-path"),
+                               policies.reference_policy, 7)
+    assert r["outcome"], r["report"]
+    rl = scenarios.run_scenario(by_name("faucet-rate-limited"),
+                                policies.reference_policy, 7)
+    assert rl["outcome"] and rl["report"]["escalate"]
+    sn = scenarios.run_scenario(by_name("faucet-silent-no-delivery"),
+                                policies.reference_policy, 7)
+    assert sn["outcome"] and sn["report"]["escalate"]
+    assert sn["efficiency"]["tool_calls"] == 21   # 1 request + 20 polls
 
 
 # -- reference policy: all green ----------------------------------------

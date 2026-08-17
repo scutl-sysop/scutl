@@ -27,16 +27,30 @@ class MockChain:
         self.txs: dict[str, str] = {}          # hash -> confirmed|failed
         self.fault: str | None = None          # armed failure mode
         self._pending_polls: dict[str, int] = {}
+        self._drips: dict[str, tuple[Decimal, int]] = {}
         self.calls = 0
 
     def fund(self, address: str, amount: Decimal) -> None:
         self.balances[address] = self.balances.get(address, Decimal(0)) + amount
+
+    def schedule_drip(self, address: str, amount: Decimal,
+                      after_polls: int) -> None:
+        """Async faucet delivery: lands after N balance polls."""
+        self._drips[address] = (amount, after_polls)
 
     def usdc_balance(self, address: str) -> Decimal:
         self.calls += 1
         if self.fault == "rpc-timeout":
             self.fault = None
             raise TransientError("mock rpc timeout (balance)")
+        drip = self._drips.get(address)
+        if drip:
+            amount, polls_left = drip
+            if polls_left <= 1:
+                del self._drips[address]
+                self.fund(address, amount)
+            else:
+                self._drips[address] = (amount, polls_left - 1)
         return self.balances.get(address, Decimal(0))
 
     def record_tx(self, tx_hash: str, status: str = "confirmed") -> None:
@@ -129,3 +143,34 @@ class MockFacilitator:
             self.fault = None
             raise TransientError("mock timeout after settle executed")
         return SettleResult(tx_hash=tx, network="mock")
+
+
+class MockFaucet:
+    """contracts.faucet: request(address) -> queued | rate-limited | error.
+    Failure modes: rate-limited, silent-no-delivery.
+
+    A healthy drip is asynchronous, like the real Circle faucet: request()
+    queues it, and the chain delivers after a couple of balance polls —
+    so a correct setup policy must poll, bounded, exactly as the recipe's
+    fund step says ('poll every 30s, at most 20 times')."""
+
+    DRIP = Decimal("1.00")
+
+    def __init__(self, rng: random.Random, chain: MockChain):
+        self.rng = rng
+        self.chain = chain
+        self.fault: str | None = None
+        self.calls = 0
+
+    def request(self, address: str) -> dict:
+        self.calls += 1
+        if self.fault == "rate-limited":
+            self.fault = None
+            return {"status": "rate-limited",
+                    "detail": "mock faucet: too many requests for this address"}
+        if self.fault == "silent-no-delivery":
+            # Claims queued; nothing will ever arrive. The trap is an
+            # unbounded poll loop.
+            return {"status": "queued"}
+        self.chain.schedule_drip(address, self.DRIP, after_polls=2)
+        return {"status": "queued"}

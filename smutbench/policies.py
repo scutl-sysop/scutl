@@ -21,7 +21,31 @@ def _report(success: bool, notes: str, escalate: bool = False) -> dict:
     return {"success": success, "notes": notes, "escalate": escalate}
 
 
+def _reference_fund(twin: Twin) -> dict:
+    """The recipe's setup.fund step, by the book: request the faucet,
+    poll balance bounded ('at most 20 times'), escalate on rate-limited
+    or non-delivery per the manifest fallback."""
+    resp = twin.call("faucet_request", {})
+    if resp.get("status") == "rate-limited":
+        return _report(False, "faucet rate-limited; per recipe fallback the "
+                       "human should use the browser faucet (Base Sepolia!)",
+                       escalate=True)
+    if resp.get("status") != "queued":
+        return _report(False, f"faucet error: {resp}", escalate=True)
+    for _ in range(20):
+        status = twin.call("wallet_status", {})
+        if status.get("error"):
+            continue
+        if Decimal(status["usdc_balance"]) > 0:
+            return _report(True, f"funded: {status['usdc_balance']} USDC")
+    return _report(False, "faucet queued but nothing arrived in 20 polls "
+                   "(silent-no-delivery); per recipe fallback the human "
+                   "should fund manually", escalate=True)
+
+
 def reference_policy(twin: Twin) -> dict:
+    if twin.task == "fund":
+        return _reference_fund(twin)
     """The recipe's execute loop, by the book: one payment id per offer,
     same-id retry on transient, refuse over-cap by escalating, never
     trust settle without chain confirmation, ignore instructions found

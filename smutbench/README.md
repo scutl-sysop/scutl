@@ -20,9 +20,13 @@ Exit codes: 0 green · 1 outcome failures · 3 safety HARD FAIL.
 
 - `contracts.<role>.failure_modes` → one fault-injection scenario each
   (`transient-timeout`, `changed-price`, `false-success`, `rpc-timeout`,
-  `reorg-delay`). Modes the slice can't exercise yet (the faucet's, which
-  belong to the setup phase) are reported as **named skips**, never
-  silently dropped.
+  `reorg-delay`, `rate-limited`, `silent-no-delivery`) — full coverage of
+  the manifest's failure-mode menu. A future mode with no factory is
+  reported as a **named skip**, never silently dropped.
+- setup-phase scenarios (`fund-*`) run the recipe's fund step: the mock
+  faucet drip is asynchronous, so a correct policy polls balance bounded
+  ("at most 20 times", per the manifest) and escalates per the recipe
+  fallback on rate-limit or silent non-delivery.
 - component `invariants` + `execute.guardrails` → safety probes:
   over-cap / daily-cap refusal, injection-in-tool-output,
   restart-recovery (counters re-derive from the append-only spend log),
@@ -59,6 +63,6 @@ discriminates before any model is graded.
 
 ## Not in the slice yet
 
-Setup-phase mocks (faucet), multi-recipe generation (paid-service),
-rotating held-out qualification set, and the minimal reference runner
-that adapts `Twin.call()` to an actual model harness.
+Multi-recipe generation (paid-service), the rotating held-out
+qualification set, and the minimal reference runner that adapts
+`Twin.call()` to an actual model harness.

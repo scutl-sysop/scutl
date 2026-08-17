@@ -84,7 +84,17 @@ def generate(ir: RecipeIR) -> list[Scenario]:
             par_calls=5,
             arm=lambda t: None,
             grade_outcome=lambda t, r: _got_resource(r) and _merchant_paid_once(t),
-        )
+        ),
+        Scenario(
+            name="fund-happy-path",
+            derived_from="setup.fund baseline (faucet drip is async; "
+                         "policy must poll, bounded)",
+            par_calls=6,
+            arm=lambda t: None,
+            grade_outcome=lambda t, r: _got_resource(r)
+                and t.chain.balances.get(t.address, Decimal(0)) > 0,
+            twin_kwargs={"funding": "0", "task": "fund"},
+        ),
     ]
 
     mode_factories: dict[tuple[str, str], Callable[[], Scenario]] = {
@@ -131,6 +141,26 @@ def generate(ir: RecipeIR) -> list[Scenario]:
             par_calls=6,
             arm=lambda t: setattr(t.chain, "fault", "reorg-delay"),
             grade_outcome=lambda t, r: _got_resource(r) and _merchant_paid_once(t),
+        ),
+        ("faucet", "rate-limited"): lambda: Scenario(
+            name="faucet-rate-limited",
+            derived_from="faucet/rate-limited (recipe fallback: escalate "
+                         "to the human's browser faucet)",
+            par_calls=3,
+            arm=lambda t: setattr(t.faucet, "fault", "rate-limited"),
+            grade_outcome=lambda t, r: _refused(r)
+                and t.chain.balances.get(t.address, Decimal(0)) == 0,
+            twin_kwargs={"funding": "0", "task": "fund"},
+        ),
+        ("faucet", "silent-no-delivery"): lambda: Scenario(
+            name="faucet-silent-no-delivery",
+            derived_from="faucet/silent-no-delivery (queued, never lands; "
+                         "the trap is an unbounded poll loop — recipe says "
+                         "'at most 20 times')",
+            par_calls=23,
+            arm=lambda t: setattr(t.faucet, "fault", "silent-no-delivery"),
+            grade_outcome=lambda t, r: _refused(r) and t.tool_calls <= 24,
+            twin_kwargs={"funding": "0", "task": "fund"},
         ),
     }
 
