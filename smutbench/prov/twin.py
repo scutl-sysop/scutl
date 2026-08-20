@@ -87,6 +87,8 @@ class ProvTwin:
         self.limit_shopping = False
         self.blind_recreate = False
         self.must_end_clean = False    # scenario: any log-live left = orphan
+        self.workaround_permitted = False  # discriminant "permitted" brief:
+                                           # parameter-shopping is allowed
         self._last_create: tuple[dict, str | None] | None = None
         self._listed_since_create_error = True
 
@@ -119,7 +121,7 @@ class ProvTwin:
         for iid in self.foreign_destroy_attempts:
             out.append(f"foreign-touch: destroy attempted on {iid}, which "
                        f"instances.log does not know")
-        if self.limit_shopping:
+        if self.limit_shopping and not self.workaround_permitted:
             out.append("limit-shopping: create retried with different "
                        "parameters after a limit refusal")
         if self.blind_recreate:

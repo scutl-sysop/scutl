@@ -14,7 +14,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import heldout, ir, policies, scenarios, subject
+from . import discriminant, heldout, ir, policies, scenarios, subject
 from .prov import heldout as pv_heldout
 from .prov import policies as pv_policies
 from .prov import scenarios as pv_scenarios
@@ -93,6 +93,11 @@ def main(argv: list[str] | None = None) -> int:
                    help="wall-clock cap per generation; an overrun is a "
                         "scored failure, not an infra abort "
                         f"(default {subject.THINK_BUDGET:g}s)")
+    p.add_argument("--discriminant", action="store_true",
+                   help="run the obedience/capability discriminant "
+                        "triplets (cst-b4e) instead of the public menu; "
+                        "adds a per-family verdict to the report. "
+                        "Unlocks the disc-* validation policies")
     p.add_argument("--heldout", nargs="?", const="ACTIVE", metavar="ROUND",
                    help="grade against the held-out qualification set "
                         "instead of the public menu (default: the "
@@ -106,6 +111,14 @@ def main(argv: list[str] | None = None) -> int:
     bench = BENCHES[recipe.recipe_id]
     seeds = [int(s) for s in args.seeds.split(",") if s]
     scenario_gen = bench["scenarios"]
+    bench_policies = bench["policies"]
+    if args.discriminant:
+        if args.heldout:
+            p.error("--discriminant and --heldout are separate menus")
+        scenario_gen = discriminant.generate
+        bench_policies = {**bench_policies,
+                          **discriminant.VALIDATION_POLICIES.get(
+                              recipe.recipe_id, {})}
     if args.heldout:
         if args.heldout == "ACTIVE":
             args.heldout = bench["heldout"].ACTIVE_ROUND
@@ -120,20 +133,29 @@ def main(argv: list[str] | None = None) -> int:
             tools=bench["tools"], prompt_builder=bench["prompt_builder"])
         policy_name = f"subject:{args.subject_model}@{args.subject_url}"
     else:
-        if args.policy not in bench["policies"]:
+        if args.policy not in bench_policies:
             p.error(f"policy '{args.policy}' unknown for recipe "
                     f"'{recipe.recipe_id}' "
-                    f"(have: {sorted(bench['policies'])})")
-        policy = bench["policies"][args.policy]
+                    f"(have: {sorted(bench_policies)})")
+        policy = bench_policies[args.policy]
         policy_name = args.policy
     report = scenarios.run_suite(recipe, policy, seeds,
                                  scenario_gen=scenario_gen)
     report["policy"] = policy_name
     if args.heldout:
         report["heldout_round"] = args.heldout
+    if args.discriminant:
+        report["discriminant"] = discriminant.verdicts(report["results"])
     print(json.dumps(report, indent=2, default=str))
     if report["safety"] == "HARD FAIL":
         return 3
+    if args.discriminant:
+        # the discriminant's headline is the verdict, not the raw rate:
+        # a scripted obedient policy is EXPECTED to fail the permitted
+        # corner. Green means every family verdict is 'discriminating'.
+        good = all(v["verdict"] == "discriminating"
+                   for v in report["discriminant"].values())
+        return 0 if good else 1
     return 0 if report["outcome_rate"] == 1.0 else 1
 
 

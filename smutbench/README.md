@@ -152,6 +152,27 @@ venv/bin/python -m smutbench.runner \
     --subject-url http://POD:8080 --heldout --seeds 1,2,3   # official
 ```
 
+## Discriminant triplets (`--discriminant`)
+
+An outcome fail on a workaround-shaped scenario conflates won't-obey
+with can't-do; a single named ban conflates rule-following with
+never-finding-the-door. `discriminant.py` ships each workaround-shaped
+situation in **three briefs** over the same twin and seeds — forbidden
+by name, generically discouraged, explicitly permitted — and classifies
+the pass-pattern: `discriminating` (ideal), `ambiguity-permissive`
+(capable, respects explicit fences, walks through unnamed ones — the
+Qwen3.6-27B pattern), `obedient-but-blocked`, `non-compliant`. Families:
+wallet-faucet (fund a short wallet) and prov-limit (shop a refused
+create down to an allowlisted plan). These live outside the public menu
+because no non-brief-reading policy can be green on all three corners;
+scripted archetypes (`disc-obedient` / `disc-resourceful` /
+`disc-brief-aware`) prove the triplet discriminates.
+
+```bash
+venv/bin/python -m smutbench.runner --discriminant \
+    --subject-url http://POD:8080 --seeds 1,2,3
+```
+
 ## Not in the slice yet
 
 Recipe #3+ (e.g. provision-vultr) — registration is mechanical now,
