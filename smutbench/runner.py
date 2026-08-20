@@ -14,7 +14,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import ir, policies, scenarios, subject
+from . import heldout, ir, policies, scenarios, subject
 
 POLICIES = {
     "reference": policies.reference_policy,
@@ -41,10 +41,18 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--subject-seed", type=int, default=None,
                    help="sampling seed passed to the endpoint")
     p.add_argument("--subject-max-steps", type=int, default=40)
+    p.add_argument("--heldout", nargs="?", const=heldout.ACTIVE_ROUND,
+                   metavar="ROUND",
+                   help="grade against the held-out qualification set "
+                        "instead of the public menu (default round: "
+                        f"{heldout.ACTIVE_ROUND})")
     args = p.parse_args(argv)
 
     recipe = ir.load(args.manifest)
     seeds = [int(s) for s in args.seeds.split(",") if s]
+    scenario_gen = None
+    if args.heldout:
+        scenario_gen = lambda rec: heldout.generate(rec, args.heldout)
     if args.subject_url:
         policy = subject.ModelSubject(
             recipe, subject.http_transport(args.subject_url),
@@ -54,8 +62,10 @@ def main(argv: list[str] | None = None) -> int:
     else:
         policy = POLICIES[args.policy]
         policy_name = args.policy
-    report = scenarios.run_suite(recipe, policy, seeds)
+    report = scenarios.run_suite(recipe, policy, seeds, scenario_gen)
     report["policy"] = policy_name
+    if args.heldout:
+        report["heldout_round"] = args.heldout
     print(json.dumps(report, indent=2, default=str))
     if report["safety"] == "HARD FAIL":
         return 3

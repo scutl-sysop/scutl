@@ -26,6 +26,8 @@ class MockChain:
         self.balances: dict[str, Decimal] = {}
         self.txs: dict[str, str] = {}          # hash -> confirmed|failed
         self.fault: str | None = None          # armed failure mode
+        self.fault_times = 1                   # how often it fires (heldout)
+        self.reorg_polls = 2                   # confirms tx stays pending
         self._pending_polls: dict[str, int] = {}
         self._drips: dict[str, tuple[Decimal, int]] = {}
         self.calls = 0
@@ -38,10 +40,16 @@ class MockChain:
         """Async faucet delivery: lands after N balance polls."""
         self._drips[address] = (amount, after_polls)
 
+    def _consume_fault(self) -> None:
+        self.fault_times -= 1
+        if self.fault_times <= 0:
+            self.fault = None
+            self.fault_times = 1
+
     def usdc_balance(self, address: str) -> Decimal:
         self.calls += 1
         if self.fault == "rpc-timeout":
-            self.fault = None
+            self._consume_fault()
             raise TransientError("mock rpc timeout (balance)")
         drip = self._drips.get(address)
         if drip:
@@ -59,10 +67,10 @@ class MockChain:
     def tx_status(self, tx_hash: str) -> str:
         self.calls += 1
         if self.fault == "rpc-timeout":
-            self.fault = None
+            self._consume_fault()
             raise TransientError("mock rpc timeout (tx_status)")
         if self.fault == "reorg-delay":
-            left = self._pending_polls.get(tx_hash, 2)
+            left = self._pending_polls.get(tx_hash, self.reorg_polls)
             if left > 0:
                 self._pending_polls[tx_hash] = left - 1
                 return "pending"
@@ -85,6 +93,7 @@ class MockFacilitator:
         self.rng = rng
         self.chain = chain
         self.fault: str | None = None
+        self.fault_times = 1                   # repeats before clearing
         self.settled: dict[str, str] = {}      # nonce -> tx_hash
         self.transfers: list[tuple[str, str, Decimal]] = []  # (nonce, to, amt)
         self.expected_amount: Decimal | None = None  # merchant's current price
@@ -99,6 +108,12 @@ class MockFacilitator:
     def _mint_hash(self, nonce: str) -> str:
         salt = self.rng.getrandbits(64).to_bytes(8, "big")
         return "0x" + hashlib.sha256(nonce.encode() + salt).hexdigest()
+
+    def _consume_fault(self) -> None:
+        self.fault_times -= 1
+        if self.fault_times <= 0:
+            self.fault = None
+            self.fault_times = 1
 
     # -- contract surface ------------------------------------------------
     def verify(self, payment_payload: dict, requirements: dict) -> None:
@@ -123,7 +138,7 @@ class MockFacilitator:
             return SettleResult(tx_hash=self.settled[nonce], network="mock")
 
         if self.fault == "false-success":
-            self.fault = None
+            self._consume_fault()
             # Claims success; the hash never appears on the mock chain.
             return SettleResult(tx_hash=self._mint_hash(nonce + "-phantom"), network="mock")
 
@@ -139,8 +154,10 @@ class MockFacilitator:
 
         if self.fault == "transient-timeout":
             # The settle EXECUTED but the response was lost — the
-            # canonical duplicate-retry trap.
-            self.fault = None
+            # canonical duplicate-retry trap. With fault_times > 1 the
+            # loss repeats, exercising a bounded-retry policy harder while
+            # the nonce guarantee still makes a same-id retry safe.
+            self._consume_fault()
             raise TransientError("mock timeout after settle executed")
         return SettleResult(tx_hash=tx, network="mock")
 

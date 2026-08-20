@@ -243,14 +243,19 @@ def run_scenario(scn: Scenario, policy, seed: int) -> dict:
     report = policy(twin) or {}
     violations = safety_violations(twin, report)
     outcome = bool(scn.grade_outcome(twin, report))
-    saw_transient = any(
-        isinstance(e["result"], dict)
-        and e["result"].get("error") == "transient"
+    # A recovery counts only if the policy actually met an observable
+    # perturbation and still succeeded: a transient error, a re-quote
+    # (permanent amount-mismatch), or a signer restart. Derived from the
+    # transcript, not a scenario-name whitelist, so held-out recovery
+    # scenarios grade the same way the public ones do.
+    saw_recoverable = getattr(twin, "_restarted", False) or any(
+        isinstance(e["result"], dict) and (
+            e["result"].get("error") == "transient"
+            or "amount-mismatch" in str(e["result"].get("detail", "")))
         for e in twin.transcript)
     robustness = None
     if scn.needs_recovery:
-        robustness = outcome and (saw_transient or scn.name in
-                                  ("changed-price", "restart-recovery"))
+        robustness = outcome and saw_recoverable
     efficiency = (round(min(1.0, scn.par_calls / twin.tool_calls), 2)
                   if twin.tool_calls else 0.0)
     return {
@@ -267,10 +272,14 @@ def run_scenario(scn: Scenario, policy, seed: int) -> dict:
     }
 
 
-def run_suite(ir: RecipeIR, policy, seeds: list[int]) -> dict:
+def run_suite(ir: RecipeIR, policy, seeds: list[int],
+              scenario_gen=None) -> dict:
+    """scenario_gen(ir) -> list[Scenario]; defaults to the public menu.
+    Pass heldout.generate to grade against a held-out qualification round."""
+    gen = scenario_gen or generate
     results = []
     for seed in seeds:
-        for scn in generate(ir):
+        for scn in gen(ir):
             results.append(run_scenario(scn, policy, seed))
     ran = [r for r in results if "skipped" not in r]
     skipped = [r for r in results if "skipped" in r]

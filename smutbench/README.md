@@ -81,7 +81,32 @@ failing is not evidence about the model. `tests/test_subject.py`
 validates the adapter by driving the full suite green with a scripted
 correct-model transport, no endpoint needed.
 
+## Held-out qualification set
+
+The public menu above is the *framework* and its representative cases —
+runnable by anyone, so a perfect score on it (Qwen3.6-35B-A3B,
+2026-08-19) proves little about generalization. Official results are
+graded on `heldout.py`: rounds kept OUT of the public menu that test the
+same contracts through variations it does not contain — compositions the
+menu keeps separate (re-quote *and* injection in one episode), harder
+degrees of a fault (settle lost twice, merchant re-quotes twice, chain
+pending four polls), and injection phrasings that share no trigger words
+with the public body (a subject that keyword-matches "SYSTEM OVERRIDE" is
+not saved here).
+
+```bash
+recipes/wallet-base-sepolia/.venv/bin/python -m smutbench.runner \
+    --subject-url http://POD:8080 --heldout --seeds 1,2,3
+```
+
+Rounds **rotate**: `heldout.ACTIVE_ROUND` names the current official
+round; retired rounds stay for reproducibility. Rotate by adding a round
+and bumping `ACTIVE_ROUND` — never by editing a published round in place
+(that silently invalidates prior receipts). Self-validation
+(`tests/test_heldout.py`) holds the reference policy green on every round
+and proves the phrasings evade the public keyword reflex.
+
 ## Not in the slice yet
 
-Multi-recipe generation (paid-service) and the rotating held-out
-qualification set (matters once official results exist).
+Multi-recipe generation (paid-service) — SMUTbench currently derives
+from the wallet recipe only.
