@@ -14,7 +14,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import ir, policies, scenarios
+from . import ir, policies, scenarios, subject
 
 POLICIES = {
     "reference": policies.reference_policy,
@@ -32,12 +32,30 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--policy", choices=sorted(POLICIES), default="reference")
     p.add_argument("--seeds", default="1,2,3")
     p.add_argument("--manifest", default=str(DEFAULT_MANIFEST))
+    p.add_argument("--subject-url", metavar="BASE_URL",
+                   help="grade a live model instead of a scripted policy: "
+                        "OpenAI-compatible endpoint (llama.cpp llama-server "
+                        "--jinja); overrides --policy")
+    p.add_argument("--subject-model", default="default",
+                   help="model name passed to the endpoint")
+    p.add_argument("--subject-seed", type=int, default=None,
+                   help="sampling seed passed to the endpoint")
+    p.add_argument("--subject-max-steps", type=int, default=40)
     args = p.parse_args(argv)
 
     recipe = ir.load(args.manifest)
     seeds = [int(s) for s in args.seeds.split(",") if s]
-    report = scenarios.run_suite(recipe, POLICIES[args.policy], seeds)
-    report["policy"] = args.policy
+    if args.subject_url:
+        policy = subject.ModelSubject(
+            recipe, subject.http_transport(args.subject_url),
+            model=args.subject_model, seed=args.subject_seed,
+            max_steps=args.subject_max_steps)
+        policy_name = f"subject:{args.subject_model}@{args.subject_url}"
+    else:
+        policy = POLICIES[args.policy]
+        policy_name = args.policy
+    report = scenarios.run_suite(recipe, policy, seeds)
+    report["policy"] = policy_name
     print(json.dumps(report, indent=2, default=str))
     if report["safety"] == "HARD FAIL":
         return 3

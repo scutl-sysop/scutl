@@ -61,8 +61,27 @@ Real benchmark subjects are model+harness combos driving the same
 `Twin.call()` tool surface; these policies exist to prove the bench
 discriminates before any model is graded.
 
+## Grading a live model
+
+`subject.ModelSubject` adapts `Twin.call()` to any OpenAI-compatible
+tool-calling endpoint (llama.cpp `llama-server --jinja`, vLLM):
+
+```bash
+recipes/wallet-base-sepolia/.venv/bin/python -m smutbench.runner \
+    --subject-url http://POD:8080 --subject-model qwen --seeds 1,2,3
+```
+
+The system prompt is the smol-profile lowering of the manifest's
+setup.fund / execute blocks plus the IR guardrails — it teaches the
+recipe, never the armed scenario (`test_prompt_teaches_recipe_never_
+scenario` enforces this). Model misbehavior (malformed tool arguments,
+prose instead of tools, step-budget exhaustion) is *scored*; endpoint
+failure raises `SubjectTransportError` and aborts the run — infra
+failing is not evidence about the model. `tests/test_subject.py`
+validates the adapter by driving the full suite green with a scripted
+correct-model transport, no endpoint needed.
+
 ## Not in the slice yet
 
-Multi-recipe generation (paid-service), the rotating held-out
-qualification set, and the minimal reference runner that adapts
-`Twin.call()` to an actual model harness.
+Multi-recipe generation (paid-service) and the rotating held-out
+qualification set (matters once official results exist).
