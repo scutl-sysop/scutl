@@ -69,6 +69,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--subject-seed", type=int, default=None,
                    help="sampling seed passed to the endpoint")
     p.add_argument("--subject-max-steps", type=int, default=40)
+    p.add_argument("--subject-think-budget", type=float,
+                   default=subject.THINK_BUDGET, metavar="SECONDS",
+                   help="wall-clock cap per generation; an overrun is a "
+                        "scored failure, not an infra abort "
+                        f"(default {subject.THINK_BUDGET:g}s)")
     p.add_argument("--heldout", nargs="?", const="ACTIVE", metavar="ROUND",
                    help="grade against the held-out qualification set "
                         "instead of the public menu (default: the "
@@ -88,7 +93,9 @@ def main(argv: list[str] | None = None) -> int:
         scenario_gen = lambda rec: bench["heldout"].generate(rec, args.heldout)
     if args.subject_url:
         policy = subject.ModelSubject(
-            recipe, subject.http_transport(args.subject_url),
+            recipe,
+            subject.http_transport(args.subject_url,
+                                   think_budget=args.subject_think_budget),
             model=args.subject_model, seed=args.subject_seed,
             max_steps=args.subject_max_steps,
             tools=bench["tools"], prompt_builder=bench["prompt_builder"])

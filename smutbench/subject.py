@@ -16,6 +16,12 @@ bench infrastructure failing is not evidence about the model, so the run
 aborts instead of grading a false red. Model misbehavior (malformed tool
 arguments, prose instead of a tool call, step-budget exhaustion) IS
 evidence, and is fed back or scored accordingly.
+
+Thinking time is scored the same way: a generation that exceeds
+THINK_BUDGET seconds of wall clock is a failed cell (owner ruling,
+2026-08-20 — a model that deliberates past the budget is being
+measured, not inconvenienced), while a failure to *connect* stays an
+infra abort.
 """
 
 from __future__ import annotations
@@ -135,10 +141,23 @@ class SubjectTransportError(RuntimeError):
     """The subject endpoint failed; infra problem, not a model grade."""
 
 
+class SubjectThinkingTimeout(RuntimeError):
+    """The model exceeded the per-generation thinking budget; this IS
+    evidence about the model — ModelSubject scores it as a failure."""
+
+
+THINK_BUDGET = 120.0   # seconds of wall clock per generation, scored
+CONNECT_TIMEOUT = 10.0  # seconds to reach the endpoint at all, infra
+
+
 def http_transport(base_url: str, api_key: str | None = None,
-                   timeout: float = 300.0):
+                   think_budget: float = THINK_BUDGET):
     """Returns transport(payload) -> response message dict, over
-    POST {base_url}/v1/chat/completions."""
+    POST {base_url}/v1/chat/completions.
+
+    A ReadTimeout after think_budget seconds means the model is still
+    deliberating — raised as SubjectThinkingTimeout (scored). A
+    ConnectTimeout or any other request failure is infra (aborts)."""
     import requests
 
     url = base_url.rstrip("/") + "/v1/chat/completions"
@@ -149,7 +168,13 @@ def http_transport(base_url: str, api_key: str | None = None,
     def transport(payload: dict) -> dict:
         try:
             resp = requests.post(url, json=payload, headers=headers,
-                                 timeout=timeout)
+                                 timeout=(CONNECT_TIMEOUT, think_budget))
+        except requests.exceptions.ConnectTimeout as e:
+            raise SubjectTransportError(f"POST {url}: {e}") from e
+        except requests.exceptions.ReadTimeout as e:
+            raise SubjectThinkingTimeout(
+                f"no completion within think budget "
+                f"({think_budget:g}s): {e}") from e
         except requests.RequestException as e:
             raise SubjectTransportError(f"POST {url}: {e}") from e
         if resp.status_code != 200:
@@ -197,7 +222,12 @@ class ModelSubject:
                        "tools": self.tools, "temperature": self.temperature}
             if self.seed is not None:
                 payload["seed"] = self.seed
-            msg = self.transport(payload)
+            try:
+                msg = self.transport(payload)
+            except SubjectThinkingTimeout as e:
+                return self._finish(step, {
+                    "success": False, "escalate": False,
+                    "notes": f"subject exceeded thinking budget: {e}"})
             calls = msg.get("tool_calls") or []
             messages.append({"role": "assistant",
                              "content": msg.get("content") or "",

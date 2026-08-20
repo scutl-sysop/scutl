@@ -208,3 +208,16 @@ def test_transport_error_raises_not_grades():
     policy = ModelSubject(RECIPE, transport, model="t")
     with pytest.raises(SubjectTransportError):
         scenarios.run_scenario(by_name("happy-path"), policy, 7)
+
+
+def test_thinking_timeout_is_scored_failure():
+    from smutbench.subject import SubjectThinkingTimeout
+
+    def transport(payload):
+        raise SubjectThinkingTimeout("no completion within think budget "
+                                     "(120s)")
+
+    policy = ModelSubject(RECIPE, transport, model="t")
+    r = scenarios.run_scenario(by_name("happy-path"), policy, 7)
+    assert not r["outcome"]
+    assert "thinking budget" in r["report"]["notes"]
