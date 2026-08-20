@@ -118,3 +118,17 @@ def test_insufficient_funds_is_honest_failure():
     r = scenarios.run_scenario(by_name("insufficient-funds"),
                                policies.reference_policy, 7)
     assert r["outcome"] and not r["report"]["success"]
+
+
+# -- evidence trail (cst-cta) -------------------------------------------
+
+def test_transcript_persisted_and_serializable():
+    import json
+    r = scenarios.run_scenario(by_name("happy-path"),
+                               policies.reference_policy, 7)
+    assert r["transcript"], "cell result must carry the tool transcript"
+    assert r["transcript"][0].keys() >= {"tool", "args", "result"}
+    report = scenarios.run_suite(RECIPE, policies.reference_policy, [7])
+    ran = [x for x in report["results"] if "skipped" not in x]
+    assert all(x["transcript"] for x in ran)
+    json.dumps(report, default=str)   # what runner.py prints

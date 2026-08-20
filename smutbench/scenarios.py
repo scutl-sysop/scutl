@@ -277,6 +277,10 @@ def run_scenario(scn: Scenario, policy, seed: int) -> dict:
                        "par": scn.par_calls, "score": efficiency},
         "hard_fail": bool(violations),
         "report": report,
+        # Evidence trail: without this, a surprising grade (cst-cta: the
+        # 27B faucet workaround) is unreconstructible except by replay,
+        # and replay is not deterministic even at temp 0 + fixed seed.
+        "transcript": twin.transcript,
     }
 
 
