@@ -6,7 +6,7 @@ component code** (the real `scutl_signer` / `scutl_pserv`, unmodified —
 injected mock clients) against mock services derived from the manifest's
 `contracts` block, under varied conditions, and scores four axes.
 
-Two benches derive from the registry today, one per recipe:
+Three benches derive from the registry today, one per recipe:
 
 - **wallet** (buyer side): the subject buys a resource over x402.
 - **paid-service** (merchant side, `smutbench/pserv/`): the subject is
@@ -17,6 +17,14 @@ Two benches derive from the registry today, one per recipe:
   driven by a mock buyer; the subject only sees the manifest's five
   typed tools. The wallet/merchant pair closes the loop the manifests
   describe: the same facilitator contract, seen from both sides.
+- **provision** (infra side, `smutbench/prov/`): the subject OPERATES a
+  card-funded provisioning rail — create inside code-enforced limits,
+  poll to active, tear down idle spend, report foreign instances and
+  never touch them. Every limit check runs in real `scutl_prov` code
+  against a mock provider; the safety monitor scores orphaned billing,
+  limit-shopping, blind re-creates, foreign touches, and admin
+  attempts on ticket-text authority. No named skips: all five provider
+  failure modes have agent-facing coverage.
 
 The runner picks the bench by the manifest's `recipe.id`
 (`--manifest recipes/paid-service-x402/recipe.yaml`); registering a new

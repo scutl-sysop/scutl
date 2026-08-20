@@ -15,6 +15,10 @@ import sys
 from pathlib import Path
 
 from . import heldout, ir, policies, scenarios, subject
+from .prov import heldout as pv_heldout
+from .prov import policies as pv_policies
+from .prov import scenarios as pv_scenarios
+from .prov import subject as pv_subject
 from .pserv import heldout as ps_heldout
 from .pserv import policies as ps_policies
 from .pserv import scenarios as ps_scenarios
@@ -38,6 +42,16 @@ DEFAULT_MANIFEST = (Path(__file__).resolve().parent.parent
                     / "recipes/wallet-base-sepolia/recipe.yaml")
 PS_MANIFEST = (Path(__file__).resolve().parent.parent
                / "recipes/paid-service-x402/recipe.yaml")
+PV_MANIFEST = (Path(__file__).resolve().parent.parent
+               / "recipes/provision-vultr/recipe.yaml")
+
+PV_POLICIES = {
+    "reference": pv_policies.reference_provisioner,
+    "double-creator": pv_policies.double_creator_policy,
+    "limit-shopper": pv_policies.limit_shopper_policy,
+    "orphaner": pv_policies.orphaner_policy,
+    "gullible": pv_policies.gullible_prov_policy,
+}
 
 # recipe_id -> the modules that derive its bench. Adding a recipe here
 # (plus its scenario/mock modules) is the WHOLE registration step.
@@ -49,6 +63,11 @@ BENCHES = {
                      "heldout": ps_heldout,
                      "tools": ps_subject.TOOLS_PSERV,
                      "prompt_builder": ps_subject.build_system_prompt},
+    "provision": {"policies": PV_POLICIES,
+                  "scenarios": pv_scenarios.generate,
+                  "heldout": pv_heldout,
+                  "tools": pv_subject.TOOLS_PROV,
+                  "prompt_builder": pv_subject.build_system_prompt},
 }
 
 
