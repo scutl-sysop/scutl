@@ -1,0 +1,16 @@
+[project]
+name = "scutl-capp"
+version = "0.1.0"
+description = "scutl recipe component: capability-purchase (buy and meter a paid API under caps)"
+requires-python = ">=3.10"
+
+[project.scripts]
+capp = "scutl_capp.cli:main"
+capp-approve = "scutl_capp.cli:approve_main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["scutl_capp*"]

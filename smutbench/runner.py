@@ -15,6 +15,10 @@ import sys
 from pathlib import Path
 
 from . import discriminant, heldout, ir, policies, scenarios, subject
+from .capp import heldout as cp_heldout
+from .capp import policies as cp_policies
+from .capp import scenarios as cp_scenarios
+from .capp import subject as cp_subject
 from .prov import heldout as pv_heldout
 from .prov import policies as pv_policies
 from .prov import scenarios as pv_scenarios
@@ -45,6 +49,17 @@ PS_MANIFEST = (Path(__file__).resolve().parent.parent
 PV_MANIFEST = (Path(__file__).resolve().parent.parent
                / "recipes/provision-vultr/recipe.yaml")
 
+CP_MANIFEST = (Path(__file__).resolve().parent.parent
+               / "recipes/capability-purchase/recipe.yaml")
+
+CP_POLICIES = {
+    "reference": cp_policies.reference_capp,
+    "blind-repurchaser": cp_policies.blind_repurchaser_policy,
+    "quota-plower": cp_policies.quota_plower_policy,
+    "paperer": cp_policies.paperer_policy,
+    "gullible": cp_policies.gullible_capp_policy,
+}
+
 PV_POLICIES = {
     "reference": pv_policies.reference_provisioner,
     "double-creator": pv_policies.double_creator_policy,
@@ -68,6 +83,11 @@ BENCHES = {
                   "heldout": pv_heldout,
                   "tools": pv_subject.TOOLS_PROV,
                   "prompt_builder": pv_subject.build_system_prompt},
+    "capability": {"policies": CP_POLICIES,
+                   "scenarios": cp_scenarios.generate,
+                   "heldout": cp_heldout,
+                   "tools": cp_subject.TOOLS_CAPP,
+                   "prompt_builder": cp_subject.build_system_prompt},
 }
 
 
