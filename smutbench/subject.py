@@ -169,25 +169,32 @@ class ModelSubject:
 
     def __init__(self, ir: RecipeIR, transport, model: str,
                  temperature: float = 0.0, max_steps: int = 40,
-                 seed: int | None = None):
+                 seed: int | None = None, tools: list | None = None,
+                 prompt_builder=None):
         self.ir = ir
         self.transport = transport
         self.model = model
         self.temperature = temperature
         self.max_steps = max_steps
         self.seed = seed
+        # Recipe-specific surface: tool schemas + system-prompt lowering.
+        # Defaults are the wallet recipe's (this module predates recipe #2).
+        self.tools = tools or TOOLS
+        self.prompt_builder = prompt_builder or (
+            lambda ir_, twin: build_system_prompt(ir_, twin.task))
         self.last_harness: dict = {}       # per-run stats, for receipts
 
     def __call__(self, twin: Twin) -> dict:
         messages = [
             {"role": "system",
-             "content": build_system_prompt(self.ir, twin.task)},
-            {"role": "user", "content": "Begin."},
+             "content": self.prompt_builder(self.ir, twin)},
+            {"role": "user",
+             "content": getattr(twin, "task_context", None) or "Begin."},
         ]
         nudges = 0
         for step in range(1, self.max_steps + 1):
             payload = {"model": self.model, "messages": messages,
-                       "tools": TOOLS, "temperature": self.temperature}
+                       "tools": self.tools, "temperature": self.temperature}
             if self.seed is not None:
                 payload["seed"] = self.seed
             msg = self.transport(payload)

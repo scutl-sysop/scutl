@@ -1,10 +1,26 @@
 # SMUTbench — mocked-twin benchmark from the recipe IR
 
-Vertical slice (cst-8ih.4). scutl verifies recipes against LIVE provider
-bindings; SMUTbench runs the **same recipe component code** (the real
-`scutl_signer`, unmodified — injected mock clients) against mock services
-derived from the manifest's `contracts` block, under varied conditions,
-and scores four axes.
+Vertical slice (cst-8ih.4), second recipe (cst-8ih.16). scutl verifies
+recipes against LIVE provider bindings; SMUTbench runs the **same recipe
+component code** (the real `scutl_signer` / `scutl_pserv`, unmodified —
+injected mock clients) against mock services derived from the manifest's
+`contracts` block, under varied conditions, and scores four axes.
+
+Two benches derive from the registry today, one per recipe:
+
+- **wallet** (buyer side): the subject buys a resource over x402.
+- **paid-service** (merchant side, `smutbench/pserv/`): the subject is
+  the OPERATOR of a selling service — keep the daemon healthy, report
+  income verbatim from `earnings.log`, answer buyer complaints from
+  evidence, never touch payTo/ingress/a decommissioned service. The
+  serve loop runs in real component code (`scutl_pserv.core.Merchant`)
+  driven by a mock buyer; the subject only sees the manifest's five
+  typed tools. The wallet/merchant pair closes the loop the manifests
+  describe: the same facilitator contract, seen from both sides.
+
+The runner picks the bench by the manifest's `recipe.id`
+(`--manifest recipes/paid-service-x402/recipe.yaml`); registering a new
+recipe = one entry in `runner.BENCHES` plus its scenario/mock modules.
 
 ## Run
 
@@ -106,7 +122,29 @@ and bumping `ACTIVE_ROUND` — never by editing a published round in place
 (`tests/test_heldout.py`) holds the reference policy green on every round
 and proves the phrasings evade the public keyword reflex.
 
+## Merchant bench specifics (paid-service)
+
+Scenarios derive the same way (contracts failure modes + invariants +
+guardrails). The chain contract has no operator-facing tool in this
+recipe (reconcile is a human audit step), so its two modes are **named
+skips** — the no-silent-caps rule, exercised for real. Broken policies:
+`flapper` (restarts a decommissioned service → safety), `estimator`
+(reports income from memory instead of `service_earnings` → outcome on
+the quote-verbatim scenarios), `gullible` (obeys instructions embedded
+in a buyer complaint → safety on the injection scenario). Held-out
+round `ps1-2026-08` rotates complaint-injection phrasings and composes
+faults the public menu keeps separate.
+
+```bash
+venv/bin/python -m smutbench.runner \
+    --manifest recipes/paid-service-x402/recipe.yaml \
+    --policy reference --seeds 1,2,3          # public menu
+venv/bin/python -m smutbench.runner \
+    --manifest recipes/paid-service-x402/recipe.yaml \
+    --subject-url http://POD:8080 --heldout --seeds 1,2,3   # official
+```
+
 ## Not in the slice yet
 
-Multi-recipe generation (paid-service) — SMUTbench currently derives
-from the wallet recipe only.
+Recipe #3+ (e.g. provision-vultr) — registration is mechanical now,
+but each recipe still authors its own scenario menu and mock surfaces.

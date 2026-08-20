@@ -15,6 +15,10 @@ import sys
 from pathlib import Path
 
 from . import heldout, ir, policies, scenarios, subject
+from .pserv import heldout as ps_heldout
+from .pserv import policies as ps_policies
+from .pserv import scenarios as ps_scenarios
+from .pserv import subject as ps_subject
 
 POLICIES = {
     "reference": policies.reference_policy,
@@ -23,13 +27,37 @@ POLICIES = {
     "false-success-truster": policies.false_success_truster_policy,
 }
 
+PS_POLICIES = {
+    "reference": ps_policies.reference_operator,
+    "flapper": ps_policies.flapper_policy,
+    "estimator": ps_policies.estimator_policy,
+    "gullible": ps_policies.gullible_operator_policy,
+}
+
 DEFAULT_MANIFEST = (Path(__file__).resolve().parent.parent
                     / "recipes/wallet-base-sepolia/recipe.yaml")
+PS_MANIFEST = (Path(__file__).resolve().parent.parent
+               / "recipes/paid-service-x402/recipe.yaml")
+
+# recipe_id -> the modules that derive its bench. Adding a recipe here
+# (plus its scenario/mock modules) is the WHOLE registration step.
+BENCHES = {
+    "wallet": {"policies": POLICIES, "scenarios": scenarios.generate,
+               "heldout": heldout, "tools": None, "prompt_builder": None},
+    "paid-service": {"policies": PS_POLICIES,
+                     "scenarios": ps_scenarios.generate,
+                     "heldout": ps_heldout,
+                     "tools": ps_subject.TOOLS_PSERV,
+                     "prompt_builder": ps_subject.build_system_prompt},
+}
 
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="smutbench")
-    p.add_argument("--policy", choices=sorted(POLICIES), default="reference")
+    p.add_argument("--policy", default="reference",
+                   help="scripted policy name (per-recipe: wallet has "
+                        f"{sorted(POLICIES)}, paid-service has "
+                        f"{sorted(PS_POLICIES)})")
     p.add_argument("--seeds", default="1,2,3")
     p.add_argument("--manifest", default=str(DEFAULT_MANIFEST))
     p.add_argument("--subject-url", metavar="BASE_URL",
@@ -41,28 +69,39 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--subject-seed", type=int, default=None,
                    help="sampling seed passed to the endpoint")
     p.add_argument("--subject-max-steps", type=int, default=40)
-    p.add_argument("--heldout", nargs="?", const=heldout.ACTIVE_ROUND,
-                   metavar="ROUND",
+    p.add_argument("--heldout", nargs="?", const="ACTIVE", metavar="ROUND",
                    help="grade against the held-out qualification set "
-                        "instead of the public menu (default round: "
-                        f"{heldout.ACTIVE_ROUND})")
+                        "instead of the public menu (default: the "
+                        "recipe's ACTIVE_ROUND)")
     args = p.parse_args(argv)
 
     recipe = ir.load(args.manifest)
+    if recipe.recipe_id not in BENCHES:
+        p.error(f"no bench registered for recipe '{recipe.recipe_id}' "
+                f"(have: {sorted(BENCHES)})")
+    bench = BENCHES[recipe.recipe_id]
     seeds = [int(s) for s in args.seeds.split(",") if s]
-    scenario_gen = None
+    scenario_gen = bench["scenarios"]
     if args.heldout:
-        scenario_gen = lambda rec: heldout.generate(rec, args.heldout)
+        if args.heldout == "ACTIVE":
+            args.heldout = bench["heldout"].ACTIVE_ROUND
+        scenario_gen = lambda rec: bench["heldout"].generate(rec, args.heldout)
     if args.subject_url:
         policy = subject.ModelSubject(
             recipe, subject.http_transport(args.subject_url),
             model=args.subject_model, seed=args.subject_seed,
-            max_steps=args.subject_max_steps)
+            max_steps=args.subject_max_steps,
+            tools=bench["tools"], prompt_builder=bench["prompt_builder"])
         policy_name = f"subject:{args.subject_model}@{args.subject_url}"
     else:
-        policy = POLICIES[args.policy]
+        if args.policy not in bench["policies"]:
+            p.error(f"policy '{args.policy}' unknown for recipe "
+                    f"'{recipe.recipe_id}' "
+                    f"(have: {sorted(bench['policies'])})")
+        policy = bench["policies"][args.policy]
         policy_name = args.policy
-    report = scenarios.run_suite(recipe, policy, seeds, scenario_gen)
+    report = scenarios.run_suite(recipe, policy, seeds,
+                                 scenario_gen=scenario_gen)
     report["policy"] = policy_name
     if args.heldout:
         report["heldout_round"] = args.heldout
