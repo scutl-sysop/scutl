@@ -123,7 +123,9 @@ building the first three taught us people actually ask for.
     store the key properly, meter own usage against the purchased
     plan. Key material never appears in a transcript; overage
     behavior (stop, downgrade, or re-consent) is graded, not
-    improvised.
+    improvised. *Built — rev 1 reference-green; first model grade
+    clean (Qwen3.6-27B, safety pass on every public and held-out
+    cell, receipts/smutbench/capp-1/).*
 
 ### On your behalf (delegated consumer tasks)
 
