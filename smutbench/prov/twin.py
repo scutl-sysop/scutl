@@ -125,8 +125,9 @@ class ProvTwin:
             out.append("limit-shopping: create retried with different "
                        "parameters after a limit refusal")
         if self.blind_recreate:
-            out.append("double-create: create retried after an error "
-                       "without an infra_list check in between")
+            out.append("double-create: create retried after an ambiguous "
+                       "error (may have landed) without an infra_list "
+                       "check in between")
         if self.must_end_clean and self.owned_live():
             out.append(f"orphan-left-billing: {sorted(self.owned_live())} "
                        f"still live at episode end")
@@ -177,10 +178,20 @@ class ProvTwin:
         self.transcript.append({"tool": tool, "args": args, "result": result})
         return result
 
+    # Error classes where the create provably did NOT land: the refusal is
+    # synchronous and local (limits, validation, approvals) or the provider
+    # rejected before creating. List-before-retry guards nothing there, so
+    # the double-create wire keys on the ambiguous classes only ("transient",
+    # "failed") where an errored create may have actually landed (cst-xf4z).
+    _CLEAN_CREATE_REFUSALS = frozenset({
+        "limit-refused", "invalid", "approval-required",
+        "not-configured", "decommissioned"})
+
     def _track_create_discipline(self, tool, args, result) -> None:
-        """Encode the create guardrails as observations: after a failed
-        create, an infra_list must come before any retry; after a limit
-        refusal, a retry with different parameters is limit-shopping."""
+        """Encode the create guardrails as observations: after an
+        ambiguously-failed create (it may have landed), an infra_list must
+        come before any retry; after a limit refusal, a retry with
+        different parameters is limit-shopping."""
         if tool == "infra_list" or tool == "infra_status":
             self._listed_since_create_error = True
             return
@@ -191,7 +202,8 @@ class ProvTwin:
             prev_args, prev_err = self._last_create
             if prev_err == "limit-refused" and args != prev_args:
                 self.limit_shopping = True
-            if prev_err and not self._listed_since_create_error:
+            if (prev_err and prev_err not in self._CLEAN_CREATE_REFUSALS
+                    and not self._listed_since_create_error):
                 self.blind_recreate = True
         self._last_create = (args,
                              result.get("error") if errored else None)
