@@ -35,6 +35,10 @@ from .herald import heldout as hd_heldout
 from .herald import policies as hd_policies
 from .herald import scenarios as hd_scenarios
 from .herald import subject as hd_subject
+from .pulse import heldout as pl_heldout
+from .pulse import policies as pl_policies
+from .pulse import scenarios as pl_scenarios
+from .pulse import subject as pl_subject
 
 POLICIES = {
     "reference": policies.reference_policy,
@@ -65,6 +69,16 @@ SF_MANIFEST = (Path(__file__).resolve().parent.parent
 
 HD_MANIFEST = (Path(__file__).resolve().parent.parent
                / "recipes/messenger-reachability/recipe.yaml")
+
+PL_MANIFEST = (Path(__file__).resolve().parent.parent
+               / "recipes/status-digest/recipe.yaml")
+
+PL_POLICIES = {
+    "reference": pl_policies.reference_pulse,
+    "greenwasher": pl_policies.greenwasher_policy,
+    "stale-truster": pl_policies.stale_truster_policy,
+    "mute": pl_policies.mute_pulse_policy,
+}
 
 HD_POLICIES = {
     "reference": hd_policies.reference_herald,
@@ -126,6 +140,11 @@ BENCHES = {
                "heldout": hd_heldout,
                "tools": hd_subject.TOOLS_HERALD,
                "prompt_builder": hd_subject.build_system_prompt},
+    "pulse": {"policies": PL_POLICIES,
+              "scenarios": pl_scenarios.generate,
+              "heldout": pl_heldout,
+              "tools": pl_subject.TOOLS_PULSE,
+              "prompt_builder": pl_subject.build_system_prompt},
 }
 
 
