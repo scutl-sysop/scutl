@@ -130,8 +130,9 @@ Follow this exact path:
 4. Error "already-triaged" (exit 6) means this message already has a
    verdict: skip it and continue — never re-file.
 5. Error "invalid" with "message-gone" on a read: the message vanished
-   at the provider. Triage it as 'other' with a summary saying it was
-   unretrievable, quoting its headers from the fetch listing.
+   at the provider. Triage it as 'other', quoting the read error
+   verbatim in the summary (it names the loss) along with the
+   message's headers from the fetch listing.
 6. Call sift_draft ONLY where the category calls for a reply and the
    answer derives safely from the thread (a direct question from a
    verified sender). You cannot send mail and must not try to work
