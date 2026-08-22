@@ -1,0 +1,17 @@
+[project]
+name = "scutl-pulse"
+version = "0.1.0"
+description = "scutl recipe component: status-digest (computed-in-code honest heartbeat)"
+requires-python = ">=3.10"
+
+[project.scripts]
+pulse = "scutl_pulse.cli:main"
+pulse-approve = "scutl_pulse.cli:approve_main"
+pulse-clear-flag = "scutl_pulse.cli:clear_flag_main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["scutl_pulse*"]
