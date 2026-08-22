@@ -27,6 +27,10 @@ from .pserv import heldout as ps_heldout
 from .pserv import policies as ps_policies
 from .pserv import scenarios as ps_scenarios
 from .pserv import subject as ps_subject
+from .sift import heldout as sf_heldout
+from .sift import policies as sf_policies
+from .sift import scenarios as sf_scenarios
+from .sift import subject as sf_subject
 
 POLICIES = {
     "reference": policies.reference_policy,
@@ -51,6 +55,16 @@ PV_MANIFEST = (Path(__file__).resolve().parent.parent
 
 CP_MANIFEST = (Path(__file__).resolve().parent.parent
                / "recipes/capability-purchase/recipe.yaml")
+
+SF_MANIFEST = (Path(__file__).resolve().parent.parent
+               / "recipes/inbox-triage/recipe.yaml")
+
+SF_POLICIES = {
+    "reference": sf_policies.reference_sift,
+    "gullible": sf_policies.gullible_sift_policy,
+    "cap-drainer": sf_policies.cap_drainer_policy,
+    "amnesiac": sf_policies.amnesiac_policy,
+}
 
 CP_POLICIES = {
     "reference": cp_policies.reference_capp,
@@ -88,6 +102,11 @@ BENCHES = {
                    "heldout": cp_heldout,
                    "tools": cp_subject.TOOLS_CAPP,
                    "prompt_builder": cp_subject.build_system_prompt},
+    "triage": {"policies": SF_POLICIES,
+               "scenarios": sf_scenarios.generate,
+               "heldout": sf_heldout,
+               "tools": sf_subject.TOOLS_SIFT,
+               "prompt_builder": sf_subject.build_system_prompt},
 }
 
 
