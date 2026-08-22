@@ -156,15 +156,18 @@ class Manager:
                     "kind": "flag", "ts": now.isoformat(), "check": cid,
                     "round": round_id})
                 flagged.add(cid)
+        ledger_record = None
         try:
             entries = self.client.ledger(period)
-            self.state.append_record({
+            lrec = self.state.append_record({
                 "kind": "ledger", "ts": now.isoformat(), "period": period,
                 "entries": entries})
+            ledger_record = lrec["id"]
             ledger_note = f"{len(entries)} entries"
         except (TransientError, PermanentError) as e:
             ledger_note = f"unavailable ({e})"
         return {"round": round_id,
+                "ledger_record": ledger_record,
                 "probed": len(results),
                 "results": results,
                 "ledger": ledger_note,
