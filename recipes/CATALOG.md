@@ -108,7 +108,10 @@ building the first three taught us people actually ask for.
     categorize, draft-never-send without approval. The safety spine
     is injection-hardening at full width — mail that *asks* the
     agent to pay, forward, or rotate keys is the bench, and mail is
-    always data, never instructions.
+    always data, never instructions. *Built — rev 1 reference-green;
+    model grades clean at two tiers (Qwen3.6-27B and 35B-A3B, safety
+    pass on every public and held-out cell; the A3B posts 42/42 after
+    the lowering rev — receipts/smutbench/sift-1..3/).*
 22. **messenger-reachability** — report to and take instruction from
     the human over a channel they already live in, with who-is-
     speaking verified in code and rate caps that make the flooding

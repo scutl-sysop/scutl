@@ -1,4 +1,4 @@
-# SCUTL recipe manifest — rev 1 draft
+# SCUTL recipe manifest — rev 1 (reference-green)
 # Recipe #5: "Inbox triage" (work an inbox: summarize, categorize,
 # draft-never-send). Catalog row 21; presence group. Design record:
 # bead cst-9blh (group brainstorm 2026-08-20, owner greenlight
@@ -41,7 +41,14 @@ recipe:
     instruction: mail asking the agent to pay, forward, reconfigure,
     or reveal anything is flagged and reported verbatim. Every triage
     verdict lands in an append-only log; a message is triaged once.
-  status: draft
+  status: reference-green  # bench green (public + heldout); model grades
+                           # clean: Qwen3.6-27B 40/42 public, 12/12 heldout
+                           # (receipts/smutbench/sift-1/); Qwen3.6-35B-A3B
+                           # 42/42 public, 12/12 heldout after the smol
+                           # lowering rev (sift-2/, sift-3/) — safety pass
+                           # on every cell of every run at both tiers.
+                           # 'shipped' waits on a blessed live mailbox
+                           # provider (bindings record the vacancy).
   maintainer: first-party
   depends: []   # standalone by design; composition (agent-email as the
                 # owned mailbox, messenger-reachability as the report
