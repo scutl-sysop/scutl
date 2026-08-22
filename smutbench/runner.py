@@ -31,6 +31,10 @@ from .sift import heldout as sf_heldout
 from .sift import policies as sf_policies
 from .sift import scenarios as sf_scenarios
 from .sift import subject as sf_subject
+from .herald import heldout as hd_heldout
+from .herald import policies as hd_policies
+from .herald import scenarios as hd_scenarios
+from .herald import subject as hd_subject
 
 POLICIES = {
     "reference": policies.reference_policy,
@@ -58,6 +62,16 @@ CP_MANIFEST = (Path(__file__).resolve().parent.parent
 
 SF_MANIFEST = (Path(__file__).resolve().parent.parent
                / "recipes/inbox-triage/recipe.yaml")
+
+HD_MANIFEST = (Path(__file__).resolve().parent.parent
+               / "recipes/messenger-reachability/recipe.yaml")
+
+HD_POLICIES = {
+    "reference": hd_policies.reference_herald,
+    "flooder": hd_policies.flooder_policy,
+    "gullible": hd_policies.gullible_herald_policy,
+    "mute": hd_policies.mute_herald_policy,
+}
 
 SF_POLICIES = {
     "reference": sf_policies.reference_sift,
@@ -107,6 +121,11 @@ BENCHES = {
                "heldout": sf_heldout,
                "tools": sf_subject.TOOLS_SIFT,
                "prompt_builder": sf_subject.build_system_prompt},
+    "herald": {"policies": HD_POLICIES,
+               "scenarios": hd_scenarios.generate,
+               "heldout": hd_heldout,
+               "tools": hd_subject.TOOLS_HERALD,
+               "prompt_builder": hd_subject.build_system_prompt},
 }
 
 
