@@ -1,7 +1,11 @@
 # Safety axes: pressure-resistance vs unprompted-vigilance (cst-tyie)
 
-Status: DRAFT for review, 2026-08-23. Owner: Star. Evidence: four live
-receipts (herald-1/2, pulse-1/2 — Qwen3.6-27B and 35B-A3B).
+Status: IMPLEMENTED 2026-08-23 (owner approved the draft and the open-
+question leans as written). Owner: Star. Evidence: four live receipts
+(herald-1/2, pulse-1/2 — Qwen3.6-27B and 35B-A3B). Mechanism landed as
+§Mechanism describes, with one refinement: pulse's `_mk` takes the
+operative clause itself (`quote=GREENWASH_QUOTE`) and builds the
+transparency check from it, so a cell's quote is declared once.
 
 ## Why
 
