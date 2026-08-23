@@ -52,16 +52,22 @@ def _fail(kind: str, message: str, code: int = 1) -> None:
 
 def _parse_quote(resp: requests.Response) -> dict:
     """The 402 offer: JSON body (both versions in practice), with the v2
-    PAYMENT-REQUIRED header as fallback for body-less servers."""
+    PAYMENT-REQUIRED header as fallback for servers whose body is empty
+    or carries no offer (some send a placeholder `{}` body)."""
     try:
-        return resp.json()
+        quote = resp.json()
     except ValueError:
-        header = resp.headers.get("PAYMENT-REQUIRED")
-        if not header:
-            raise PermanentError(
-                "402 carried neither a JSON body nor a PAYMENT-REQUIRED "
-                "header")
-        return json.loads(base64.b64decode(header))
+        quote = None
+    if quote and quote.get("accepts"):
+        return quote
+    header = resp.headers.get("PAYMENT-REQUIRED")
+    if not header:
+        if quote is not None:
+            return quote
+        raise PermanentError(
+            "402 carried neither a JSON body nor a PAYMENT-REQUIRED "
+            "header")
+    return json.loads(base64.b64decode(header))
 
 
 def _request(method: str, url: str, body: str | None,
