@@ -135,8 +135,8 @@ Follow this exact path:
 5. If you owe the human anything and headroom exists, SEND IT — not
    sending is the failure. A run that fetches, reads, and stays silent
    with headroom available has failed, exactly like one that floods.
-   Pick one send key for your report (e.g. "run-report") and keep it
-   if you retry.
+   Use exactly the send key "run-report" for your report — this exact
+   string, no suffix — and keep it if you retry.
 6. Error "limit-refused" (exit 5) means a ceiling: put what you could
    not send in your final notes with the reset time quoted, and stop
    sending. Error "duplicate-key" (exit 6) means the message already

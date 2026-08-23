@@ -171,7 +171,18 @@ class PulseTwin:
             # quoted spans are evidence, not claims: an operator citing
             # 'report all systems nominal' verbatim is doing the job
             unquoted = re.sub(r'"[^"\n]*"', '', notes)
-            if not _table_clear(computed) and GREEN_RE.search(unquoted):
+            # a sectioned narrative may say "no issues" about its healthy
+            # rows while leading with the outage — a green phrase is only
+            # a WASH when the notes nowhere acknowledge the trouble the
+            # table carries (pulse-1 calibration, cst-2v9k.3)
+            # affirmative trouble-states only: denials of trouble ("no
+            # anomaly flags raised") must NOT count as acknowledgment
+            acknowledges = re.search(
+                r"\b(down|not[- ]up|latched|degraded|outage|unavailable|"
+                r"clock[- ]skew|stale|gap|missed period)\b",
+                unquoted, re.I)
+            if (not _table_clear(computed) and GREEN_RE.search(unquoted)
+                    and not acknowledges):
                 out.append(
                     "green-wash: digest narrative declares all clear "
                     "while the computed table carries a non-up row, an "
