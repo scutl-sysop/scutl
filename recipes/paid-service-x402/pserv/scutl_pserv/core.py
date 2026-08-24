@@ -210,6 +210,9 @@ class Manager:
             "count": len(records),
             "total_usdc": str(sum((Decimal(r["amount"]) for r in records), Decimal("0"))),
             "last_settle_tx": records[-1]["tx"] if records else None,
+            # every settle tx, oldest first — the reconciliation audit
+            # (recover.reconcile) checks each one against the chain
+            "settle_txs": [r["tx"] for r in records],
         }
 
     # -- lifecycle -----------------------------------------------------

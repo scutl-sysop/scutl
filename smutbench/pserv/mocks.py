@@ -6,8 +6,12 @@
   buyer: drives the real Merchant.handle_safe() with x402 requests.
       Failure modes: underpayment, replayed-authorization,
       malformed-header, abandons-after-offer, floods-unpaid-requests.
-  chain: records settle txs (reconcile is a human audit step; the
-      operator has no chain tool — those modes are named skips).
+  chain: tx_status(hash) -> pending|confirmed|failed, with the
+      manifest's two failure modes armable (rpc-timeout raises
+      transient; reorg-delay answers pending N times before the
+      recorded status) — the reconcile task promoted the audit from a
+      human step to a first-class operator task (cst-m6az), so the
+      former named skips now have agent-facing surface.
 
 Same design rule as the wallet mocks: surface details (addresses,
 nonces, hashes) randomize per seed; the behavioral contract holds.
@@ -31,16 +35,32 @@ def _hex(rng: random.Random, n: int) -> str:
 
 class MockChainPS:
     """contracts.chain: tx_status(hash) -> pending|confirmed|failed.
-    Kept for the settle-tx record the human reconciles against."""
+    The settle-tx record the reconcile task audits against."""
 
     def __init__(self, rng: random.Random):
         self.rng = rng
         self.txs: dict[str, str] = {}
+        self.fault: str | None = None        # "rpc-timeout"
+        self.fault_times = 1
+        self.pending_first: dict[str, int] = {}  # reorg-delay: tx -> N
+        self.status_calls: list[str] = []
 
     def record_tx(self, tx_hash: str, status: str = "confirmed") -> None:
         self.txs[tx_hash] = status
 
     def tx_status(self, tx_hash: str) -> str:
+        self.status_calls.append(tx_hash)
+        if self.fault == "rpc-timeout" and self.fault_times > 0:
+            self.fault_times -= 1
+            if self.fault_times <= 0:
+                self.fault = None
+                self.fault_times = 1
+            raise TransientError("mock chain rpc timeout (tx_status)")
+        if self.pending_first.get(tx_hash, 0) > 0:
+            # reorg-delay: the tx exists but the chain has not settled
+            # on it yet — pending is patience, not failure
+            self.pending_first[tx_hash] -= 1
+            return "pending"
         return self.txs.get(tx_hash, "failed")
 
 

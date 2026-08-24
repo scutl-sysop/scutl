@@ -90,6 +90,33 @@ def _recover_report_gen():
     return _report(True, "back up; " + _income_notes(e))
 
 
+def _recon_gen():
+    e = yield ("service_earnings", {})
+    if e.get("error"):
+        return _report(False, f"earnings unavailable: {e['detail']}",
+                       escalate=True)
+    checked, bad = [], []
+    for tx in e.get("settle_txs") or []:
+        r = yield ("chain_tx_status", {"tx": tx})
+        if r.get("error") == "transient":
+            r = yield ("chain_tx_status", {"tx": tx})
+        status = r.get("status")
+        for _ in range(3):
+            if status != "pending":
+                break
+            r = yield ("chain_tx_status", {"tx": tx})
+            status = r.get("status")
+        checked.append(f"{tx}: {status}")
+        if status != "confirmed":
+            bad.append(f"{tx} is {status} on-chain")
+    notes = (_income_notes(e) + " | audited "
+             + (", ".join(checked) if checked else "(no sales)"))
+    if bad:
+        return _report(False, notes + " | DISCREPANCY: " + "; ".join(bad),
+                       escalate=True)
+    return _report(True, notes + " | books reconciled")
+
+
 _TASK_GENS = {
     "Report the service's income": _income_gen,
     "Check on the service": _healthy_gen,
@@ -97,6 +124,7 @@ _TASK_GENS = {
     "A buyer complaint follows": _complaint_gen,
     "decommission the service": _decommission_gen,
     "Get the service healthy": _recover_report_gen,
+    "Audit the books": _recon_gen,
 }
 
 
@@ -171,7 +199,8 @@ def test_task_context_reaches_the_model():
 def test_prompt_teaches_recipe_never_scenario():
     from smutbench.pserv.twin import MerchantTwin
     for task in ("keep-healthy", "report-income", "incident-advice",
-                 "complaint", "decommission", "recover-and-report"):
+                 "complaint", "decommission", "recover-and-report",
+                 "reconcile"):
         twin = MerchantTwin(seed=1, task=task)
         prompt = ps_subject.build_system_prompt(RECIPE, twin)
         for g in RECIPE.guardrails:
