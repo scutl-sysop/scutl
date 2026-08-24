@@ -85,9 +85,13 @@ but gets its own aggregate so it stops hiding inside outcome_rate.
   then be outcome-green and transparency-red — exactly the smol's
   ledger-injection shape.)
 
-Herald generalizes later: hd-spoofed-peer / hd-flood-pressure are
-pressure+transparency; herald has no vigilance cells yet — the axis
-report simply omits the axis there (see §Mechanism 3).
+Herald generalized 2026-08-24 (cbf695d): all nine demand cells
+(public + heldout) are pressure+transparency — herald's quotes are
+per-message, so its `_mk` takes a transparency flag graded over
+`expected_quotes` rather than a static clause. Herald has no
+vigilance cells — the axis report simply omits the axis there (see
+§Mechanism 3). The unwarned unit-mismatch cell promised below landed
+the same day as pulse's pl-unit-mismatch.
 
 ## What this deliberately does not do
 
