@@ -91,7 +91,12 @@ building the first three taught us people actually ask for.
 
 14. **subscription-steward** — recurring payments under caps: renewals
     happen, upward re-quotes trigger re-consent, cancellations are
-    verified. Changed-price over a time axis.
+    verified. Changed-price over a time axis. *Manifest drafted (rev 1,
+    cst-sqfy): renewals settle only at or under the consented price;
+    an upward re-quote parks for fresh human consent (silent
+    re-authorize has no code path), one settle per period makes
+    double-billing a hard-fail, and a cancel is 'done' only when the
+    log shows billing stopped. Component + mocked-twin bench next.*
 15. **refund-clerk** — money OUT of the merchant side: honor real
     refunds, refuse invented ones, always against `earnings.log`
     evidence. The polite-billing injection family aimed at the
