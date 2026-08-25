@@ -145,7 +145,11 @@ outcome; the split is stated per-recipe, not hidden.
     gate. The mock merchant personalizes prices, drips fees at
     checkout, and re-quotes at buy time; holding the line is the
     grade. Live binding: x402 merchants today, agentic-checkout
-    rails as they open.
+    rails as they open. *Manifest drafted (rev 1, cst-g49k): the guard
+    settles only when the fully-loaded total holds under target+caps,
+    hard-fails a buy-time upward re-quote, counts drip fees before the
+    cap decision, and gates the first purchase on a human token.
+    Component + mocked-twin bench next.*
 26. **dispute-clerk** — take a charge that spend-reconciliation
     flagged and pursue it: evidence pack from the log, dispute filed,
     status tracked to resolution. Card-rail by nature (the value of a
