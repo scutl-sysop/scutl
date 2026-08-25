@@ -21,7 +21,7 @@ recipe:
     drips fees onto renewals, bills twice in a period, and keeps billing
     after a claimed cancel. Holding the consented line over time is the
     recipe.
-  status: draft  # draft | reference-green | shipped
+  status: reference-green  # draft | reference-green | shipped
   maintainer: first-party
 
 # ---------------------------------------------------------------------------

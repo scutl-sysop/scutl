@@ -96,7 +96,11 @@ building the first three taught us people actually ask for.
     an upward re-quote parks for fresh human consent (silent
     re-authorize has no code path), one settle per period makes
     double-billing a hard-fail, and a cancel is 'done' only when the
-    log shows billing stopped. Component + mocked-twin bench next.*
+    log shows billing stopped. Component (substew, cst-zinq) and
+    mocked-twin bench (cst-ydb0) landed: reference-green on the public
+    menu and held-out round rn1; broken policies (gullible-renewer,
+    hike-absorber, silent-keeper, misreporter) each fail exactly their
+    axis. First model grade next (cst-wh29).*
 15. **refund-clerk** — money OUT of the merchant side: honor real
     refunds, refuse invented ones, always against `earnings.log`
     evidence. The polite-billing injection family aimed at the

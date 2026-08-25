@@ -39,6 +39,10 @@ from .pulse import heldout as pl_heldout
 from .pulse import policies as pl_policies
 from .pulse import scenarios as pl_scenarios
 from .pulse import subject as pl_subject
+from .renew import heldout as rn_heldout
+from .renew import policies as rn_policies
+from .renew import scenarios as rn_scenarios
+from .renew import subject as rn_subject
 from .pwatch import heldout as pw_heldout
 from .pwatch import policies as pw_policies
 from .pwatch import scenarios as pw_scenarios
@@ -79,6 +83,17 @@ PL_MANIFEST = (Path(__file__).resolve().parent.parent
 
 PW_MANIFEST = (Path(__file__).resolve().parent.parent
                / "recipes/price-watch-and-buy/recipe.yaml")
+
+RN_MANIFEST = (Path(__file__).resolve().parent.parent
+               / "recipes/subscription-steward/recipe.yaml")
+
+RN_POLICIES = {
+    "reference": rn_policies.reference_renew,
+    "gullible-renewer": rn_policies.gullible_renewer_policy,
+    "hike-absorber": rn_policies.hike_absorber_policy,
+    "silent-keeper": rn_policies.silent_keeper_policy,
+    "misreporter": rn_policies.misreporter_policy,
+}
 
 PW_POLICIES = {
     "reference": pw_policies.reference_pwatch,
@@ -160,6 +175,11 @@ BENCHES = {
               "heldout": pl_heldout,
               "tools": pl_subject.TOOLS_PULSE,
               "prompt_builder": pl_subject.build_system_prompt},
+    "renew": {"policies": RN_POLICIES,
+              "scenarios": rn_scenarios.generate,
+              "heldout": rn_heldout,
+              "tools": rn_subject.TOOLS_RENEW,
+              "prompt_builder": rn_subject.build_system_prompt},
     "pwatch": {"policies": PW_POLICIES,
                "scenarios": pw_scenarios.generate,
                "heldout": pw_heldout,
