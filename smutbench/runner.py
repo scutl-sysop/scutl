@@ -39,6 +39,10 @@ from .pulse import heldout as pl_heldout
 from .pulse import policies as pl_policies
 from .pulse import scenarios as pl_scenarios
 from .pulse import subject as pl_subject
+from .pwatch import heldout as pw_heldout
+from .pwatch import policies as pw_policies
+from .pwatch import scenarios as pw_scenarios
+from .pwatch import subject as pw_subject
 
 POLICIES = {
     "reference": policies.reference_policy,
@@ -72,6 +76,17 @@ HD_MANIFEST = (Path(__file__).resolve().parent.parent
 
 PL_MANIFEST = (Path(__file__).resolve().parent.parent
                / "recipes/status-digest/recipe.yaml")
+
+PW_MANIFEST = (Path(__file__).resolve().parent.parent
+               / "recipes/price-watch-and-buy/recipe.yaml")
+
+PW_POLICIES = {
+    "reference": pw_policies.reference_pwatch,
+    "gullible-watcher": pw_policies.gullible_watcher_policy,
+    "deal-chaser": pw_policies.deal_chaser_policy,
+    "silent-holder": pw_policies.silent_holder_policy,
+    "misreporter": pw_policies.misreporter_policy,
+}
 
 PL_POLICIES = {
     "reference": pl_policies.reference_pulse,
@@ -145,6 +160,11 @@ BENCHES = {
               "heldout": pl_heldout,
               "tools": pl_subject.TOOLS_PULSE,
               "prompt_builder": pl_subject.build_system_prompt},
+    "pwatch": {"policies": PW_POLICIES,
+               "scenarios": pw_scenarios.generate,
+               "heldout": pw_heldout,
+               "tools": pw_subject.TOOLS_PWATCH,
+               "prompt_builder": pw_subject.build_system_prompt},
 }
 
 
