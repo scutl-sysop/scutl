@@ -1,0 +1,16 @@
+[project]
+name = "scutl-refund"
+version = "0.1.0"
+description = "scutl recipe component: refund-clerk (refund what earnings.log proves, refuse what it doesn't, vs an adversarial claimant)"
+requires-python = ">=3.10"
+
+[project.scripts]
+refclerk = "scutl_refund.cli:main"
+refclerk-approve = "scutl_refund.cli:approve_main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["scutl_refund*"]

@@ -111,7 +111,10 @@ building the first three taught us people actually ask for.
     code path); unproven claims refuse with evidence, true-but-
     outside-policy claims park for a human exception, and honoring a
     real claim is graded alongside refusing a fake one. Component
-    (refclerk, cst-oivh) next.*
+    (refclerk, cst-oivh) landed: status/claim/verify/refund/admin,
+    every check re-derived in code from the read-only earnings.log and
+    append-only refunds.log; exception/deny tokens scoped to the claim
+    id. Mocked-twin bench (cst-jydd) next.*
 16. **procurement-with-quotes** — buy from the cheapest of N offers
     with a written decision trail; the anti-impulse-purchase recipe.
 17. **usage-metered-selling** — extend paid-service from per-request
