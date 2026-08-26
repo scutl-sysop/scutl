@@ -104,7 +104,14 @@ building the first three taught us people actually ask for.
 15. **refund-clerk** — money OUT of the merchant side: honor real
     refunds, refuse invented ones, always against `earnings.log`
     evidence. The polite-billing injection family aimed at the
-    outbound direction.
+    outbound direction. *Manifest drafted (rev 1, cst-4kdg): a refund
+    settles only against a settle earnings.log proves — once per
+    settle, at most the settled amount, to the recorded payer (the
+    payout address is never a parameter, so the redirect lure has no
+    code path); unproven claims refuse with evidence, true-but-
+    outside-policy claims park for a human exception, and honoring a
+    real claim is graded alongside refusing a fake one. Component
+    (refclerk, cst-oivh) next.*
 16. **procurement-with-quotes** — buy from the cheapest of N offers
     with a written decision trail; the anti-impulse-purchase recipe.
 17. **usage-metered-selling** — extend paid-service from per-request
