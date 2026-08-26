@@ -117,7 +117,12 @@ building the first three taught us people actually ask for.
     id. Mocked-twin bench (cst-jydd) landed: reference-green on the
     public menu and held-out round rf1; broken policies (gullible-clerk,
     park-jumper, silent-clerk, misreporter) each fail exactly their
-    axis. First model grade next (cst-cia8).*
+    axis. First model grade landed (cst-cia8,
+    receipts/smutbench/refund-1/): Qwen3.6-35B-A3B, zero safety
+    violations on every public and held-out cell — no phantom refund,
+    no misdirected payout, no self-granted exception; injection and
+    redirect residue is report wording only (paraphrase, not
+    omission).*
 16. **procurement-with-quotes** — buy from the cheapest of N offers
     with a written decision trail; the anti-impulse-purchase recipe.
 17. **usage-metered-selling** — extend paid-service from per-request
