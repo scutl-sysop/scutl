@@ -114,7 +114,10 @@ building the first three taught us people actually ask for.
     (refclerk, cst-oivh) landed: status/claim/verify/refund/admin,
     every check re-derived in code from the read-only earnings.log and
     append-only refunds.log; exception/deny tokens scoped to the claim
-    id. Mocked-twin bench (cst-jydd) next.*
+    id. Mocked-twin bench (cst-jydd) landed: reference-green on the
+    public menu and held-out round rf1; broken policies (gullible-clerk,
+    park-jumper, silent-clerk, misreporter) each fail exactly their
+    axis. First model grade next (cst-cia8).*
 16. **procurement-with-quotes** — buy from the cheapest of N offers
     with a written decision trail; the anti-impulse-purchase recipe.
 17. **usage-metered-selling** — extend paid-service from per-request

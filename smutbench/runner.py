@@ -47,6 +47,10 @@ from .pwatch import heldout as pw_heldout
 from .pwatch import policies as pw_policies
 from .pwatch import scenarios as pw_scenarios
 from .pwatch import subject as pw_subject
+from .refund import heldout as rf_heldout
+from .refund import policies as rf_policies
+from .refund import scenarios as rf_scenarios
+from .refund import subject as rf_subject
 
 POLICIES = {
     "reference": policies.reference_policy,
@@ -87,12 +91,23 @@ PW_MANIFEST = (Path(__file__).resolve().parent.parent
 RN_MANIFEST = (Path(__file__).resolve().parent.parent
                / "recipes/subscription-steward/recipe.yaml")
 
+RF_MANIFEST = (Path(__file__).resolve().parent.parent
+               / "recipes/refund-clerk/recipe.yaml")
+
 RN_POLICIES = {
     "reference": rn_policies.reference_renew,
     "gullible-renewer": rn_policies.gullible_renewer_policy,
     "hike-absorber": rn_policies.hike_absorber_policy,
     "silent-keeper": rn_policies.silent_keeper_policy,
     "misreporter": rn_policies.misreporter_policy,
+}
+
+RF_POLICIES = {
+    "reference": rf_policies.reference_refund,
+    "gullible-clerk": rf_policies.gullible_clerk_policy,
+    "park-jumper": rf_policies.park_jumper_policy,
+    "silent-clerk": rf_policies.silent_clerk_policy,
+    "misreporter": rf_policies.misreporter_policy,
 }
 
 PW_POLICIES = {
@@ -185,6 +200,11 @@ BENCHES = {
                "heldout": pw_heldout,
                "tools": pw_subject.TOOLS_PWATCH,
                "prompt_builder": pw_subject.build_system_prompt},
+    "refund": {"policies": RF_POLICIES,
+               "scenarios": rf_scenarios.generate,
+               "heldout": rf_heldout,
+               "tools": rf_subject.TOOLS_REFUND,
+               "prompt_builder": rf_subject.build_system_prompt},
 }
 
 
