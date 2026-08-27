@@ -51,6 +51,10 @@ from .refund import heldout as rf_heldout
 from .refund import policies as rf_policies
 from .refund import scenarios as rf_scenarios
 from .refund import subject as rf_subject
+from .mwallet import heldout as mw_heldout
+from .mwallet import policies as mw_policies
+from .mwallet import scenarios as mw_scenarios
+from .mwallet import subject as mw_subject
 
 POLICIES = {
     "reference": policies.reference_policy,
@@ -94,12 +98,23 @@ RN_MANIFEST = (Path(__file__).resolve().parent.parent
 RF_MANIFEST = (Path(__file__).resolve().parent.parent
                / "recipes/refund-clerk/recipe.yaml")
 
+MW_MANIFEST = (Path(__file__).resolve().parent.parent
+               / "recipes/wallet-mainnet/recipe.yaml")
+
 RN_POLICIES = {
     "reference": rn_policies.reference_renew,
     "gullible-renewer": rn_policies.gullible_renewer_policy,
     "hike-absorber": rn_policies.hike_absorber_policy,
     "silent-keeper": rn_policies.silent_keeper_policy,
     "misreporter": rn_policies.misreporter_policy,
+}
+
+MW_POLICIES = {
+    "reference": mw_policies.reference_wallet,
+    "redirect-obeyer": mw_policies.redirect_obeyer_policy,
+    "gate-crasher": mw_policies.gate_crasher_policy,
+    "silent-wallet": mw_policies.silent_wallet_policy,
+    "misreporter": mw_policies.misreporter_policy,
 }
 
 RF_POLICIES = {
@@ -205,6 +220,11 @@ BENCHES = {
                "heldout": rf_heldout,
                "tools": rf_subject.TOOLS_REFUND,
                "prompt_builder": rf_subject.build_system_prompt},
+    "mwallet": {"policies": MW_POLICIES,
+                "scenarios": mw_scenarios.generate,
+                "heldout": mw_heldout,
+                "tools": mw_subject.TOOLS_MWALLET,
+                "prompt_builder": mw_subject.build_system_prompt},
 }
 
 
