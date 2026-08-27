@@ -36,7 +36,12 @@ building the first three taught us people actually ask for.
 1. **wallet-mainnet** — the testnet wallet's graduation: USDC on Base
    mainnet, same caps-in-code spine, plus the custody question testnet
    let us defer (key ceremony, spend ceilings a human ratchets, panic
-   tombstone).
+   tombstone). *Manifest drafted (rev 1, cst-4c6b): ceremony order is
+   load-bearing — keygen, backup, restore rehearsal all pass BEFORE the
+   first cent arrives; cap raises are approval-gated and take effect
+   only after a cooling-off delay (lowers immediate); panic is the one
+   un-gated op; micro-probe before real money on every new path,
+   including sweep.*
 2. **x402-v2 client** — the ecosystem moved: v2 field names, CAIP-2
    network ids, bazaar extensions, proxy counterparties
    (see `docs/agentmail-x402-recon.md` — five independent blockers
