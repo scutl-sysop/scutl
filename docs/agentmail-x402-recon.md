@@ -1,5 +1,45 @@
 # AgentMail x402 recon (cst-8ih.8)
 
+> **Refresh 2026-08-27 (cst-rjba, Star) — read this before the body below.**
+>
+> Re-probed `x402.api.agentmail.to` unauthenticated. The wire is
+> **byte-identical** to the 2026-08-17 capture: still x402 v2, `amount`
+> field, CAIP-2 ids, five mainnet offers (Base 8453 / Solana / Avalanche /
+> X Layer / Polygon), 2.00 USDC create-inbox via the paysponge proxy,
+> zero-amount signed GETs, `extensions.bazaar` body schema unchanged.
+> Fresh captures: `agentmail-402-offer-inboxes-create-2026-08-27.json`,
+> `agentmail-402-offer-list-inboxes-2026-08-27.json`.
+>
+> **The "five independent blockers" verdict below is OBSOLETE.** All five
+> were fixed the same day by wallet rev 2 (cst-8ih.14, closed 2026-08-17,
+> live mainnet probe receipt in `agentmail-mainnet-probe-receipt.md`):
+>
+> 1. Network hard-reject → `network.py` BLESSED bindings table
+>    (`eip155:84532` sepolia + `eip155:8453` mainnet), select-by-binding.
+> 2. v1-only parsing → `select_offer` speaks v1 and v2 (`amount` vs
+>    `maxAmountRequired`), multi-offer select by blessed network, asset
+>    and EIP-712-domain checked against the binding.
+> 3. GET-only driver → `x402-buy --method POST/PUT/PATCH/DELETE --data`.
+> 4. Compile-time sepolia chain binding → `NetworkBinding` carries chain
+>    id, RPCs, USDC contract, and EIP-712 domain name ("USD Coin" on
+>    mainnet vs "USDC" on sepolia), verified against the offer's `extra`.
+> 5. Zero-amount signed calls → sign-and-record path through the Signer;
+>    v2 headers (PAYMENT-SIGNATURE / PAYMENT-RESPONSE, offer in body or
+>    PAYMENT-REQUIRED header) both handled.
+>
+> Policy note carried from cst-8ih.14: **Base only** — Solana/Avalanche/
+> X Layer/Polygon offers are ignored by design (owner call).
+>
+> What cst-rjba's molecule therefore actually is: not parser work but
+> **promotion** — the v2 client capability exists as wallet-rev-2 code and
+> a one-off probe; the recipe needs a manifest of its own contracts
+> (v2 offer selection, proxy-counterparty trust, wallet-as-identity /
+> zero-amount auth, bazaar-driven request construction), a component
+> factoring that stands alone from the sepolia recipe tree, a mocked
+> bench (a v2 test merchant twin — nothing about the bench needs mainnet),
+> and a grade. Open follow-up still live from cst-8ih.14: owner keystore
+> backup pending (`backup_verified false`) — wallet-key-is-account.
+
 Star, 2026-08-17. First-pass recon of AgentMail as the registry's first
 EXTERNAL composition edge. No spend was made — everything below comes from
 unauthenticated probes of `x402.api.agentmail.to` (a bare request returns
