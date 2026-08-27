@@ -1,0 +1,24 @@
+# scutl-mwallet depends on scutl-signer, which is a sibling recipe's
+# package, not on PyPI. Install order:
+#   pip install -e ../wallet-base-sepolia/signer
+#   pip install -e .
+[project]
+name = "scutl-mwallet"
+version = "0.1.0"
+description = "scutl wallet-mainnet custody component (msigner)"
+requires-python = ">=3.10"
+dependencies = [
+    "scutl-signer",
+    "eth-account>=0.11",
+]
+
+[project.scripts]
+msigner = "scutl_mwallet.cli:main"
+msigner-approve = "scutl_mwallet.cli:approve"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["scutl_mwallet"]

@@ -53,7 +53,7 @@ decide:
           all admin ops. Mainnet defaults start at pocket-change scale;
           growing them is the ratchet ceremony, not an edit.
         blessed: true
-        asks: [cap_per_tx, cap_daily, gas_floor_eth]
+        asks: [cap_per_tx, cap_daily]
     # 'approve-everything' still not offered: it deletes the unattended
     # branch this recipe exists to make safe (wallet rev-1 ruling).
 
@@ -95,12 +95,6 @@ parameters:
       backstop that bounds the blast radius of every other bug. Counted
       from the append-only spend log.
     default: "5.00"
-  gas_floor_eth:
-    type: decimal-eth
-    prompt: >
-      Minimum ETH balance below which the signer refuses to START a
-      payment (rather than fail midway). Refill is a human funding step.
-    default: "0.0005"
   ratchet_delay_hours:
     type: hours
     prompt: >
@@ -127,8 +121,8 @@ components:
                               # spend today/lifetime, ceremony state, panic state
         command: "msigner status"
       - name: mw_pay          # direct x402 payment; REFUSES in code when over
-                              # any cap, when gas < gas_floor_eth, when the
-                              # ceremony is incomplete, or when panicked
+                              # any cap, when the ceremony is incomplete, or
+                              # when panicked
         command: "msigner pay --payment-id {payment_id} --to {to} --amount {usdc}"
       - name: mw_buy          # whole x402 purchase loop (402 offer ->
                               # cap-checked authorize -> retry with header ->
@@ -168,9 +162,13 @@ components:
          immediately. The pending raise and its effect time are visible in
          mw_status the whole delay — a raise the human forgot is a raise the
          human can cancel."
-      - "mw_pay refuses to start when the ETH balance is below gas_floor_eth;
-         a payment must never die half-signed for gas. Gas refill is a human
-         funding step, reported, never bought by the agent."
+      - "The wallet is GASLESS by construction: every spend is an EIP-3009
+         transfer authorization the counterparty submits and pays gas for.
+         The signer never broadcasts a transaction, so the wallet holds no
+         ETH and there is no gas key, gas balance, or fee decision anywhere
+         in the component. (Design revision 2026-08-27: replaces the drafted
+         gas_floor_eth parameter, which solved a problem this construction
+         does not have.)"
       - "mw_panic always succeeds, from any state, without approval, and stops
          all spend and all admin except unpanic and status. Un-panic requires
          a human approval token."
@@ -268,13 +266,14 @@ setup:
   - step: micro-fund
     actor: human
     instructions: >
-      Send a micro-deposit (e.g. 0.50 USDC) and the gas ETH from your own
-      exchange or wallet to the printed address. Network MUST be Base
-      mainnet — a deposit on the wrong network or in the wrong token is
-      invisible here and possibly unrecoverable.
-    verify: "agent polls mw_status until the exact micro amount and gas arrive; reports both"
+      Send a micro-deposit (e.g. 0.50 USDC) from your own exchange or
+      wallet to the printed address. No ETH is needed — the wallet is
+      gasless (counterparties submit and pay for every transfer). Network
+      MUST be Base mainnet — a deposit on the wrong network or in the
+      wrong token is invisible here and possibly unrecoverable.
+    verify: "agent polls mw_status until the exact micro amount arrives; reports it"
     commands: ["msigner status"]
-    expect: ".balance_usdc == micro amount and .balance_eth >= gas_floor_eth; poll every 60s, at most 30 times"
+    expect: ".balance_usdc == micro amount; poll every 60s, at most 30 times"
     fallback:
       trigger: [wrong-network-deposit, wrong-token-deposit, partial-arrival, silent-no-delivery]
       actor: human
@@ -305,8 +304,10 @@ execute:
   over_cap: "exit 5 (cap-exceeded); report the offer and the binding cap.
     If the human wants it, THEY start the ratchet — the agent never
     frames cap-raising as the fix for a blocked purchase."
-  gas_floor: "exit 7 (gas-floor); no payment starts. Report ETH balance
-    and floor; refill is a human funding step."
+  ceremony_incomplete: "exit 7 (ceremony-incomplete); spend tools are
+    locked until keygen, backup-verify, and restore-rehearsal have all
+    passed. Report which step is missing; the missing steps are human
+    ceremony, not something to work around."
   transient: "exit 6; retry with the SAME payment id (idempotent, never
     double-pays). Mainnet note: a timeout is NOT a failure — the settle
     may have landed. Never re-pay under a fresh id until tx_status of the
@@ -337,7 +338,10 @@ verify:
   - "over-cap probe: a payment above cap_per_tx is refused in code (exit 5)"
   - "lifetime probe: spends totalling cap_lifetime refuse the next payment
      even when per-tx and daily caps have headroom"
-  - "gas-floor probe: with ETH below gas_floor_eth no payment starts (exit 7)"
+  - "sweep probe: sweep emits a micro authorization first; the remainder
+     authorization requires a second approval scoped 'remainder'; both
+     bypass spend caps (human-approved full-balance op) and pin the
+     human-typed destination"
   - "ratchet probe: an approved raise is pending-visible and inert until
      ratchet_delay_hours pass; a lower applies immediately; a bare-model
      ratchet attempt (no token) fails. Live install runs this with
@@ -368,11 +372,15 @@ recover:
   sweep:
     approval: human
     run: >
-      mw_admin sweep: sends the full USDC balance to a destination the
-      human TYPES at approval time — never from context or config. The
-      signer sends a micro amount first, waits for the human to confirm
-      receipt at the destination, then sends the remainder. The
-      micro-probe discipline applies to leaving, too.
+      mw_admin sweep: moves the full USDC balance to a destination the
+      human TYPES at approval time — never from context or config.
+      Gasless construction: the signer never broadcasts, so sweep EMITS a
+      signed transfer authorization the HUMAN submits from their own
+      wallet/relayer (which pays the gas). Micro-first: a small
+      authorization is issued, the human submits it and confirms receipt,
+      and only a second approval scoped 'remainder' unlocks the
+      full-balance authorization. The micro-probe discipline applies to
+      leaving, too.
   revoke:
     approval: human
     run: >
