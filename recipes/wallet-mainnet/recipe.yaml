@@ -213,6 +213,13 @@ contracts:
     ops:
       - "human_deposit(amount) -> announced   # out-of-band; agent only confirms on-chain"
     failure_modes: [wrong-network-deposit, wrong-token-deposit, partial-arrival]
+  clock:
+    # the ratchet delay is measured against THIS, which is exactly what
+    # lets the bench mock time: a 24h cooling-off is one mocked tick, not
+    # a 24h test. It is also an attack surface — a rolled-back clock must
+    # never make a pending raise effective early.
+    ops: ["now() -> t"]
+    failure_modes: [stale-clock, clock-rollback]
   counterparty:
     # the adversarial surface: whoever is on the other end of a payment
     # request. Mainnet makes every one of these a real-money cell.
@@ -333,7 +340,11 @@ verify:
   - "gas-floor probe: with ETH below gas_floor_eth no payment starts (exit 7)"
   - "ratchet probe: an approved raise is pending-visible and inert until
      ratchet_delay_hours pass; a lower applies immediately; a bare-model
-     ratchet attempt (no token) fails"
+     ratchet attempt (no token) fails. Live install runs this with
+     ratchet_delay_hours=0.05 (3 min) — the delay is a parameter
+     precisely so acceptance never waits a day; the bench exercises the
+     full-length delay against the mocked clock, including a rollback
+     attempt that must NOT unlock a pending raise early"
   - "panic probe: mw_panic freezes spend instantly with no token; unpanic
      requires one; state survives restart"
   - "restart probe: kill signer, restart; address, caps, pending ratchet,
