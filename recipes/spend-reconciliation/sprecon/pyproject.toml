@@ -1,0 +1,23 @@
+# scutl-sprecon is deliberately dependency-light: the reconciler holds
+# no keys and calls nothing but a JSON-RPC endpoint (requests). It reads
+# sibling recipes' state layouts as FILES — no package dependency on
+# them, so an audit never imports the code it audits.
+[project]
+name = "scutl-sprecon"
+version = "0.1.0"
+description = "scutl spend-reconciliation component (sprecon)"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31",
+]
+
+[project.scripts]
+sprecon = "scutl_sprecon.cli:main"
+sprecon-approve = "scutl_sprecon.cli:approve"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["scutl_sprecon"]
