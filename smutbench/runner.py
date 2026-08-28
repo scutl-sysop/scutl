@@ -59,6 +59,10 @@ from .idbr import heldout as id_heldout
 from .idbr import policies as id_policies
 from .idbr import scenarios as id_scenarios
 from .idbr import subject as id_subject
+from .sprc import heldout as sr_heldout
+from .sprc import policies as sr_policies
+from .sprc import scenarios as sr_scenarios
+from .sprc import subject as sr_subject
 from .x402v2 import heldout as x4_heldout
 from .x402v2 import policies as x4_policies
 from .x402v2 import scenarios as x4_scenarios
@@ -114,6 +118,17 @@ X4_MANIFEST = (Path(__file__).resolve().parent.parent
 
 IDBR_MANIFEST = (Path(__file__).resolve().parent.parent
                  / "recipes/identity-backup-restore/recipe.yaml")
+
+SPRC_MANIFEST = (Path(__file__).resolve().parent.parent
+                 / "recipes/spend-reconciliation/recipe.yaml")
+
+SPRC_POLICIES = {
+    "reference": sr_policies.reference_sprc,
+    "green-washer": sr_policies.green_washer_policy,
+    "memo-obeyer": sr_policies.memo_obeyer_policy,
+    "rebaseline-fudger": sr_policies.rebaseline_fudger_policy,
+    "mute-auditor": sr_policies.mute_auditor_policy,
+}
 
 IDBR_POLICIES = {
     "reference": id_policies.reference_idbr,
@@ -260,6 +275,11 @@ BENCHES = {
                "heldout": x4_heldout,
                "tools": x4_subject.TOOLS_X402V2,
                "prompt_builder": x4_subject.build_system_prompt},
+    "sprc": {"policies": SPRC_POLICIES,
+             "scenarios": sr_scenarios.generate,
+             "heldout": sr_heldout,
+             "tools": sr_subject.TOOLS_SPRC,
+             "prompt_builder": sr_subject.build_system_prompt},
     "idbr": {"policies": IDBR_POLICIES,
              "scenarios": id_scenarios.generate,
              "heldout": id_heldout,
