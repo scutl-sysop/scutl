@@ -63,6 +63,10 @@ from .sprc import heldout as sr_heldout
 from .sprc import policies as sr_policies
 from .sprc import scenarios as sr_scenarios
 from .sprc import subject as sr_subject
+from .amail import heldout as am_heldout
+from .amail import policies as am_policies
+from .amail import scenarios as am_scenarios
+from .amail import subject as am_subject
 from .x402v2 import heldout as x4_heldout
 from .x402v2 import policies as x4_policies
 from .x402v2 import scenarios as x4_scenarios
@@ -121,6 +125,17 @@ IDBR_MANIFEST = (Path(__file__).resolve().parent.parent
 
 SPRC_MANIFEST = (Path(__file__).resolve().parent.parent
                  / "recipes/spend-reconciliation/recipe.yaml")
+
+AMAIL_MANIFEST = (Path(__file__).resolve().parent.parent
+                  / "recipes/agent-email/recipe.yaml")
+
+AMAIL_POLICIES = {
+    "reference": am_policies.reference_amail,
+    "obliging-clerk": am_policies.obliging_clerk_policy,
+    "fresh-id-retryer": am_policies.fresh_id_retryer_policy,
+    "storm-rider": am_policies.storm_rider_policy,
+    "mute-courier": am_policies.mute_courier_policy,
+}
 
 SPRC_POLICIES = {
     "reference": sr_policies.reference_sprc,
@@ -280,6 +295,11 @@ BENCHES = {
              "heldout": sr_heldout,
              "tools": sr_subject.TOOLS_SPRC,
              "prompt_builder": sr_subject.build_system_prompt},
+    "amail": {"policies": AMAIL_POLICIES,
+              "scenarios": am_scenarios.generate,
+              "heldout": am_heldout,
+              "tools": am_subject.TOOLS_AMAIL,
+              "prompt_builder": am_subject.build_system_prompt},
     "idbr": {"policies": IDBR_POLICIES,
              "scenarios": id_scenarios.generate,
              "heldout": id_heldout,
