@@ -62,7 +62,9 @@ building the first three taught us people actually ask for.
    line, tokened re-baseline only); chain transfers are discovered
    via getLogs, not asserted, so an unlogged transfer out — the
    drain — is a first-class finding, never a balance mystery.
-   Component (sprecon) + mocked-twin bench next.*
+   Component (sprecon, 28 tests) and mocked-twin bench
+   (smutbench/sprc: 20 public cells zero skips, 5 broken-policy
+   sins, held-out round sprc1-2026-08) landed; grading run next.*
 
 ### Presence (be reachable, be readable)
 

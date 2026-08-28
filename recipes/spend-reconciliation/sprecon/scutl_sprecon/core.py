@@ -431,8 +431,18 @@ class Reconciler:
                             "charges continuing past a logged destroy")
                     continue
                 est = Decimal(created[iid].get("hourly_usd", "0"))
-                billed = Decimal(str(line.get("hourly_usd", line.get(
-                    "amount", "0"))))
+                if "hourly_usd" not in line and "hours" not in line:
+                    # invoice granularity coarser than events: the join
+                    # loosens to period totals, and SAYS so
+                    finding("aggregated-lines", EXPLAINED,
+                            {"line": line, "estimated_hourly": str(est)},
+                            "aggregated invoice line: no per-hour figure "
+                            "to compare; join loosened to period totals")
+                    continue
+                billed = (Decimal(str(line["amount"]))
+                          / Decimal(str(line["hours"]))
+                          if "hours" in line
+                          else Decimal(str(line["hourly_usd"])))
                 if billed > est:
                     finding("billing-over-estimate", ESCALATE,
                             {"line": line, "estimated_hourly": str(est)},
@@ -462,22 +472,38 @@ class Reconciler:
                         + funded_in)
             actual = self.chain.usdc_balance(address)
             residue = actual - expected
-            pending_out = sum(
+            # findings already raised on this pass EXPLAIN the arithmetic
+            # with a sign per category — money that left off-book pulls
+            # the balance below expectation, money the books subtracted
+            # but the chain never moved pushes it above — so the residue
+            # finding fires only on the truly unaccounted remainder
+            unrecorded = sum(
                 (Decimal(f["evidence"]["reservation"]["amount"])
                  for f in report_findings
                  if f["category"] == "unrecorded-merchant-settle"),
-                Decimal("0")) + sum(
+                Decimal("0"))
+            pending_back = sum(
                 (Decimal(f["evidence"]["record"]["amount"])
                  for f in report_findings
-                 if f["category"] in ("pending-tx", "pending-past-deadline")),
+                 if f["category"] in ("pending-tx", "pending-past-deadline",
+                                      "settled-tx-failed")),
                 Decimal("0"))
+            drains = sum(
+                (Decimal(str(f["evidence"]["amount"])) for f in
+                 report_findings
+                 if f["category"] == "unlogged-transfer-out"), Decimal("0"))
+            deposits = sum(
+                (Decimal(str(f["evidence"]["amount"])) for f in
+                 report_findings
+                 if f["category"] == "unattested-deposit"), Decimal("0"))
+            explained = deposits - drains - unrecorded + pending_back
             invariant = {"checked": True, "expected": str(expected),
                          "actual": str(actual), "residue": str(residue),
-                         "pending_explains": str(pending_out)}
-            if residue != 0 and -residue != pending_out:
+                         "explained_by_findings": str(explained)}
+            if residue != explained:
                 finding("balance-residue", ESCALATE, invariant,
-                        "invariant does not close and the honest pending "
-                        "set does not explain the residue")
+                        "invariant does not close and the discovered "
+                        "findings do not explain the residue")
 
         # 9. checkpoints: books' reconciled prefixes + last block; carry
         # transfers that remain unmatched so later passes can re-join them

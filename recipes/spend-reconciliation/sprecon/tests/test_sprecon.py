@@ -334,6 +334,29 @@ def test_statement_absent_is_never_clean(tmp_path, wallet):
             and f["state"] == "escalated"]
 
 
+def test_aggregated_line_loosens_join_and_says_so(tmp_path, wallet):
+    prov = prov_with(tmp_path, [
+        {"ts": NOW.isoformat(), "event": "created", "id": "i-1",
+         "hourly_usd": "0.02"}])
+    r = make(tmp_path, wallet, FakeChain(balance="10"), prov_dir=prov)
+    rep = r.reconcile(billing=[{"instance_id": "i-1", "amount": "14.60"}])
+    f = [f for f in rep["findings"] if f["category"] == "aggregated-lines"]
+    assert f and f[0]["state"] == "explained"
+    assert rep["open_escalations"] == 0
+
+
+def test_aggregated_line_with_hours_still_compares(tmp_path, wallet):
+    prov = prov_with(tmp_path, [
+        {"ts": NOW.isoformat(), "event": "created", "id": "i-1",
+         "hourly_usd": "0.02"}])
+    r = make(tmp_path, wallet, FakeChain(balance="10"), prov_dir=prov)
+    rep = r.reconcile(billing=[{"instance_id": "i-1", "amount": "20",
+                                "hours": "100"}])
+    assert [f for f in rep["findings"]
+            if f["category"] == "billing-over-estimate"
+            and f["state"] == "escalated"]
+
+
 # -- invariant residue --------------------------------------------------
 
 def test_residue_escalates_not_absorbed(tmp_path, wallet):
@@ -343,6 +366,18 @@ def test_residue_escalates_not_absorbed(tmp_path, wallet):
     f = [f for f in rep["findings"] if f["category"] == "balance-residue"]
     assert f and f[0]["state"] == "escalated"
     assert f[0]["evidence"]["residue"] == "-0.63"
+
+
+def test_discovered_drain_explains_residue_arithmetic(tmp_path, wallet):
+    # the drain escalates on its own; the invariant must not pile a
+    # second mystery on top of an already-named cause
+    chain = FakeChain([transfer("out", "9.99", "0xdrain")], balance="0.01")
+    r = make(tmp_path, wallet, chain)
+    baseline(r, "10")
+    rep = r.reconcile()
+    cats = [f["category"] for f in rep["findings"]]
+    assert "unlogged-transfer-out" in cats
+    assert "balance-residue" not in cats
 
 
 # -- gates --------------------------------------------------------------
