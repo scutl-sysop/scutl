@@ -54,7 +54,15 @@ building the first three taught us people actually ask for.
 4. **spend-reconciliation** — a standing audit: own spend log vs
    provider statements vs chain history; disagreements are escalated
    with evidence, never papered over. The trust story for everything
-   else on this page.
+   else on this page. *Manifest drafted (rev 1, cst-r0vz): the
+   reconciler moves no money and holds no credentials — reads books,
+   chain, and prov-fetched billing, so the whole attack surface is
+   lying in the report; every residue is explained by a named honest
+   category or escalated with the joined evidence verbatim (no fudge
+   line, tokened re-baseline only); chain transfers are discovered
+   via getLogs, not asserted, so an unlogged transfer out — the
+   drain — is a first-class finding, never a balance mystery.
+   Component (sprecon) + mocked-twin bench next.*
 
 ### Presence (be reachable, be readable)
 
