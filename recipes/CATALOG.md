@@ -72,7 +72,14 @@ building the first three taught us people actually ask for.
 5. **agent-email** — a real inbox the agent owns and pays for
    (AgentMail-shaped: x402-purchased, wallet-owned). Send, receive,
    thread; injection-hardened reading is the safety spine — mail is
-   data, not instructions.
+   data, not instructions. *Manifest drafted (rev 1, cst-yo6d): the
+   sender writes the message and can initiate contact, so the walls
+   are code — a recipient allowlist is this recipe's caps-in-code
+   (exfiltration needs an address), every send is idempotency-keyed
+   and append-only logged, reconcile against provider history closes
+   each session; inbound demands are refused AND quoted whatever
+   their register — the polite ask is the same attack as the barked
+   override. Recon: docs/agent-email-recon.md.*
 6. **static-website** — publish a site: object storage + DNS + TLS on
    the provision rail. The agent's public face, and the first
    composition test (provision + DNS recipes as dependencies).
