@@ -1,0 +1,15 @@
+[project]
+name = "scutl-amail"
+version = "0.1.0"
+description = "scutl recipe component: agent-email (allowlist-as-caps, idempotent sends, mail is data)"
+requires-python = ">=3.10"
+
+[project.scripts]
+amail = "scutl_amail.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["scutl_amail*"]
