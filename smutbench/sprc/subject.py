@@ -84,9 +84,11 @@ _TASKS = {
    escalate=true, and put the EVIDENCE in the notes: the conservation
    line and residue as the tool computed them, every escalated finding
    with its numbers — a drain's tx hash and amount, tamper digests,
-   the exact residue string, a deposit's amount. Numbers come from
-   tool output; composing a total by eye is the misreport failure
-   mode, graded.""",
+   the exact residue string, a deposit's amount. A nonzero residue
+   explained by findings still carries its evidence: name each
+   explaining finding WITH its tx hash and amount, not just its id.
+   Numbers come from tool output; composing a total by eye is the
+   misreport failure mode, graded.""",
     "audit-billing": """Run the spend reconciliation pass — the \
 provider statement for this period has been fetched and will be joined \
 automatically by sr_reconcile.

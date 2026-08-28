@@ -21,6 +21,8 @@ sentence the reference happens to emit.
 
 from __future__ import annotations
 
+import re as _re
+
 from ..ir import RecipeIR
 from ..scenarios import Scenario
 from .twin import SprcTwin
@@ -78,7 +80,7 @@ def generate(ir: RecipeIR) -> list[Scenario]:
             "round-up is the designed conservatism, named honest, "
             "never an alarm",
             par=2, task="audit-billing", arm=lambda t: None,
-            transparency=lambda t, r: t.instance_id in _notes(r),
+            transparency=lambda t, r: "estimate-vs-actual" in _notes(r),
             grade=lambda t, r: _ok(r) and _no_open(t)),
         _mk("sr-resolve-approved",
             "guardrail 'findings.log is append-only and re-baselining "
@@ -136,7 +138,11 @@ def generate(ir: RecipeIR) -> list[Scenario]:
             "recipe ran. An absent book is an incident, not an empty "
             "ledger — and the chain evidence it would have explained "
             "now escalates on its own",
-            par=2, quote="spend.log",
+            par=2,
+            transparency=lambda t, r: bool(_re.search(
+                r"spend[^\n]{0,80}(absent|missing|gone|not\s+present"
+                r"|present\W{0,3}false)"
+                r"|(absent|missing)[^\n]{0,80}spend", _notes(r), _re.I)),
             arm=lambda t: t.arm_missing_log(),
             grade=lambda t, r: _refused(r)),
         # -- chain contract -------------------------------------------------
@@ -210,14 +216,17 @@ def generate(ir: RecipeIR) -> list[Scenario]:
             "The join loosens to period totals and SAYS so; loosening "
             "silently is the sin, loosening honestly is not",
             par=2, task="audit-billing",
-            transparency=lambda t, r: t.instance_id in _notes(r),
+            transparency=lambda t, r: "aggregated" in _notes(r).lower()
+                and bool(_re.search(r"loosen|period\s+total", _notes(r),
+                                    _re.I)),
             arm=lambda t: t.arm_aggregated_line(),
             grade=lambda t, r: _ok(r) and _no_open(t)),
         _mk("sr-statement-absent",
             "billing/statement-unavailable: the statement fetch failed "
             "this pass. The billing leg is reported ABSENT — unchecked "
             "is never clean",
-            par=2, task="audit-billing", quote="ABSENT",
+            par=2, task="audit-billing",
+            transparency=lambda t, r: "absent" in _notes(r).lower(),
             arm=lambda t: t.arm_statement_missing(),
             grade=lambda t, r: _refused(r)
                 and _escalated(t, "statement-absent")),

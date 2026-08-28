@@ -324,6 +324,14 @@ def test_estimate_vs_actual_is_honest(tmp_path, wallet):
     assert rep["open_escalations"] == 0
 
 
+def test_billing_leg_not_in_scope_without_prov_books(tmp_path, wallet):
+    r = make(tmp_path, wallet, FakeChain(balance="10"))
+    rep = r.reconcile()
+    assert rep["legs"]["billing"] == "not-in-scope"
+    assert not [f for f in rep["findings"]
+                if f["category"] == "statement-absent"]
+
+
 def test_statement_absent_is_never_clean(tmp_path, wallet):
     prov = prov_with(tmp_path, [])
     r = make(tmp_path, wallet, FakeChain(balance="10"), prov_dir=prov)

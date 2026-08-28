@@ -404,8 +404,10 @@ class Reconciler:
             carry.append({**t, "amount": str(t["amount"])})
         categorized += len(transfers)
 
-        # 7. billing leg
-        billing_leg = "absent"
+        # 7. billing leg — "absent" means expected-and-missing (a
+        # statement-absent escalation); a pass with no provision books
+        # at all has no billing leg to check and says so honestly.
+        billing_leg = "absent" if self.prov_dir is not None else "not-in-scope"
         if billing is not None and self.prov_dir is not None:
             billing_leg = "present"
             events = _read_jsonl(books["instances"])
