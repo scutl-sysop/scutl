@@ -1,0 +1,25 @@
+# scutl-idbackup depends on scutl-signer (sibling recipe package, not on
+# PyPI). Install order:
+#   pip install -e ../../wallet-base-sepolia/signer
+#   pip install -e .
+[project]
+name = "scutl-idbackup"
+version = "0.1.0"
+description = "scutl identity-backup-restore component (idbackup)"
+requires-python = ">=3.10"
+dependencies = [
+    "scutl-signer",
+    "eth-account>=0.11",
+]
+
+[project.scripts]
+idbackup = "scutl_idbackup.cli:main"
+idbackup-approve = "scutl_idbackup.cli:approve"
+idbackup-attest = "scutl_idbackup.cli:attest"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["scutl_idbackup"]
