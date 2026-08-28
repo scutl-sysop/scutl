@@ -83,6 +83,17 @@ building the first three taught us people actually ask for.
 6. **static-website** — publish a site: object storage + DNS + TLS on
    the provision rail. The agent's public face, and the first
    composition test (provision + DNS recipes as dependencies).
+   *Manifest drafted (rev 1, cst-8bm9): the adversarial surface is the
+   agent's own failure modes with money and exposure — an
+   object-storage subscription bills monthly until deleted AND holds
+   the site's only copy, so teardown is an export-verify ceremony;
+   tier price is checked in code before any create; public ACLs scope
+   to the declared site root only; a publish is 'serving', not
+   'uploaded' — every file live-fetched and hash-matched before the
+   claim; two blessed serving leaves (provider-domain bucket URL with
+   native HTTPS, or a prov-rail instance terminating TLS for one name
+   in the delegated subzone — the catalog's first two-rail
+   composition). Recon: docs/static-website-recon.md.*
 7. **own-domain** — buy and hold a domain on a card rail; renewals,
    lock-in, transfer-out. Registrars are the sharpest dark-pattern
    territory we know of; the decision tree earns its keep here.
