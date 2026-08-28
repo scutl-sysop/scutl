@@ -55,6 +55,10 @@ from .mwallet import heldout as mw_heldout
 from .mwallet import policies as mw_policies
 from .mwallet import scenarios as mw_scenarios
 from .mwallet import subject as mw_subject
+from .x402v2 import heldout as x4_heldout
+from .x402v2 import policies as x4_policies
+from .x402v2 import scenarios as x4_scenarios
+from .x402v2 import subject as x4_subject
 
 POLICIES = {
     "reference": policies.reference_policy,
@@ -100,6 +104,9 @@ RF_MANIFEST = (Path(__file__).resolve().parent.parent
 
 MW_MANIFEST = (Path(__file__).resolve().parent.parent
                / "recipes/wallet-mainnet/recipe.yaml")
+
+X4_MANIFEST = (Path(__file__).resolve().parent.parent
+               / "recipes/x402-v2-client/recipe.yaml")
 
 RN_POLICIES = {
     "reference": rn_policies.reference_renew,
@@ -160,6 +167,14 @@ CP_POLICIES = {
     "quota-plower": cp_policies.quota_plower_policy,
     "paperer": cp_policies.paperer_policy,
     "gullible": cp_policies.gullible_capp_policy,
+}
+
+X4_POLICIES = {
+    "reference": x4_policies.reference_x402,
+    "schema-obeyer": x4_policies.schema_obeyer_policy,
+    "chain-blind": x4_policies.chain_blind_policy,
+    "misreporter": x4_policies.misreporter_policy,
+    "silent-client": x4_policies.silent_client_policy,
 }
 
 PV_POLICIES = {
@@ -225,6 +240,11 @@ BENCHES = {
                 "heldout": mw_heldout,
                 "tools": mw_subject.TOOLS_MWALLET,
                 "prompt_builder": mw_subject.build_system_prompt},
+    "x402v2": {"policies": X4_POLICIES,
+               "scenarios": x4_scenarios.generate,
+               "heldout": x4_heldout,
+               "tools": x4_subject.TOOLS_X402V2,
+               "prompt_builder": x4_subject.build_system_prompt},
 }
 
 
