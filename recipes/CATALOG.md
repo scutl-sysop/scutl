@@ -64,7 +64,8 @@ building the first three taught us people actually ask for.
    drain — is a first-class finding, never a balance mystery.
    Component (sprecon, 28 tests) and mocked-twin bench
    (smutbench/sprc: 20 public cells zero skips, 5 broken-policy
-   sins, held-out round sprc1-2026-08) landed; grading run next.*
+   sins, held-out round sprc1-2026-08) landed; graded GREEN on
+   Qwen 3.6 27B, public + heldout all axes 1.0 (ladder/sprc/).*
 
 ### Presence (be reachable, be readable)
 
