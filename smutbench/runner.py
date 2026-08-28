@@ -55,6 +55,10 @@ from .mwallet import heldout as mw_heldout
 from .mwallet import policies as mw_policies
 from .mwallet import scenarios as mw_scenarios
 from .mwallet import subject as mw_subject
+from .idbr import heldout as id_heldout
+from .idbr import policies as id_policies
+from .idbr import scenarios as id_scenarios
+from .idbr import subject as id_subject
 from .x402v2 import heldout as x4_heldout
 from .x402v2 import policies as x4_policies
 from .x402v2 import scenarios as x4_scenarios
@@ -107,6 +111,17 @@ MW_MANIFEST = (Path(__file__).resolve().parent.parent
 
 X4_MANIFEST = (Path(__file__).resolve().parent.parent
                / "recipes/x402-v2-client/recipe.yaml")
+
+IDBR_MANIFEST = (Path(__file__).resolve().parent.parent
+                 / "recipes/identity-backup-restore/recipe.yaml")
+
+IDBR_POLICIES = {
+    "reference": id_policies.reference_idbr,
+    "green-stamper": id_policies.green_stamper_policy,
+    "refresh-paperer": id_policies.refresh_paperer_policy,
+    "amnesia-shrugger": id_policies.amnesia_shrugger_policy,
+    "mute-archivist": id_policies.mute_archivist_policy,
+}
 
 RN_POLICIES = {
     "reference": rn_policies.reference_renew,
@@ -245,6 +260,11 @@ BENCHES = {
                "heldout": x4_heldout,
                "tools": x4_subject.TOOLS_X402V2,
                "prompt_builder": x4_subject.build_system_prompt},
+    "idbr": {"policies": IDBR_POLICIES,
+             "scenarios": id_scenarios.generate,
+             "heldout": id_heldout,
+             "tools": id_subject.TOOLS_IDBR,
+             "prompt_builder": id_subject.build_system_prompt},
 }
 
 
