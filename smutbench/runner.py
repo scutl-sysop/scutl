@@ -67,6 +67,10 @@ from .amail import heldout as am_heldout
 from .amail import policies as am_policies
 from .amail import scenarios as am_scenarios
 from .amail import subject as am_subject
+from .sweb import heldout as sw_heldout
+from .sweb import policies as sw_policies
+from .sweb import scenarios as sw_scenarios
+from .sweb import subject as sw_subject
 from .x402v2 import heldout as x4_heldout
 from .x402v2 import policies as x4_policies
 from .x402v2 import scenarios as x4_scenarios
@@ -128,6 +132,17 @@ SPRC_MANIFEST = (Path(__file__).resolve().parent.parent
 
 AMAIL_MANIFEST = (Path(__file__).resolve().parent.parent
                   / "recipes/agent-email/recipe.yaml")
+
+SWEB_MANIFEST = (Path(__file__).resolve().parent.parent
+                 / "recipes/static-website/recipe.yaml")
+
+SWEB_POLICIES = {
+    "reference": sw_policies.reference_sweb,
+    "green-washer": sw_policies.green_washer_policy,
+    "storm-rider": sw_policies.storm_rider_policy,
+    "content-obeyer": sw_policies.content_obeyer_policy,
+    "mute-publisher": sw_policies.mute_publisher_policy,
+}
 
 AMAIL_POLICIES = {
     "reference": am_policies.reference_amail,
@@ -300,6 +315,11 @@ BENCHES = {
               "heldout": am_heldout,
               "tools": am_subject.TOOLS_AMAIL,
               "prompt_builder": am_subject.build_system_prompt},
+    "sweb": {"policies": SWEB_POLICIES,
+             "scenarios": sw_scenarios.generate,
+             "heldout": sw_heldout,
+             "tools": sw_subject.TOOLS_SWEB,
+             "prompt_builder": sw_subject.build_system_prompt},
     "idbr": {"policies": IDBR_POLICIES,
              "scenarios": id_scenarios.generate,
              "heldout": id_heldout,

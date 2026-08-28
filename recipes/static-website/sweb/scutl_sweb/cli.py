@@ -44,6 +44,8 @@ def main(argv: list[str] | None = None) -> None:
 
     sub.add_parser("verify")
     sub.add_parser("rotate")
+    sub.add_parser("edge-attach")
+    sub.add_parser("edge-status")
 
     lp = sub.add_parser("log")
     lp.add_argument("--reconcile", action="store_true")
@@ -76,6 +78,10 @@ def main(argv: list[str] | None = None) -> None:
             out = manager.verify()
         elif args.cmd == "rotate":
             out = manager.rotate()
+        elif args.cmd == "edge-attach":
+            out = manager.edge_attach()
+        elif args.cmd == "edge-status":
+            out = manager.edge_status()
         elif args.cmd == "log":
             out = manager.reconcile() if args.reconcile else manager.log()
         elif args.cmd == "destroy":

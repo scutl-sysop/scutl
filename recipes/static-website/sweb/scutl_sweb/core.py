@@ -61,10 +61,16 @@ class DuplicatePublish(Exception):
 class Manager:
     def __init__(self, state: StateDir | None = None,
                  mgmt: MgmtClient | None = None,
-                 data: DataClient | None = None):
+                 data: DataClient | None = None,
+                 edge: object | None = None):
         self.state = state or StateDir()
         self.mgmt = mgmt or MgmtClient(self.state)
         self._data = data  # constructed lazily: needs the subscription's hostname
+        # custom-subzone leaf only: the composed prov-rail surface
+        # (dns_get/dns_set inside the delegated subzone, instance_ip/
+        # instance_up, acme_issue, tls_probe). Injected — sweb never
+        # talks to the DNS API or the instance directly.
+        self.edge = edge
 
     def data(self) -> DataClient:
         if self._data is None:
@@ -317,6 +323,61 @@ class Manager:
         return {"destroyed": True, "id": sub["id"],
                 "exported": exported, "export_dir": str(out),
                 "billing_stopped_verified_by": "fresh subscription list"}
+
+    # -- custom-subzone edge (composed prov rail) ----------------------
+    def _edge_name(self) -> str:
+        config = self.state.load_config()
+        if config.get("serving") != "custom-subzone":
+            raise LimitRefused(
+                "edge ops apply only to serving=custom-subzone; this "
+                "install serves from the provider domain")
+        if self.edge is None:
+            raise LimitRefused(
+                "no edge wired: custom-subzone serving composes the "
+                "provision rail (instance + DNS + ACME); wire it first")
+        return config["site_name"]
+
+    def edge_attach(self) -> dict:
+        """Point the site name at the edge instance and issue its cert.
+
+        One DNS set + ONE ACME issuance attempt per call. An ACME
+        rate-limit is a TransientError the caller must report and wait
+        out — never loop this op against a limit.
+        """
+        name = self._edge_name()
+        ip = self.edge.instance_ip()
+        self.edge.dns_set(name, ip)
+        cert = self.edge.acme_issue(name)
+        self.state.append_event({
+            "ts": _now(), "event": "edge-attach", "name": name, "ip": ip})
+        return {"attached": True, "name": name, "ip": ip, "cert": cert}
+
+    def edge_status(self) -> dict:
+        """Facts only: DNS answer, instance health, cert expiry, and
+        whether the CONTENT is still safe on the bucket regardless of
+        edge health (loss vs outage are different emergencies)."""
+        name = self._edge_name()
+        config = self.state.load_config()
+        out: dict = {"name": name,
+                     "dns_ip": self.edge.dns_get(name),
+                     "instance_up": bool(self.edge.instance_up())}
+        try:
+            out["cert"] = self.edge.tls_probe(name)
+        except (PermanentError, TransientError) as e:
+            out["cert"] = {"error": str(e)}
+        manifest = self.state.live_manifest()
+        if manifest:
+            key = sorted(manifest)[0]
+            try:
+                body, _ = self.data().public_get(config["site_bucket"], key)
+                ok = hashlib.sha256(body).hexdigest() == manifest[key]["sha256"]
+                out["content_safe_on_bucket"] = ok
+            except (PermanentError, TransientError) as e:
+                out["content_safe_on_bucket"] = False
+                out["content_probe_error"] = str(e)
+        else:
+            out["content_safe_on_bucket"] = None
+        return out
 
     # -- admin (human-approved) ----------------------------------------
     def configure(self, ceiling_usd: Decimal, max_subscriptions: int,

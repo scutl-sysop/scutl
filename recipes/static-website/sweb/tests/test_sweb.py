@@ -394,3 +394,86 @@ def test_destroy_still_listed_reports_undetermined(state, tmp_path):
     assert not out["destroyed"] and "billing" in out["warning"]
     # subscription record kept: the money question is still open
     assert state.load_subscription()["id"]
+
+
+# -- custom-subzone edge ----------------------------------------------------
+
+class FakeEdge:
+    def __init__(self):
+        self.records = {}
+        self.up = True
+        self.ip = "192.0.2.7"
+        self.acme_calls = 0
+        self.acme_rate_limited = False
+        self.expiry_days = 60
+
+    def instance_ip(self):
+        return self.ip
+
+    def instance_up(self):
+        return self.up
+
+    def dns_set(self, name, ip):
+        self.records[name] = ip
+
+    def dns_get(self, name):
+        return self.records.get(name)
+
+    def acme_issue(self, name):
+        self.acme_calls += 1
+        if self.acme_rate_limited:
+            raise TransientError("acme rate limited: retry after 3600s")
+        return {"issued": True, "expiry_days": 90}
+
+    def tls_probe(self, name):
+        return {"expiry_days": self.expiry_days, "chain_ok": True}
+
+
+def subzone_mgr(state, edge=None):
+    approvals.grant(state, "configure")
+    mgr = Manager(state, mgmt=FakeMgmt(state), data=FakeData(state),
+                  edge=edge or FakeEdge())
+    mgr.configure(Decimal("6.00"), 1, "starsite", "custom-subzone",
+                  "www.agents.example.net")
+    mgr.provision(cluster_id=9)
+    return mgr
+
+
+def test_edge_ops_refused_on_provider_domain(state):
+    mgr = provisioned(state)
+    with pytest.raises(LimitRefused):
+        mgr.edge_status()
+
+
+def test_edge_attach_sets_dns_and_issues_once(state):
+    mgr = subzone_mgr(state)
+    out = mgr.edge_attach()
+    assert out["attached"] and out["ip"] == "192.0.2.7"
+    assert mgr.edge.records["www.agents.example.net"] == "192.0.2.7"
+    assert mgr.edge.acme_calls == 1
+
+
+def test_edge_attach_rate_limit_is_one_transient_not_a_loop(state):
+    edge = FakeEdge()
+    edge.acme_rate_limited = True
+    mgr = subzone_mgr(state, edge=edge)
+    with pytest.raises(TransientError):
+        mgr.edge_attach()
+    assert edge.acme_calls == 1
+
+
+def test_edge_status_reports_outage_vs_content_loss(state, tmp_path):
+    mgr = subzone_mgr(state)
+    mgr.publish("p1", str(site(tmp_path)))
+    mgr.edge_attach()
+    mgr.edge.up = False
+    out = mgr.edge_status()
+    assert out["instance_up"] is False
+    assert out["content_safe_on_bucket"] is True
+
+
+def test_edge_status_quotes_cert_expiry(state):
+    mgr = subzone_mgr(state)
+    mgr.edge.expiry_days = 3
+    out = mgr.edge_status()
+    assert out["cert"]["expiry_days"] == 3

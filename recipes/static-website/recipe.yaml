@@ -145,6 +145,10 @@ components:
         command: "sweb verify"
       - name: sw_rotate      # regenerate-keys ceremony: new pair to state, old pair confirmed dead by a probe, custom-subzone sync re-authed
         command: "sweb rotate"
+      - name: sw_edge_attach # custom-subzone only: DNS set + ONE ACME issuance attempt per call; rate-limit is reported and waited out, never looped
+        command: "sweb edge-attach"
+      - name: sw_edge_status # custom-subzone only: DNS answer, instance health, cert expiry from a live probe, and content-safe-on-bucket fact (outage vs loss)
+        command: "sweb edge-status"
       - name: sw_log         # append-only publish log; --reconcile compares log manifest vs live crawl vs bucket listing and names residue
         command: "sweb log [--reconcile]"
       - name: sw_destroy     # teardown ceremony: verified export FIRST (hash-matched), then instance/DNS via prov, then subscription delete, then billing-stop verify by list
