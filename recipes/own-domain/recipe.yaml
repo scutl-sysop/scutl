@@ -154,7 +154,7 @@ components:
         command: "odom status"
       - name: od_quote     # checkDomain + decision tree verdict: avail, teaser vs regular vs renewal vs transfer prices, premium, TLD-allowlist and ceiling checks, per-TLD requirements schema fetched; verdict is buyable|refused(reason) — no charge, no side effect
         command: "odom quote {domain}"
-      - name: od_buy       # dryRun rehearsal first (wouldSucceed, funds, spend limit), then create with pinned cost + Idempotency-Key; privacy forced on, autoRenew set explicitly; intent logged before the call, outcome after
+      - name: od_buy       # dryRun rehearsal first (wouldSucceed, funds, spend limit), then create with pinned cost + Idempotency-Key; privacy forced on, autoRenew set explicitly; intent logged before the call, outcome after. EXCEPTION: a retry of a committed (unresolved) intent skips the rehearsal — the same-key replay is charge-free, and rehearsing it as a fresh charge against the already-debited balance falsely refuses (found live, heldout odho1)
         command: "odom buy {domain} --quote-id {quote_id}"
       - name: od_renew     # renewal with the same pinned-cost + idempotency ceremony; refuses if quoted renewal exceeds ceiling (escalate, don't silently eat a price hike)
         command: "odom renew {domain}"

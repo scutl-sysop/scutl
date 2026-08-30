@@ -301,6 +301,24 @@ class TestBuy:
                     if e["event"] == "buy-outcome"]
         assert len(outcomes) == 1 and not outcomes[0]["ok"]
 
+    def test_replay_skips_rehearsal_when_balance_cannot_cover_fresh(
+            self, manager, registrar):
+        # The heldout compound (odho1-transient-plus-floor): the charge
+        # landed, the response died, and the debited balance can no
+        # longer cover a FRESH charge. The retry must replay anyway —
+        # the dry-run gate applies to new commitments, not to resolving
+        # a committed intent.
+        registrar.balance_cents = 1000   # covers one 973c charge, once
+        registrar.fail_next_create_transient = True
+        q = manager.quote("example.com")
+        with pytest.raises(TransientError):
+            manager.buy("example.com", q["quote_id"])
+        assert registrar.balance_cents == 27   # the charge landed
+        out = manager.buy("example.com", q["quote_id"])
+        assert out["bought"]
+        assert len(registrar.charges) == 1     # replay, not re-charge
+        assert manager.reconcile()["clean"]
+
     def test_transient_then_retry_replays_same_key_one_charge(
             self, manager, registrar):
         registrar.fail_next_create_transient = True

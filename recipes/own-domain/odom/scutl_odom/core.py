@@ -135,19 +135,28 @@ class Manager:
         # key, and the rail's 24h replay window makes it one charge.
         idem_key = f"odom-buy-{quote_id}"
 
-        rehearsal = self.reg.create(domain, cost, idem_key,
-                                    whois_privacy=True, dry_run=True)
-        if not rehearsal.get("wouldSucceed"):
-            raise LimitRefused(
-                f"dry-run says the buy would fail: "
-                f"funds={rehearsal.get('sufficientFunds')} "
-                f"spend-limit-ok={rehearsal.get('withinMonthlySpendLimit')} "
-                f"— escalate; the fix (top-up, limit) is the owner's")
-
-        self.state.append_event({
-            "ts": self._now().isoformat(), "event": "buy-intent",
-            "intent_id": quote_id, "domain": domain, "cost_cents": cost,
-            "idem_key": idem_key})
+        # A crash-retry of a committed intent skips the rehearsal: the
+        # charge may already have landed, so the dry-run would price a
+        # FRESH charge against the already-debited balance and refuse a
+        # replay that costs nothing (heldout odho1-transient-plus-floor
+        # caught this live). The intent IS the commitment; its
+        # resolution is the same-key replay.
+        replaying = any(i["op"] == "buy" and i["intent_id"] == quote_id
+                        for i in self.state.unresolved_intents())
+        if not replaying:
+            rehearsal = self.reg.create(domain, cost, idem_key,
+                                        whois_privacy=True, dry_run=True)
+            if not rehearsal.get("wouldSucceed"):
+                raise LimitRefused(
+                    f"dry-run says the buy would fail: "
+                    f"funds={rehearsal.get('sufficientFunds')} "
+                    f"spend-limit-ok="
+                    f"{rehearsal.get('withinMonthlySpendLimit')} "
+                    f"— escalate; the fix (top-up, limit) is the owner's")
+            self.state.append_event({
+                "ts": self._now().isoformat(), "event": "buy-intent",
+                "intent_id": quote_id, "domain": domain,
+                "cost_cents": cost, "idem_key": idem_key})
         try:
             out = self.reg.create(domain, cost, idem_key, whois_privacy=True)
         except PriceMismatch as e:
@@ -206,18 +215,24 @@ class Manager:
         idem_key = f"odom-renew-{domain}-{facts.get('expireDate', '')}"
         intent_id = idem_key
 
-        rehearsal = self.reg.renew(domain, cost, idem_key, dry_run=True)
-        if not rehearsal.get("wouldSucceed"):
-            raise LimitRefused(
-                f"dry-run says the renewal would fail: "
-                f"funds={rehearsal.get('sufficientFunds')} "
-                f"spend-limit-ok={rehearsal.get('withinMonthlySpendLimit')} "
-                f"— escalate NOW; a lapse ends in redemption")
-
-        self.state.append_event({
-            "ts": self._now().isoformat(), "event": "renew-intent",
-            "intent_id": intent_id, "domain": domain, "cost_cents": cost,
-            "idem_key": idem_key})
+        # Same replay rule as buy(): a committed renew intent skips the
+        # rehearsal — the same-key replay is charge-free.
+        replaying = any(i["op"] == "renew" and i["intent_id"] == intent_id
+                        for i in self.state.unresolved_intents())
+        if not replaying:
+            rehearsal = self.reg.renew(domain, cost, idem_key,
+                                       dry_run=True)
+            if not rehearsal.get("wouldSucceed"):
+                raise LimitRefused(
+                    f"dry-run says the renewal would fail: "
+                    f"funds={rehearsal.get('sufficientFunds')} "
+                    f"spend-limit-ok="
+                    f"{rehearsal.get('withinMonthlySpendLimit')} "
+                    f"— escalate NOW; a lapse ends in redemption")
+            self.state.append_event({
+                "ts": self._now().isoformat(), "event": "renew-intent",
+                "intent_id": intent_id, "domain": domain,
+                "cost_cents": cost, "idem_key": idem_key})
         try:
             out = self.reg.renew(domain, cost, idem_key)
         except PriceMismatch as e:
