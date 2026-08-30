@@ -93,7 +93,10 @@ building the first three taught us people actually ask for.
    claim; two blessed serving leaves (provider-domain bucket URL with
    native HTTPS, or a prov-rail instance terminating TLS for one name
    in the delegated subzone — the catalog's first two-rail
-   composition). Recon: docs/static-website-recon.md.*
+   composition). Component (scutl_sweb) and mocked-twin bench
+   (smutbench/sweb, held-out round sweb1-2026-08) landed; graded
+   GREEN on Qwen 3.6 27B, public + heldout all axes 1.0
+   (ladder/sweb/, cst-8bm9). Recon: docs/static-website-recon.md.*
 7. **own-domain** — buy and hold a domain on a card rail; renewals,
    lock-in, transfer-out. Registrars are the sharpest dark-pattern
    territory we know of; the decision tree earns its keep here.
