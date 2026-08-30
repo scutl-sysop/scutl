@@ -1,0 +1,16 @@
+[project]
+name = "scutl-keep"
+version = "0.1.0"
+description = "SCUTL recipe #10 component: managed Postgres whose backup is proven, not promised"
+requires-python = ">=3.11"
+
+[project.scripts]
+keep = "scutl_keep.cli:main"
+keep-approve = "scutl_keep.cli:approve"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["scutl_keep"]

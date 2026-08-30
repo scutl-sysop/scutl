@@ -75,9 +75,12 @@ recipe:
     # the ACCOUNT rail (same Vultr account prov established; the
     # cluster is created/destroyed via /v2/databases on that key —
     # shared blast radius named in the header) and the DUMP TARGET:
-    # keep's backups ride silo's put/verify path, so keep cannot
-    # reach component before silo's rail is live (cst-esz9 + the
-    # silo subscription approval, then #9's grade).
+    # keep's backups ride silo's put/verify path. The LIVE rail
+    # gates setup and grade (cst-esz9 + the silo subscription
+    # approval, then #9's grade); the component and bench build
+    # against the mocked twin per contracts.wire — silo's pending
+    # probes are interface-invariant to the two-call seam keep
+    # consumes (parking re-examined 2026-08-30, cst-k453).
     - { recipe: provision-vultr, rev: 1, needs: account-rail }
     - { recipe: silo, rev: 1, needs: backup-target }
   composes:
@@ -390,6 +393,7 @@ contracts:
       - "list_clusters() -> inventory                       # twin may show a fork/orphan beside the primary"
       - "create_db(cluster_id, name) -> ok | refused        # scratch database for rehearsals"
       - "drop_db(cluster_id, name) -> ok | refused"
+      - "create_user(cluster_id, name) -> {user, password} | refused   # the app user; the admin identity never does the daily work"
       - "apply_migration(file, checksum, approval?) -> applied | refused(reason)   # twin may ack-then-not-apply (phantom migration)"
       - "ledger_head() -> {applied: [file:checksum]}        # cluster's migrations table; twin may diverge it from the local ledger"
       - "dump(db) -> {bytes, row_counts, table_digests}     # twin may produce dumps that later fail restore"
