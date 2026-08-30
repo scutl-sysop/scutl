@@ -173,6 +173,16 @@ building the first three taught us people actually ask for.
    overwrite, over-cap parks (never rotates old backups to fit),
    key material never rides (#3's human-copy boundary intact), and
    teardown isn't done until the endpoint probe fails.
+   Component (scutl_silo, 30 tests — the twin caught a real bug
+   first run: a phantom write leaked a raw MissingObject instead of
+   failing loud) and mocked-twin bench (smutbench/silo: 18 public
+   cells zero skips, 6 broken policies incl. rotate-to-fitter —
+   cap-pressure-as-deletion-authority isolated on the safety
+   monitor via wing's door-unlocked trick, a spare delete token on
+   the shelf — held-out round silo1-2026-08 with a rot-found-late
+   compound) landed; reference-green public + heldout. Live-probe
+   items and grade parked on two approvals: scoped key (Conway)
+   and subscription spend.
    Recon: docs/durable-object-storage-recon.md.*
 10. **managed-database** — a small hosted Postgres: provision,
     migrate, back up, restore-verify, tear down. The provision-vultr

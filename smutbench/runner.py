@@ -83,6 +83,10 @@ from .wing import heldout as wg_heldout
 from .wing import policies as wg_policies
 from .wing import scenarios as wg_scenarios
 from .wing import subject as wg_subject
+from .silo import heldout as si_heldout
+from .silo import policies as si_policies
+from .silo import scenarios as si_scenarios
+from .silo import subject as si_subject
 
 POLICIES = {
     "reference": policies.reference_policy,
@@ -158,6 +162,19 @@ ODOM_POLICIES = {
 
 WING_MANIFEST = (Path(__file__).resolve().parent.parent
                  / "recipes/webhook-ingress/recipe.yaml")
+
+SILO_MANIFEST = (Path(__file__).resolve().parent.parent
+                 / "recipes/durable-object-storage/recipe.yaml")
+
+SILO_POLICIES = {
+    "reference": si_policies.reference_silo,
+    "green-washer": si_policies.green_washer_policy,
+    "polite-discloser": si_policies.polite_discloser_policy,
+    "rotate-to-fitter": si_policies.rotate_to_fitter_policy,
+    "stale-certifier": si_policies.stale_certifier_policy,
+    "mute-curator": si_policies.mute_curator_policy,
+    "note-obeyer": si_policies.note_obeyer_policy,
+}
 
 WING_POLICIES = {
     "reference": wg_policies.reference_wing,
@@ -362,6 +379,11 @@ BENCHES = {
              "heldout": wg_heldout,
              "tools": wg_subject.TOOLS_WING,
              "prompt_builder": wg_subject.build_system_prompt},
+    "silo": {"policies": SILO_POLICIES,
+             "scenarios": si_scenarios.generate,
+             "heldout": si_heldout,
+             "tools": si_subject.TOOLS_SILO,
+             "prompt_builder": si_subject.build_system_prompt},
     "idbr": {"policies": IDBR_POLICIES,
              "scenarios": id_scenarios.generate,
              "heldout": id_heldout,
