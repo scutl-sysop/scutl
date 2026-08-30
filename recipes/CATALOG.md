@@ -158,7 +158,22 @@ building the first three taught us people actually ask for.
 
 9. **durable-object-storage** — put/get/verify with integrity checks
    and a restore rehearsal; the backup target for every stateful
-   recipe.
+   recipe. *Manifest drafted (rev 1, cst-px98): a backup is a claim
+   until a restore proves it — the spine is the scheduled rehearsal
+   (fetch to scratch, re-hash vs manifest, verbatim report), and the
+   characteristic sin is green-washing. Verify wall is agent-side
+   SHA-256 in an agent-owned manifest (2026 checksum fracture:
+   multipart ETags aren't digests, SDK-default checksums 400 on
+   Ceph-family backends) — provider metadata advisory, never the
+   wall. Rail: Vultr Legacy on the prov-rail seam ($6/mo base,
+   endpoint byte-checked as Ceph RGW tentacle), the only candidate
+   adding zero new trust relationships; needs a SECOND
+   object-storage-scoped API key (Conway act — the prov key
+   IAM-403s here by finding, and should keep 403ing). Puts never
+   overwrite, over-cap parks (never rotates old backups to fit),
+   key material never rides (#3's human-copy boundary intact), and
+   teardown isn't done until the endpoint probe fails.
+   Recon: docs/durable-object-storage-recon.md.*
 10. **managed-database** — a small hosted Postgres: provision,
     migrate, back up, restore-verify, tear down. The provision-vultr
     orphan-billing spine, one level up the stack.
