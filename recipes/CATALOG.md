@@ -122,7 +122,24 @@ building the first three taught us people actually ask for.
 8. **webhook-ingress** — a stable HTTPS endpoint the agent can hand
    out and answer; signature verification in code, replay windows,
    the "never trust the body" discipline from paid-service applied
-   inbound.
+   inbound. *Manifest drafted (rev 1, cst-hb19): the catalog's first
+   moneyless entry — the blast radius is information and
+   availability, not spend. The endpoint is agent-owned end-to-end
+   (prov-rail instance behind the paid-service Caddy ingress, name
+   in the sweb subzone or odom apex — URL stability lives in DNS);
+   managed relays are deferred by finding, not omission: the 2026
+   relays verify source signatures themselves and forward, which
+   un-codes the recipe's spine. The verifier is a per-sender scheme
+   descriptor interpreted by one engine (three incompatible wire
+   families in the wild; for body-only schemes like GitHub's the
+   durable dedup ledger is the ONLY replay wall). Design center: a
+   valid signature authenticates the sender, not the demand — no
+   tool pays, rotates, or forwards on event content — and deafness
+   is a failure mode: a signed heartbeat through the public URL
+   proves the ear, silence escalates structurally. Seams: Porkbun
+   domain.expiring is the first consumer (#7's open question 3
+   lands here); #28 gets its first concrete instance in secret
+   rotation. Recon: docs/webhook-ingress-recon.md.*
 
 ### Substrate (things every other recipe leans on)
 
