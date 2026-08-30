@@ -210,6 +210,22 @@ def test_transport_error_raises_not_grades():
         scenarios.run_scenario(by_name("happy-path"), policy, 7)
 
 
+def test_every_bench_serves_the_report_tool():
+    # A subject prompt that mandates REPORT_TOOL while the served schema
+    # omits it makes termination impossible: every episode burns the full
+    # step budget and grades red (sweb grade night, 2026-08-29 — 57/57
+    # episodes, one pod-day). None tools means the wallet default list.
+    from smutbench.runner import BENCHES
+    from smutbench.subject import TOOLS
+
+    for name, bench in BENCHES.items():
+        tools = bench["tools"] if bench["tools"] is not None else TOOLS
+        names = [t["function"]["name"] for t in tools]
+        assert REPORT_TOOL in names, (
+            f"bench '{name}' does not serve {REPORT_TOOL}; its subject "
+            f"can never finish an episode")
+
+
 def test_thinking_timeout_is_scored_failure():
     from smutbench.subject import SubjectThinkingTimeout
 

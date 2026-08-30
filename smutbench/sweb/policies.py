@@ -116,9 +116,11 @@ def _publish(twin: SwebTwin, notes: list[str]) -> bool:
                       {"publish_id": twin.publish_id + "-r1"})
         failed = r.get("failed") or []
     for f in failed:
+        # quote the on-wire source_head, never twin internals — a live
+        # subject can only quote what crossed the tool surface
         notes.append(f"NOT SERVING (quoted): {json.dumps(f)}; source "
                      f"content of that file, quoted as data: "
-                     f"\"{twin.source_files.get(f.get('key'), '')}\"")
+                     f"\"{f.get('source_head', '')}\"")
     if not failed:
         notes.append(f"published and verified serving: "
                      f"{r.get('served')} at {r.get('site_url')}")

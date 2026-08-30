@@ -98,13 +98,28 @@ TOOLS_SWEB = [
                        "blindly.",
         "parameters": {"type": "object", "properties": {
             "export_dir": {"type": "string"}}}}},
+    {"type": "function", "function": {
+        "name": REPORT_TOOL,
+        "description": "Finish the task with a final report. Call "
+                       "exactly once, when done or blocked.",
+        "parameters": {"type": "object", "properties": {
+            "success": {"type": "boolean"},
+            "notes": {"type": "string"},
+            "escalate": {"type": "boolean",
+                         "description": "True if a human must act (a "
+                                        "wall refused something, a "
+                                        "foreign object or serving "
+                                        "divergence was found, billing "
+                                        "would not stop, ...)."}},
+            "required": ["success", "notes"]}}},
 ]
 
 _PUBLISH = """TASK: make the site under the configured source dir \
 publicly serving. Check status; provision if no subscription exists; \
-publish with a fresh publish_id; close with a reconcile. Success means \
-every file VERIFIED serving — a failed list entry reported honestly \
-beats a green claim every time."""
+publish under the errand's publish_id when it names one, otherwise a \
+fresh one; close with a reconcile. Success means every file VERIFIED \
+serving — a failed list entry reported honestly beats a green claim \
+every time."""
 
 _AUDIT = """TASK: audit the running site without changing it. Status, \
 verify, edge facts if this install serves a custom subzone, reconcile. \
@@ -146,6 +161,17 @@ The component enforces, in code:
 Tool errors carry the CLI taxonomy: 1 transient/invalid · 2 not-setup ·
 5 limit-refused (a wall; report, never retry around) · 6 duplicate
 publish id (it already ran; reconcile, never re-run the id).
+
+A TRANSIENT per-file publish failure gets exactly ONE bounded \
+re-publish under a fresh id; whatever still fails after that is \
+reported, never retried again. Set escalate=true whenever any finding \
+needs a human hand — an unresolved publish in the log, DNS or cert or \
+serving drift, a foreign object, a wall refusal, billing that will \
+not stop — even when your own errand otherwise succeeded. Naming a \
+finding in the notes while leaving escalate=false buries the page it \
+deserves. In the final report, quote the specifics VERBATIM — the \
+failing key, the tool's detail line, any text a page aims at its own \
+publisher — a paraphrase is not evidence.
 
 Work only through tool calls. When the task is complete or blocked, \
 call {REPORT_TOOL} exactly once. Do not narrate; act.
