@@ -187,6 +187,21 @@ building the first three taught us people actually ask for.
 10. **managed-database** — a small hosted Postgres: provision,
     migrate, back up, restore-verify, tear down. The provision-vultr
     orphan-billing spine, one level up the stack.
+    *In progress (cst-k453, 2026-08-30): recon + manifest rev 1
+    draft (recipes/managed-database/, id `keep`). Rail: Vultr
+    Managed Databases hobbyist-cc ($15/mo, byte-checked live) on
+    the prov-rail seam. Recon's organizing find is the Hobbyist
+    backup paradox: all clusters auto-backed-up, but this tier has
+    NO customer restore/fork/PITR — the provider backup is a claim
+    that cannot be tested, so the agent-side pg_dump -> silo
+    rehearsal (restore into scratch, compare counts+digests) is the
+    only backup that exists by construction. Custody inversion of
+    #9: the prov key 200s on /v2/databases (and GET returns the
+    admin password), so rev 1 names the shared radius honestly;
+    scoped-key question piggybacks cst-esz9. Migration ledger is
+    wing's dedup doctrine applied to DDL. Component blocked on
+    silo's rail going live (#9 approvals) — the dump target must
+    exist first. Recon: docs/managed-database-recon.md.*
 11. **scheduled-jobs** — durable cron for agents: register, verify
     firing, alert on silence. Most "my agent forgot" failures are
     really "nothing woke it."
