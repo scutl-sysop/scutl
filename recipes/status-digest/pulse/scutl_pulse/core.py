@@ -21,6 +21,15 @@ Manifest invariants enforced HERE, in code (recipe.yaml components.pulse):
   - probe rounds are capped per period; exhaustion is a refusal
     (exit 5), so a flapping check cannot be probed until it flatters
   - status (reading the record) is never gated
+  - rev 2 (cst-u3eu), the composition walls: a substrate check's state
+    is computed from the substrate's own escalate field (`ok` iff
+    false, `attention` otherwise) and the substrate's breach lines and
+    dark/coverage/verifier labels render in the table row verbatim —
+    a fresh pulse probe cannot overwrite a substrate's internal
+    staleness or deafness (NO LAUNDERING); a substrate read failure is
+    an `unreachable` row that latches a flag, never a dropped row;
+    pulse invokes only the substrate's read-only report spine
+    (substrates.SUBSTRATE_KINDS is the allowlist)
 """
 
 from __future__ import annotations
@@ -31,10 +40,24 @@ from datetime import datetime, timezone
 from . import approvals
 from .checks import CheckClient, PermanentError, TransientError
 from .state import DuplicatePeriod, StateDir
+from .substrates import (SUBSTRATE_KINDS, SubstrateClient,
+                         SubstrateUnreachable)
 
 
 class LimitRefused(Exception):
     """A code-enforced limit said no. Exit 5; never retried around."""
+
+
+# States that do NOT latch an anomaly flag: `up` from the rail, `ok`
+# from a substrate whose own escalate is false. Everything else —
+# down, error, attention, unreachable — is evidence of trouble.
+GREEN_STATES = {"up", "ok"}
+
+# The substrate honesty labels that must survive into the table row
+# verbatim when present (NO LAUNDERING). Keys are copied from the
+# substrate's report, never synthesized.
+SUBSTRATE_LABELS = ("witness_dark", "prober_dark", "coverage",
+                    "verifier", "counts")
 
 
 # What pulse read wraps every detail/memo body in. The banner is for
@@ -59,9 +82,11 @@ def _age_minutes(ts: str, now: datetime) -> float:
 
 class Manager:
     def __init__(self, state: StateDir | None = None,
-                 client: CheckClient | None = None):
+                 client: CheckClient | None = None,
+                 substrates: SubstrateClient | None = None):
         self.state = state or StateDir()
         self.client = client or CheckClient(self.state)
+        self.substrates = substrates or SubstrateClient()
 
     # -- period arithmetic: the schedule is math over the clock ----------
     def _period_index(self, config: dict, now: datetime | None = None) -> int:
@@ -136,22 +161,44 @@ class Manager:
         flagged = {f["check"] for f in self.state.open_flags()}
         for check in config["checks"]:
             cid = check["id"]
-            try:
-                obs = self.client.probe(cid)
-                state = str(obs.get("state", "error"))
-                detail = str(obs.get("detail", ""))
-                observed_at = str(obs.get("observed_at", now.isoformat()))
-            except TransientError as e:
-                state, detail, observed_at = "error", str(e), now.isoformat()
-            except PermanentError as e:
-                state, detail, observed_at = "error", str(e), now.isoformat()
-            rec = self.state.append_record({
+            substrate = None
+            if check.get("kind") in SUBSTRATE_KINDS:
+                # substrate row: state computed from the substrate's own
+                # escalate, its report recorded verbatim; a read failure
+                # is `unreachable` — red, never absent
+                try:
+                    substrate = self.substrates.read(
+                        check["kind"], str(check.get("target", "")))
+                    state = ("ok" if not substrate.get("escalate")
+                             else "attention")
+                    detail = "; ".join(
+                        str(b) for b in substrate.get("breaches", []))
+                except SubstrateUnreachable as e:
+                    state, detail = "unreachable", str(e)
+                observed_at = now.isoformat()
+            else:
+                try:
+                    obs = self.client.probe(cid)
+                    state = str(obs.get("state", "error"))
+                    detail = str(obs.get("detail", ""))
+                    observed_at = str(obs.get("observed_at",
+                                              now.isoformat()))
+                except TransientError as e:
+                    state, detail, observed_at = ("error", str(e),
+                                                  now.isoformat())
+                except PermanentError as e:
+                    state, detail, observed_at = ("error", str(e),
+                                                  now.isoformat())
+            entry = {
                 "kind": "probe", "ts": now.isoformat(), "round": round_id,
                 "period": period, "check": cid, "state": state,
-                "detail": detail, "observed_at": observed_at})
+                "detail": detail, "observed_at": observed_at}
+            if substrate is not None:
+                entry["substrate"] = substrate
+            rec = self.state.append_record(entry)
             results.append({"id": rec["id"], "check": cid, "state": state})
             # a bad observation latches a flag; nothing here clears one
-            if state != "up" and cid not in flagged:
+            if state not in GREEN_STATES and cid not in flagged:
                 self.state.append_record({
                     "kind": "flag", "ts": now.isoformat(), "check": cid,
                     "round": round_id})
@@ -197,6 +244,17 @@ class Manager:
                 continue
             row = {"check": cid, "state": r["state"],
                    "observed_at": r["observed_at"]}
+            sub = r.get("substrate")
+            if sub is not None:
+                # NO LAUNDERING: the substrate's own verdict and labels
+                # render in the row verbatim — a fresh pulse record
+                # cannot overwrite internal staleness or deafness
+                row["kind"] = check.get("kind")
+                row["escalate"] = bool(sub.get("escalate"))
+                row["breaches"] = [str(b) for b in sub.get("breaches", [])]
+                for label in SUBSTRATE_LABELS:
+                    if label in sub:
+                        row[label] = sub[label]
             skew = abs(_age_minutes(r["observed_at"], now))
             if skew > window:
                 row["clock_skew"] = (f"rail clock disagrees with log by "
@@ -271,12 +329,23 @@ class Manager:
         for r in self.state.read_records():
             if r.get("id") == record_id:
                 out = {k: v for k, v in r.items()
-                       if k not in ("detail", "entries", "notes")}
+                       if k not in ("detail", "entries", "notes",
+                                    "substrate")}
                 body = r.get("detail")
                 if r["kind"] == "ledger":
                     body = json.dumps(r["entries"])
                 if r["kind"] == "digest":
                     body = r.get("notes", "")
+                if r.get("substrate") is not None:
+                    # two-hop provenance: the whole substrate payload is
+                    # the monitored world speaking through a sibling's
+                    # report — enveloped, never parsed back out
+                    body = json.dumps(r["substrate"])
+                    out["provenance"] = (
+                        f"substrate report for check '{r.get('check')}' "
+                        f"— the sibling component's own verdict, quoted "
+                        f"world-text included; state/labels in the "
+                        f"computed table are derived from it in code")
                 out["untrusted_content"] = {
                     "banner": UNTRUSTED_BANNER,
                     "body": body or "",
@@ -298,6 +367,10 @@ class Manager:
         for c in checks:
             if not c.get("id") or not c.get("kind"):
                 raise ValueError(f"check needs id and kind: {c}")
+            if c["kind"] in SUBSTRATE_KINDS and not c.get("target"):
+                raise ValueError(
+                    f"substrate check '{c['id']}' (kind {c['kind']}) "
+                    f"needs a target state dir")
         self.state.init()
         config = {"period_hours": int(period_hours),
                   "freshness_min": int(freshness_min),
