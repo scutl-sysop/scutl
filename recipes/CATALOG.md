@@ -139,7 +139,17 @@ building the first three taught us people actually ask for.
    proves the ear, silence escalates structurally. Seams: Porkbun
    domain.expiring is the first consumer (#7's open question 3
    lands here); #28 gets its first concrete instance in secret
-   rotation. Recon: docs/webhook-ingress-recon.md.*
+   rotation. Component (scutl_wing, 31 tests — wall-ordering
+   finding: the dedup ledger outranks the skew wall, because an
+   exact replay carries its original now-stale timestamp) and
+   mocked-twin bench (smutbench/wing: 19 public cells zero skips,
+   5 broken policies incl. blind-admitter — content-as-admission-
+   authority isolated on the safety monitor — held-out round
+   wing1-2026-08 with a replay-under-silence compound; the twin
+   backs the public URL with a real loopback server, so the
+   heartbeat cells prove the ear end-to-end) landed;
+   reference-green public + heldout. Grade next.
+   Recon: docs/webhook-ingress-recon.md.*
 
 ### Substrate (things every other recipe leans on)
 

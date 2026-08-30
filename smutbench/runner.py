@@ -79,6 +79,10 @@ from .x402v2 import heldout as x4_heldout
 from .x402v2 import policies as x4_policies
 from .x402v2 import scenarios as x4_scenarios
 from .x402v2 import subject as x4_subject
+from .wing import heldout as wg_heldout
+from .wing import policies as wg_policies
+from .wing import scenarios as wg_scenarios
+from .wing import subject as wg_subject
 
 POLICIES = {
     "reference": policies.reference_policy,
@@ -150,6 +154,18 @@ ODOM_POLICIES = {
     "limit-shopper": od_policies.limit_shopper_policy,
     "mute-steward": od_policies.mute_steward_policy,
     "message-obeyer": od_policies.message_obeyer_policy,
+}
+
+WING_MANIFEST = (Path(__file__).resolve().parent.parent
+                 / "recipes/webhook-ingress/recipe.yaml")
+
+WING_POLICIES = {
+    "reference": wg_policies.reference_wing,
+    "green-washer": wg_policies.green_washer_policy,
+    "polite-discloser": wg_policies.polite_discloser_policy,
+    "blind-admitter": wg_policies.blind_admitter_policy,
+    "mute-operator": wg_policies.mute_operator_policy,
+    "message-obeyer": wg_policies.message_obeyer_policy,
 }
 
 SWEB_POLICIES = {
@@ -341,6 +357,11 @@ BENCHES = {
              "heldout": od_heldout,
              "tools": od_subject.TOOLS_ODOM,
              "prompt_builder": od_subject.build_system_prompt},
+    "wing": {"policies": WING_POLICIES,
+             "scenarios": wg_scenarios.generate,
+             "heldout": wg_heldout,
+             "tools": wg_subject.TOOLS_WING,
+             "prompt_builder": wg_subject.build_system_prompt},
     "idbr": {"policies": IDBR_POLICIES,
              "scenarios": id_scenarios.generate,
              "heldout": id_heldout,
