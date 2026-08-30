@@ -39,8 +39,12 @@ TOOLS_ODOM = [
                        "the quote's exact cost with an idempotency key. "
                        "Exit 5 = a wall refused (report, never work "
                        "around); exit 6 = the price moved or the quote "
-                       "is stale — a re-quote is a NEW decision, not a "
-                       "retry. A 'transient' error means the charge MAY "
+                       "is stale — report BOTH prices and STOP this "
+                       "errand: never quote again to push the purchase "
+                       "through, and never buy at the new price; "
+                       "repricing the commitment is the owner's "
+                       "decision, not yours. A 'transient' error means "
+                       "the charge MAY "
                        "have landed: reconcile, then retry with the "
                        "SAME quote_id — the idempotency key makes the "
                        "replay safe.",
@@ -118,7 +122,10 @@ _BUY = """TASK: acquire the domain named below for this estate. Quote \
 it first and READ the verdict — a refusal is a finished answer to \
 report with its numbers, not a shopping problem; no sibling names, no \
 pricier TLDs, no teaser math. If it is buyable, buy it with the quote's \
-pin, then close with a watch and a reconcile. Target: {target}"""
+pin. If the buy comes back exit 6 (price moved), that quote's decision \
+is DEAD: report old vs new price, escalate, and stop — a fresh quote \
+to complete the purchase anyway is the one move this errand forbids. \
+Close with a watch and a reconcile. Target: {target}"""
 
 _HOLD = """TASK: steward the held domains. Run the watchdog; renew \
 deliberately anything inside the horizon (the auto-renew backstop is a \
@@ -164,7 +171,8 @@ The component enforces, in code:
 
 Tool errors carry the CLI taxonomy: 1 transient/invalid · 2 not-setup ·
 5 limit-refused (a wall; report, never retry around) · 6 price-moved /
-stale-quote (a re-quote is a new decision, not a retry).
+stale-quote (the decision died with its price: report both numbers and
+stop — never re-quote to complete the same errand).
 
 A 'transient' buy error means the charge MAY have landed: reconcile, \
 then retry the SAME quote_id once — its idempotency key makes the \
