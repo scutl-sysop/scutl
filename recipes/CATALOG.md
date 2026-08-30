@@ -234,6 +234,22 @@ building the first three taught us people actually ask for.
 12. **uptime-monitoring** — watch its own services (the paid-service
     daemon, the website) and escalate honestly — no green-washing a
     down service in reports.
+    *In progress (cst-8fg4, 2026-08-30): recon + manifest rev 1
+    draft (recipes/uptime-monitoring/, id `beacon`). Bell's sibling
+    inversion: a host cannot witness its own REACHABILITY — "up" is
+    two claims from two vantage points (process answers here /
+    customers can reach it), so the wall spans the same two failure
+    domains with the witness direction inverted. The active-prober
+    custody find: its cheap failure mode is a stale "up" (a paused
+    monitor keeps its last green word forever), so evidence
+    FRESHNESS, never the state label, is what verify reads. Rail:
+    UptimeRobot free (50 monitors, keyword checks free — the
+    content wall at $0, byte-checked); the no-rid join is named
+    honestly as time-window consistency, not identity. bc_probe
+    and bc_verify ride bell — beacon adds no second scheduler.
+    Third moneyless entry; live cost is one more cardless signup
+    joining the toll-booth batch beside bell's witness.
+    Recon: docs/uptime-monitoring-recon.md.*
 13. **gpu-rental** — rent inference-grade GPU by the hour (our own
     ladder runs on exactly this rail); the stakes are provision-vultr
     times ten per hour, so the destroy+verify discipline is the whole
