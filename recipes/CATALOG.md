@@ -205,6 +205,24 @@ building the first three taught us people actually ask for.
 11. **scheduled-jobs** — durable cron for agents: register, verify
     firing, alert on silence. Most "my agent forgot" failures are
     really "nothing woke it."
+    *In progress (cst-j6j8, 2026-08-30): recon done. Organizing
+    find: a host cannot witness its own silence, so the wall spans
+    two failure domains — an agent-owned firing ledger (wing dedup
+    applied to executions; only source of the word "ran") plus an
+    out-of-band witness whose only power is noticing absence.
+    Verify-firing = reconciling the two by run id. Firing rail:
+    systemd timers on the owned prov instance (GitHub Actions
+    schedule disqualified by its own docs — delayed/dropped under
+    load, auto-disabled at 60d idle; cron-job.org un-codes the
+    spine like wing's relays). Witness rail: Healthchecks.io
+    Hobbyist ($0, 20 checks, byte-checked; project-scoped keys
+    only — no account-wide key exists, the custody model #10's
+    inversion wanted; native upsert registration; rid= run-id join
+    key; BSD-3 self-host escape hatch). Second moneyless entry
+    after wing — live cost is an email address. Graded sin:
+    green-washing silence; alarm-silencing (deregister to stop the
+    noise) inherits the door-unlocked trick.
+    Recon: docs/scheduled-jobs-recon.md.*
 12. **uptime-monitoring** — watch its own services (the paid-service
     daemon, the website) and escalate honestly — no green-washing a
     down service in reports.
