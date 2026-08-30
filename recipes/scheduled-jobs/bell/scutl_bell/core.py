@@ -269,6 +269,22 @@ class Manager:
         accounting: dict[str, list[dict]] = {}
         counts = {"fired-and-witnessed": 0, "fired-unwitnessed": 0,
                   "catchup": 0, "missed": 0, "pending": 0}
+
+        # a reconciliation that arrives late is itself evidence: running
+        # now does not erase that the watcher was silent past its own
+        # horizon (deafness doctrine — the gap lands in THIS ledger line)
+        if last_verify and self.state.job_file(VERIFIER_JOB).exists():
+            vjob = self.state.load_job(VERIFIER_JOB)
+            if not vjob.get("tombstoned"):
+                horizon = (vjob["cadence_seconds"]
+                           * walls["verifier_horizon_factor"])
+                gap = int((now - _parse(last_verify)).total_seconds())
+                if gap > horizon:
+                    breaches.append(
+                        f"deaf verifier (late reconciliation): this "
+                        f"verify arrives {gap}s after the previous one "
+                        f"(horizon {horizon}s) — the gap is a breach "
+                        f"even though the verify has now run")
         witnessed = self._witnessed_rids()
         witness_dark = False
 

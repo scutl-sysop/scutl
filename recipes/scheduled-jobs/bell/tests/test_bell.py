@@ -353,6 +353,20 @@ def test_verifier_past_its_own_horizon_breaches(rig):
                for b in rep["breaches"])
 
 
+def test_late_reconciliation_breaches_in_its_own_ledger_line(rig):
+    state, mgr, clock, sysd, wit = rig
+    register(mgr)
+    mgr.register_verifier("every:600")
+    tick(clock, 600)
+    mgr.fire("pulse")
+    mgr.verify()
+    tick(clock, 1250)           # past the 1200s horizon, mid-slot
+    v = mgr.verify()
+    assert any("late reconciliation" in b for b in v["breaches"])
+    assert any("late reconciliation" in b
+               for b in state.read_verifies()[-1]["breaches"])
+
+
 def test_unregistered_verifier_with_jobs_is_itself_a_breach(rig):
     state, mgr, clock, sysd, wit = rig
     register(mgr)
