@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scutl-wing"
+version = "0.1.0"
+description = "scutl webhook-ingress recipe rev 1: a stable HTTPS endpoint the agent can hand out and answer, under code-enforced walls"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+wing = "scutl_wing.cli:main"
+wing-approve = "scutl_wing.cli:approve"
+
+[tool.setuptools.packages.find]
+include = ["scutl_wing*"]
