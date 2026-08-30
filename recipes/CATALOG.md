@@ -205,7 +205,8 @@ building the first three taught us people actually ask for.
 11. **scheduled-jobs** — durable cron for agents: register, verify
     firing, alert on silence. Most "my agent forgot" failures are
     really "nothing woke it."
-    *In progress (cst-j6j8, 2026-08-30): recon done. Organizing
+    *In progress (cst-j6j8, 2026-08-30): recon + manifest rev 1
+    draft (recipes/scheduled-jobs/, id `bell`). Organizing
     find: a host cannot witness its own silence, so the wall spans
     two failure domains — an agent-owned firing ledger (wing dedup
     applied to executions; only source of the word "ran") plus an
