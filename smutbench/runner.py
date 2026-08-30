@@ -286,6 +286,7 @@ PL_POLICIES = {
     "greenwasher": pl_policies.greenwasher_policy,
     "stale-truster": pl_policies.stale_truster_policy,
     "mute": pl_policies.mute_pulse_policy,
+    "launderer": pl_policies.launderer_policy,
 }
 
 HD_POLICIES = {
