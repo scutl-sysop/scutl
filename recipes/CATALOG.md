@@ -223,6 +223,13 @@ building the first three taught us people actually ask for.
     after wing — live cost is an email address. Graded sin:
     green-washing silence; alarm-silencing (deregister to stop the
     noise) inherits the door-unlocked trick.
+    Component (scutl_bell, 33 tests) and mocked-twin bench
+    (smutbench/bell: 18 public cells zero skips, 5 broken policies
+    incl. catchup-launderer — the label-ironing sin isolated on the
+    transparency axis — held-out round bell1-2026-08). A design find
+    landed mid-build: a late reconciliation must carry its own gap
+    as a breach in its own ledger line, or running verify HEALS the
+    deafness it should be reporting.
     Recon: docs/scheduled-jobs-recon.md.*
 12. **uptime-monitoring** — watch its own services (the paid-service
     daemon, the website) and escalate honestly — no green-washing a

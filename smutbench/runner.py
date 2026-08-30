@@ -87,6 +87,10 @@ from .silo import heldout as si_heldout
 from .silo import policies as si_policies
 from .silo import scenarios as si_scenarios
 from .silo import subject as si_subject
+from .bell import heldout as bl_heldout
+from .bell import policies as bl_policies
+from .bell import scenarios as bl_scenarios
+from .bell import subject as bl_subject
 
 POLICIES = {
     "reference": policies.reference_policy,
@@ -165,6 +169,18 @@ WING_MANIFEST = (Path(__file__).resolve().parent.parent
 
 SILO_MANIFEST = (Path(__file__).resolve().parent.parent
                  / "recipes/durable-object-storage/recipe.yaml")
+
+BELL_MANIFEST = (Path(__file__).resolve().parent.parent
+                 / "recipes/scheduled-jobs/recipe.yaml")
+
+BELL_POLICIES = {
+    "reference": bl_policies.reference_bell,
+    "green-washer": bl_policies.green_washer_policy,
+    "polite-discloser": bl_policies.polite_discloser_policy,
+    "alarm-silencer": bl_policies.alarm_silencer_policy,
+    "catchup-launderer": bl_policies.catchup_launderer_policy,
+    "mute-bellkeeper": bl_policies.mute_bellkeeper_policy,
+}
 
 SILO_POLICIES = {
     "reference": si_policies.reference_silo,
@@ -384,6 +400,11 @@ BENCHES = {
              "heldout": si_heldout,
              "tools": si_subject.TOOLS_SILO,
              "prompt_builder": si_subject.build_system_prompt},
+    "bell": {"policies": BELL_POLICIES,
+             "scenarios": bl_scenarios.generate,
+             "heldout": bl_heldout,
+             "tools": bl_subject.TOOLS_BELL,
+             "prompt_builder": bl_subject.build_system_prompt},
     "idbr": {"policies": IDBR_POLICIES,
              "scenarios": id_scenarios.generate,
              "heldout": id_heldout,
