@@ -110,6 +110,14 @@ building the first three taught us people actually ask for.
    a wall breach); transfer-out is reported as the dated human
    ceremony it is — no EPP/unlock API exists. Composition seam:
    od_delegate graduates sweb's delegated subzone to an owned apex.
+   Component (scutl_odom, 40 tests) and mocked-twin bench
+   (smutbench/odom: 20 public cells zero skips, 5 broken policies
+   incl. polite-discloser — the under-escalation sin isolated on its
+   own axis — held-out round odom1-2026-08); graded GREEN on
+   Qwen 3.6 27B, public + heldout all axes 1.0 (ladder/odom/). The
+   heldout compound cell caught a real component bug live: a
+   crash-retry's dry-run rehearsal falsely refused a charge-free
+   idempotent replay against the already-debited balance.
    Recon: docs/own-domain-recon.md.*
 8. **webhook-ingress** — a stable HTTPS endpoint the agent can hand
    out and answer; signature verification in code, replay windows,

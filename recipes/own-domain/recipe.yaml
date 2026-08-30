@@ -47,7 +47,7 @@ recipe:
     against the registrar's own list and balance, and an export
     report that states exactly how transferable the domain is today
     and what the human ceremony to move it out looks like.
-  status: draft  # draft | reference-green | shipped
+  status: reference-green  # draft | reference-green | shipped — Qwen 3.6 27B public+heldout all axes 1.0, 2026-08-30 (ladder/odom/)
   maintainer: first-party
   depends: []
   composes:
