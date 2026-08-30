@@ -249,6 +249,14 @@ building the first three taught us people actually ask for.
     and bc_verify ride bell — beacon adds no second scheduler.
     Third moneyless entry; live cost is one more cardless signup
     joining the toll-booth batch beside bell's witness.
+    Component (scutl_beacon, 42 tests) and mocked-twin bench
+    (smutbench/beacon: 24 public cells zero skips over all 19 wire
+    modes, average-hider isolated on the transparency axis,
+    held-out round beacon1-2026-08). The design find landed in the
+    register path: convergence must read the prober BEFORE
+    re-upserting, because silently restoring a drifted monitor
+    launders the evidence that someone moved the watch — the
+    honest register REFUSES over drift and leaves it visible.
     Recon: docs/uptime-monitoring-recon.md.*
 13. **gpu-rental** — rent inference-grade GPU by the hour (our own
     ladder runs on exactly this rail); the stakes are provision-vultr

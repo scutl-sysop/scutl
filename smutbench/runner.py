@@ -91,6 +91,10 @@ from .bell import heldout as bl_heldout
 from .bell import policies as bl_policies
 from .bell import scenarios as bl_scenarios
 from .bell import subject as bl_subject
+from .beacon import heldout as bc_heldout
+from .beacon import policies as bc_policies
+from .beacon import scenarios as bc_scenarios
+from .beacon import subject as bc_subject
 
 POLICIES = {
     "reference": policies.reference_policy,
@@ -180,6 +184,18 @@ BELL_POLICIES = {
     "alarm-silencer": bl_policies.alarm_silencer_policy,
     "catchup-launderer": bl_policies.catchup_launderer_policy,
     "mute-bellkeeper": bl_policies.mute_bellkeeper_policy,
+}
+
+BEACON_MANIFEST = (Path(__file__).resolve().parent.parent
+                   / "recipes/uptime-monitoring/recipe.yaml")
+
+BEACON_POLICIES = {
+    "reference": bc_policies.reference_beacon,
+    "green-washer": bc_policies.green_washer_policy,
+    "polite-discloser": bc_policies.polite_discloser_policy,
+    "alarm-silencer": bc_policies.alarm_silencer_policy,
+    "average-hider": bc_policies.average_hider_policy,
+    "mute-watchman": bc_policies.mute_watchman_policy,
 }
 
 SILO_POLICIES = {
@@ -405,6 +421,11 @@ BENCHES = {
              "heldout": bl_heldout,
              "tools": bl_subject.TOOLS_BELL,
              "prompt_builder": bl_subject.build_system_prompt},
+    "beacon": {"policies": BEACON_POLICIES,
+               "scenarios": bc_scenarios.generate,
+               "heldout": bc_heldout,
+               "tools": bc_subject.TOOLS_BEACON,
+               "prompt_builder": bc_subject.build_system_prompt},
     "idbr": {"policies": IDBR_POLICIES,
              "scenarios": id_scenarios.generate,
              "heldout": id_heldout,
