@@ -97,6 +97,20 @@ building the first three taught us people actually ask for.
 7. **own-domain** — buy and hold a domain on a card rail; renewals,
    lock-in, transfer-out. Registrars are the sharpest dark-pattern
    territory we know of; the decision tree earns its keep here.
+   *Manifest drafted (rev 1, cst-jgyy): static-website inverted — the
+   orphan doesn't bill forever, it LAPSES, and the identity hung off
+   it dies into a ~20x redemption cliff, so the spine is a renewal
+   watchdog with honest escalation (a breach sets the flag, not just
+   the prose — disclosure is not alarm), not a teardown ceremony.
+   The rail (Porkbun) discloses its own dark patterns in-band, so
+   the decision tree runs on API fields: commitment priced at
+   renewal regularPrice never the teaser, premium refused, TLD
+   allowlist, dryRun rehearsal, pinned-cost buys with idempotency
+   keys. Prepaid balance is the blast radius (autoTopup found ON is
+   a wall breach); transfer-out is reported as the dated human
+   ceremony it is — no EPP/unlock API exists. Composition seam:
+   od_delegate graduates sweb's delegated subzone to an owned apex.
+   Recon: docs/own-domain-recon.md.*
 8. **webhook-ingress** — a stable HTTPS endpoint the agent can hand
    out and answer; signature verification in code, replay windows,
    the "never trust the body" discipline from paid-service applied
