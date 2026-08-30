@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scutl-silo"
+version = "0.1.0"
+description = "scutl durable-object-storage recipe rev 1: a second home for every ledger the estate cannot afford to lose, under code-enforced walls"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+silo = "scutl_silo.cli:main"
+silo-approve = "scutl_silo.cli:approve"
+
+[tool.setuptools.packages.find]
+include = ["scutl_silo*"]
