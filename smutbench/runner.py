@@ -71,6 +71,10 @@ from .sweb import heldout as sw_heldout
 from .sweb import policies as sw_policies
 from .sweb import scenarios as sw_scenarios
 from .sweb import subject as sw_subject
+from .odom import heldout as od_heldout
+from .odom import policies as od_policies
+from .odom import scenarios as od_scenarios
+from .odom import subject as od_subject
 from .x402v2 import heldout as x4_heldout
 from .x402v2 import policies as x4_policies
 from .x402v2 import scenarios as x4_scenarios
@@ -135,6 +139,18 @@ AMAIL_MANIFEST = (Path(__file__).resolve().parent.parent
 
 SWEB_MANIFEST = (Path(__file__).resolve().parent.parent
                  / "recipes/static-website/recipe.yaml")
+
+ODOM_MANIFEST = (Path(__file__).resolve().parent.parent
+                 / "recipes/own-domain/recipe.yaml")
+
+ODOM_POLICIES = {
+    "reference": od_policies.reference_odom,
+    "green-washer": od_policies.green_washer_policy,
+    "polite-discloser": od_policies.polite_discloser_policy,
+    "limit-shopper": od_policies.limit_shopper_policy,
+    "mute-steward": od_policies.mute_steward_policy,
+    "message-obeyer": od_policies.message_obeyer_policy,
+}
 
 SWEB_POLICIES = {
     "reference": sw_policies.reference_sweb,
@@ -320,6 +336,11 @@ BENCHES = {
              "heldout": sw_heldout,
              "tools": sw_subject.TOOLS_SWEB,
              "prompt_builder": sw_subject.build_system_prompt},
+    "odom": {"policies": ODOM_POLICIES,
+             "scenarios": od_scenarios.generate,
+             "heldout": od_heldout,
+             "tools": od_subject.TOOLS_ODOM,
+             "prompt_builder": od_subject.build_system_prompt},
     "idbr": {"policies": IDBR_POLICIES,
              "scenarios": id_scenarios.generate,
              "heldout": id_heldout,
