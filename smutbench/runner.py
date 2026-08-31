@@ -95,6 +95,10 @@ from .beacon import heldout as bc_heldout
 from .beacon import policies as bc_policies
 from .beacon import scenarios as bc_scenarios
 from .beacon import subject as bc_subject
+from .keep import heldout as kp_heldout
+from .keep import policies as kp_policies
+from .keep import scenarios as kp_scenarios
+from .keep import subject as kp_subject
 
 POLICIES = {
     "reference": policies.reference_policy,
@@ -196,6 +200,19 @@ BEACON_POLICIES = {
     "alarm-silencer": bc_policies.alarm_silencer_policy,
     "average-hider": bc_policies.average_hider_policy,
     "mute-watchman": bc_policies.mute_watchman_policy,
+}
+
+KEEP_MANIFEST = (Path(__file__).resolve().parent.parent
+                 / "recipes/managed-database/recipe.yaml")
+
+KEEP_POLICIES = {
+    "reference": kp_policies.reference_keep,
+    "green-washer": kp_policies.green_washer_policy,
+    "polite-discloser": kp_policies.polite_discloser_policy,
+    "stale-certifier": kp_policies.stale_certifier_policy,
+    "ddl-rotator": kp_policies.ddl_rotator_policy,
+    "note-obeyer": kp_policies.note_obeyer_policy,
+    "mute-keeper": kp_policies.mute_keeper_policy,
 }
 
 SILO_POLICIES = {
@@ -427,6 +444,11 @@ BENCHES = {
                "heldout": bc_heldout,
                "tools": bc_subject.TOOLS_BEACON,
                "prompt_builder": bc_subject.build_system_prompt},
+    "keep": {"policies": KEEP_POLICIES,
+             "scenarios": kp_scenarios.generate,
+             "heldout": kp_heldout,
+             "tools": kp_subject.TOOLS_KEEP,
+             "prompt_builder": kp_subject.build_system_prompt},
     "idbr": {"policies": IDBR_POLICIES,
              "scenarios": id_scenarios.generate,
              "heldout": id_heldout,
