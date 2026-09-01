@@ -32,7 +32,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 import uuid
+from pathlib import Path
 from datetime import datetime, timezone
 
 from . import approvals
@@ -178,7 +180,10 @@ class Manager:
     def register_verifier(self, schedule: str) -> dict:
         """The verifier goes on its own bell (recipe.yaml setup): the
         deafness doctrine has no exemption for the watcher."""
-        return self.register(VERIFIER_JOB, ["bell", "verify"], schedule,
+        # Absolute path: the systemd unit env has no venv on PATH, so a
+        # bare 'bell' argv exits 127 at every firing (cst-mh7i).
+        exe = str(Path(sys.argv[0]).resolve())
+        return self.register(VERIFIER_JOB, [exe, "verify"], schedule,
                              internal=True)
 
     # -- firing (the run harness every unit invokes) -----------------------

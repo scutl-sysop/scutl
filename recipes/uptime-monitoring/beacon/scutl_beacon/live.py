@@ -24,7 +24,9 @@ from __future__ import annotations
 import json
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
+from datetime import datetime, timezone
 
 from .rails import LocalRail, ProberRail, ProberUnreachable, RailError
 from .state import StateDir
@@ -134,9 +136,47 @@ class LiveProber(ProberRail):
                             "(probes-pending #2); refusing to guess")
         return {"monitor_id": mid, "created": True}
 
+    def _v2_last_checks(self) -> dict:
+        """monitor_id -> newest check ISO timestamp, from the v2
+        response_times surface. v3's lastCheckedAt is null on every
+        surface observed live (list and per-monitor, 2026-09-01,
+        cst-2din), so the deafness byte rides v2 — and only with an
+        explicit start/end window: the default window lags hours.
+        Best-effort: a v2 failure returns {} and the wall degrades
+        honestly to prober-deaf, never crashes the verify."""
+        base = self._base()
+        if "/v3" not in base:
+            return {}
+        now = int(time.time())
+        form = urllib.parse.urlencode({
+            "api_key": self._key(), "format": "json",
+            "response_times": "1",
+            "response_times_start_date": str(now - 3600),
+            "response_times_end_date": str(now)}).encode()
+        req = urllib.request.Request(
+            base.replace("/v3", "/v2") + "/getMonitors", data=form,
+            headers={"Content-Type": "application/x-www-form-urlencoded",
+                     "User-Agent": "scutl-beacon/0.1"})
+        try:
+            with urllib.request.urlopen(req, timeout=TIMEOUT_S) as resp:
+                out = json.loads(resp.read().decode() or "{}")
+        except (OSError, ValueError):
+            return {}
+        checks = {}
+        for m in out.get("monitors", []):
+            rts = m.get("response_times") or []
+            if rts:
+                newest = max(r["datetime"] for r in rts)
+                checks[str(m["id"])] = datetime.fromtimestamp(
+                    newest, tz=timezone.utc).isoformat()
+        return checks
+
     def read_all(self):
         out = self._call("GET", "/monitors")
         rows = out.get("monitors") or out.get("data") or []
+        v2_checks = self._v2_last_checks() if any(
+            not (m.get("lastCheckedAt") or m.get("last_checked_at"))
+            for m in rows) else {}
         result = []
         for m in rows:
             result.append({
@@ -153,7 +193,8 @@ class LiveProber(ProberRail):
                           in ("UP", "STARTED", "2") else "down"),
                 # probes-pending #1: THE byte the deafness wall rides
                 "last_observed_at": (m.get("lastCheckedAt")
-                                     or m.get("last_checked_at")),
+                                     or m.get("last_checked_at")
+                                     or v2_checks.get(str(m.get("id")))),
                 "paused": str(m.get("status", "")).upper() in ("0", "PAUSED"),
                 "incidents": m.get("incidents", []),
             })
