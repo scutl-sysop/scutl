@@ -64,8 +64,11 @@ Candidates surveyed across the 2026 market:
   provisioned and destroyed through the *same* API the workshop
   already holds for provision-vultr: `POST /v2/object-storage`
   (cluster id + tier id), `DELETE /v2/object-storage/{id}`. Tier
-  table read live from the API (2026-08-30): Legacy base $6/mo,
-  $0.006/GB disk, $0.01/GB egress; Standard $18 base, $0.018/GB;
+  table read live from the API (2026-08-30, re-read 2026-09-01):
+  Legacy base $6/mo — **deprecated in the March 2025 relaunch and
+  now listing ZERO deployable locations; not selectable**
+  (cst-px98.1); Standard $18 base, $0.018/GB, 800 ops/s, 7
+  locations;
   Premium/Performance/Accelerated above that; and a 2026-05
   **Archival** tier (base $6, archive storage $0.006/GB) for cold
   copies. 19 clusters across 15+ regions. The endpoint is Ceph
@@ -86,14 +89,19 @@ Candidates surveyed across the 2026 market:
 - **Tigris** — zero egress, versioning + object lock; same
   objection again.
 
-**The prov-rail seam is the rail: Vultr Object Storage, Legacy
-tier.** Not because it wins on price per GB (B2 does) but because
-it is the only candidate that adds *zero new trust relationships*:
-no new account, no new card, no new custody story — one more
-subscription on a rail whose provision, cap, and destroy discipline
-the workshop has already built and graded. At backup scale (a few
-GB), the tier tables converge to the base price anyway; $6/mo
-Legacy is the floor of every candidate's real bill. R2/B2/Tigris
+**The prov-rail seam is the rail: Vultr Object Storage, Standard
+tier (tier_id 2).** Not because it wins on price per GB (B2 does)
+but because it is the only candidate that adds *zero new trust
+relationships*: no new account, no new card, no new custody story —
+one more subscription on a rail whose provision, cap, and destroy
+discipline the workshop has already built and graded. The original
+selection named Legacy ($6/mo) without analyzing its deprecation;
+Conway corrected this (cst-px98.1) and approved Standard's $18/mo
+base as a cst-px98-specific exception to the $10 non-pod threshold
+(2026-08-30 — the general threshold is unchanged). Standard's S3
+behavior (backend identity, checksum handling) is verified at grade
+time, never inherited from the Legacy/Ceph tentacle findings.
+R2/B2/Tigris
 stay in the recon as unblessed candidates; revisit only if the
 recipe outgrows single-node backup scale (egress-heavy restore
 traffic is where R2's zero-egress would start to matter).
@@ -217,7 +225,7 @@ The moneyed axes return, joined by two new ones:
    object lock. Determines the immutability posture; changes no
    walls.
 3. **Billing granularity** (component step, from the first
-   invoice/billing API): whether the Legacy $6 base carries an
+   invoice/billing API): whether the Standard $18 base carries an
    included quota or is a pure platform fee + per-GB. Affects the
    cap math, not the design.
 4. **One target or two** (manifest): is the archival cold copy rev
@@ -226,7 +234,7 @@ The moneyed axes return, joined by two new ones:
 ## Cost of the molecule
 
 Recon spent $0 (read-only API + anonymous probe). Component/bench
-need one live subscription: Legacy tier, $6/mo prorated, a few GB
+need one live subscription: Standard tier, $18/mo prorated, a few GB
 — cents to low dollars for the bench window, destroyed at
 teardown. **Subscription creation is real spend on the house rail
 and parks for approval per house practice (no standing grant),
