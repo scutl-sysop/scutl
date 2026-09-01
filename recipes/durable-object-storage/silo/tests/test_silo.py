@@ -22,7 +22,8 @@ from scutl_silo.core import (DenyListed, IntegrityError, LimitRefused,
                              Manager, UnknownKey, WallsUnratified,
                              MANIFEST_COPY_KEY)
 from scutl_silo.state import StateDir
-from scutl_silo.store import MissingObject, StoreUnreachable
+from scutl_silo.store import (AuthRefused, MissingObject,
+                              StoreUnreachable)
 
 T0 = datetime(2026, 8, 30, 12, 0, 0, tzinfo=timezone.utc)
 
@@ -420,7 +421,7 @@ def test_all_four_admin_ops_are_approval_gated(tmp_path):
     with pytest.raises(ApprovalRequired):
         mgr.configure(20, 10, 7, 2, 256)
     with pytest.raises(ApprovalRequired):
-        mgr.provision(2, 1)
+        mgr.provision(2, 2)
     approvals.grant(state, "configure")
     mgr.configure(20, 10, 7, 2, 256)
     with pytest.raises(ApprovalRequired):
@@ -463,7 +464,7 @@ def test_walls_unratified_refuses_puts_and_status_says_so(tmp_path):
     mgr = Manager(state=state, store=twin, rail=TwinRail(twin),
                   now_fn=lambda: T0)
     approvals.grant(state, "provision")
-    mgr.provision(2, 1)
+    mgr.provision(2, 2)
     with pytest.raises(WallsUnratified):
         mgr.put(__file__)
     assert mgr.status()["walls_ratified"] is False
@@ -479,7 +480,7 @@ def _provisioned_rig(tmp_path, undead=False):
     mgr = Manager(state=state, store=twin, rail=rail,
                   now_fn=lambda: clock["now"])
     approvals.grant(state, "provision")
-    mgr.provision(2, 1)
+    mgr.provision(2, 2)
     approvals.grant(state, "configure")
     mgr.configure(20, 10, 7, 2, 256)
     return state, mgr, twin, rail
@@ -505,6 +506,50 @@ def test_undead_subscription_fails_teardown_loudly(tmp_path):
         mgr.teardown()
     assert [e for e in state.read_manifest()
             if e["event"] == "teardown"] == []   # no tombstone on a lie
+
+
+# -- auth refusal is never any other outcome (cst-px98.1 IP allowlist) ----
+
+def test_teardown_auth_refused_store_is_not_gone_verified(tmp_path):
+    state, mgr, twin, rail = _provisioned_rig(tmp_path)
+    orig = twin.list
+    twin.list = lambda: (_ for _ in ()).throw(
+        AuthRefused("twin: HTTP 403 — allowlist"))
+    approvals.grant(state, "teardown")
+    with pytest.raises(AuthRefused):
+        mgr.teardown()
+    twin.list = orig
+    assert [e for e in state.read_manifest()
+            if e["event"] == "teardown"] == []   # no tombstone on a 403
+
+
+def test_teardown_auth_refused_rail_is_not_gone_verified(tmp_path):
+    state, mgr, twin, rail = _provisioned_rig(tmp_path)
+    rail.exists = lambda sub: (_ for _ in ()).throw(
+        AuthRefused("rail: HTTP 401 — allowlist"))
+    approvals.grant(state, "teardown")
+    with pytest.raises(AuthRefused):
+        mgr.teardown()
+    assert [e for e in state.read_manifest()
+            if e["event"] == "teardown"] == []
+
+
+def test_live_rails_raise_auth_refused_on_401_403(monkeypatch):
+    import urllib.error
+    from scutl_silo.s3live import S3Store, VultrRail
+
+    def refuse(code):
+        def _urlopen(req, timeout=None):
+            raise urllib.error.HTTPError(
+                req.full_url, code, "denied", {}, None)
+        return _urlopen
+
+    monkeypatch.setattr("urllib.request.urlopen", refuse(403))
+    with pytest.raises(AuthRefused, match="allowlist"):
+        S3Store("s.example.invalid", "b", "AK", "SK").list()
+    monkeypatch.setattr("urllib.request.urlopen", refuse(401))
+    with pytest.raises(AuthRefused, match="allowlist"):
+        VultrRail("k").exists("sub-1")   # 401 must NEVER read as gone
 
 
 # -- CLI smoke (exit taxonomy + scrubbing) --------------------------------

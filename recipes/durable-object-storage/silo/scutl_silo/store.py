@@ -29,6 +29,15 @@ class StoreUnreachable(Exception):
     """The endpoint did not answer. An honest breach, never a stale green."""
 
 
+class AuthRefused(Exception):
+    """The rail answered 401/403: bad token OR a source IP the service
+    user's allowlist does not carry (cst-px98.1 owner ruling — access
+    is IP-scoped by design). Distinct from StoreUnreachable and from
+    not-found so that an auth failure can NEVER read as 'gone': a
+    destroy-verify that mistakes 401 for 404 green-washes an undead
+    subscription that is still billing."""
+
+
 class ObjectStore(Protocol):
     def put(self, key: str, data: bytes) -> None: ...
     def get(self, key: str) -> bytes: ...

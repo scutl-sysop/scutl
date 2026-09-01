@@ -24,7 +24,7 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 
-from .store import MissingObject, StoreUnreachable
+from .store import AuthRefused, MissingObject, StoreUnreachable
 
 EMPTY_SHA256 = hashlib.sha256(b"").hexdigest()
 
@@ -90,6 +90,18 @@ class S3Store:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                 return resp.status, dict(resp.headers), resp.read()
         except urllib.error.HTTPError as e:
+            if e.code in (401, 403):
+                # never let an auth refusal masquerade as any other
+                # outcome — teardown reads StoreUnreachable on list()
+                # as gone-verified, and a blocked source IP must not
+                # green-wash that check (cst-px98.1 owner ruling)
+                raise AuthRefused(
+                    f"{self.endpoint} {method}: HTTP {e.code} — bad "
+                    f"S3 keys OR this host's egress IP is not on the "
+                    f"service user's allowlist (IP-scoped by owner "
+                    f"ruling; compare `curl -s https://api.ipify.org` "
+                    f"with the allowlist and ask the owner to add the "
+                    f"exact subnet; never widen it from here)") from e
             return e.code, dict(e.headers), e.read()
         except (urllib.error.URLError, OSError, TimeoutError) as e:
             raise StoreUnreachable(f"{self.endpoint}: {e}") from e
@@ -184,6 +196,20 @@ class VultrRail:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                 return resp.status, resp.read()
         except urllib.error.HTTPError as e:
+            if e.code in (401, 403):
+                # the choke point: no op downstream may interpret an
+                # auth refusal — exists() reading 401 as 'gone' would
+                # green-wash an undead, still-billing subscription
+                raise AuthRefused(
+                    f"api.vultr.com {method} {path}: HTTP {e.code} — "
+                    f"the token is invalid OR this host's egress IP is "
+                    f"not on the service user's allowlist (access is "
+                    f"IP-scoped by owner ruling, cst-px98.1; the "
+                    f"allowlist is a console/root act — compare this "
+                    f"host's egress, e.g. `curl -s https://api.ipify.org`, "
+                    f"against the allowlist and ask the owner to add "
+                    f"the exact subnet; never widen it from here)"
+                ) from e
             return e.code, e.read()
         except (urllib.error.URLError, OSError, TimeoutError) as e:
             raise StoreUnreachable(f"api.vultr.com: {e}") from e
