@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 import sys
 import uuid
 from pathlib import Path
@@ -115,6 +116,18 @@ class Manager:
             raise ValueError("job ids starting with '_' are internal")
         if not argv:
             raise ValueError("argv must be non-empty")
+        # the resolution wall (cst-z3qk): the unit fires under
+        # systemd's minimal PATH, so a bare argv[0] a baseline PATH
+        # cannot resolve would exit 127 at every slot — refuse LOUD
+        # at registration, never fail quietly forever (cst-mh7i shape)
+        exe = argv[0]
+        if "/" not in exe and shutil.which(
+                exe, path="/usr/bin:/bin:/usr/local/bin") is None:
+            raise ValueError(
+                f"argv[0] '{exe}' is a bare name a baseline PATH "
+                f"(/usr/bin:/bin:/usr/local/bin) cannot resolve — the "
+                f"systemd unit would exit 127 at every firing; register "
+                f"an absolute path (cst-mh7i)")
 
         # the parse wall: normalize or refuse; UTC only (dst-drift is
         # refused at the wall, never accepted-and-skewed)
