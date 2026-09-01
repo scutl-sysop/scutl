@@ -118,9 +118,14 @@ class LiveProber(ProberRail):
                 "url": url, "keywordValue": keyword,
                 "interval": int(cadence_seconds)})
             return {"monitor_id": m["monitor_id"], "created": False}
+        # v3 live shape (first contact 2026-08-31, cst-u3eu acceptance):
+        # keywordType is ALERT_NOT_EXISTS ("up" while the sentinel is
+        # present), keywordCaseType and timeout are required.
         out = self._call("POST", "/monitors", {
             "type": "keyword", "friendlyName": name, "url": url,
-            "keywordType": "exists", "keywordValue": keyword,
+            "keywordType": "ALERT_NOT_EXISTS",
+            "keywordCaseType": "CaseSensitive",
+            "keywordValue": keyword, "timeout": 30,
             "interval": int(cadence_seconds)})
         mid = str(out.get("id") or out.get("monitor", {}).get("id") or "")
         if not mid:
@@ -142,12 +147,14 @@ class LiveProber(ProberRail):
                     "keyword": m.get("keywordValue") or m.get("keyword_value"),
                     "cadence_seconds": int(m.get("interval") or 0),
                 },
-                "state": ("up" if str(m.get("status", "")).lower()
-                          in ("2", "up") else "down"),
+                # v3 status vocabulary observed live: UP / DOWN /
+                # STARTED (pre-first-check) / PAUSED
+                "state": ("up" if str(m.get("status", "")).upper()
+                          in ("UP", "STARTED", "2") else "down"),
                 # probes-pending #1: THE byte the deafness wall rides
                 "last_observed_at": (m.get("lastCheckedAt")
                                      or m.get("last_checked_at")),
-                "paused": str(m.get("status", "")).lower() in ("0", "paused"),
+                "paused": str(m.get("status", "")).upper() in ("0", "PAUSED"),
                 "incidents": m.get("incidents", []),
             })
         return result

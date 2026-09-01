@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import shlex
 import subprocess
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -28,6 +29,13 @@ from .state import StateDir
 
 UNIT_DIR = Path.home() / ".config" / "systemd" / "user"
 UNIT_PREFIX = "scutl-bell-"
+
+
+def _bell_exe() -> str:
+    """The bell console script beside this interpreter — the same
+    installation that performed the registration."""
+    exe = Path(sys.executable).with_name("bell")
+    return str(exe) if exe.exists() else "bell"
 
 
 class LiveSystemd(SystemdRail):
@@ -94,7 +102,12 @@ class LiveSystemd(SystemdRail):
             f"# rendered by scutl-bell; spec_hash={job['spec_hash']}\n"
             f"[Unit]\nDescription=scutl bell job {jid}\n\n"
             f"[Service]\nType=oneshot\n"
-            f"ExecStart=bell fire {shlex.quote(jid)}\n")
+            # absolute path: systemd user units resolve executables
+            # without the venv PATH (live finding 2026-08-31, cst-u3eu:
+            # bare 'bell' fails 203/EXEC on every activation), and the
+            # env var pins the state dir the registration ran against
+            f"Environment=SCUTL_BELL_STATE={self.state.root}\n"
+            f"ExecStart={_bell_exe()} fire {shlex.quote(jid)}\n")
         timer = (
             f"# rendered by scutl-bell; spec_hash={job['spec_hash']}\n"
             f"[Unit]\nDescription=scutl bell timer {jid}\n\n"

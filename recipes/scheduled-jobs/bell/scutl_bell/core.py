@@ -32,7 +32,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-import secrets as pysecrets
+import uuid
 from datetime import datetime, timezone
 
 from . import approvals
@@ -208,7 +208,11 @@ class Manager:
                     f"rid '{rid}' is already in the firing ledger — "
                     f"firings are exactly-once; the slot counts once")
         else:
-            rid = pysecrets.token_hex(8)
+            # UUID format: the live witness (Healthchecks) validates the
+            # rid ping parameter as a UUID and 400s anything else — a
+            # live-rail constraint the mocked twin cannot see
+            # (found at first-party acceptance, 2026-08-31, cst-u3eu).
+            rid = str(uuid.uuid4())
 
         slot, late = self.systemd.slot_for(job["schedule"], now)
         kind = "on-time"
