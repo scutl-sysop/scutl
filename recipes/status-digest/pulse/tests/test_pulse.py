@@ -472,7 +472,11 @@ def test_allowlist_is_report_only():
 
 
 def test_substrate_client_unreachable_on_missing_binary(monkeypatch):
+    # both resolution routes dead: PATH empty AND no sibling CLI
+    # beside the interpreter (cst-o9pl added the sibling fallback)
     monkeypatch.setenv("PATH", "/nonexistent")
+    monkeypatch.setattr("scutl_pulse.substrates.sys.executable",
+                        "/nonexistent/python")
     with pytest.raises(SubstrateUnreachable, match="not runnable"):
         SubstrateClient(timeout=2).read("bell", "/tmp/nope")
 

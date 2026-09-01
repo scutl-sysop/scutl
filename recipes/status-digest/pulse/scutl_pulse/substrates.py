@@ -28,7 +28,10 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
+import sys
+from pathlib import Path
 
 # kind -> (argv, state-dir env var). The allowlist IS the wall: there
 # is no code path from config or content to an arbitrary command.
@@ -53,6 +56,15 @@ class SubstrateClient:
         argv, state_env = SUBSTRATE_KINDS[kind]
         env = dict(os.environ)
         env[state_env] = target
+        # PATH resolves first; when it can't, fall back to the sibling
+        # CLI beside this interpreter — a caller without the venv on
+        # PATH must still reach the substrates (cst-o9pl; the
+        # allowlist above stays the only wall).
+        argv = list(argv)
+        if shutil.which(argv[0], path=env.get("PATH")) is None:
+            sibling = Path(sys.executable).parent / argv[0]
+            if sibling.exists():
+                argv[0] = str(sibling)
         try:
             proc = subprocess.run(
                 list(argv), env=env, capture_output=True, text=True,
