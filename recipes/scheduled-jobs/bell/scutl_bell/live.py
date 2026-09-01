@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import shlex
+import shutil
 import subprocess
 import sys
 import time
@@ -44,6 +45,11 @@ class LiveSystemd(SystemdRail):
         self.unit_dir = unit_dir or UNIT_DIR
 
     # -- the parse wall ----------------------------------------------------
+    BASELINE_PATH = "/usr/bin:/bin:/usr/local/bin"
+
+    def resolvable(self, exe: str) -> bool:
+        return shutil.which(exe, path=self.BASELINE_PATH) is not None
+
     def calendar_parse(self, expr: str) -> dict:
         try:
             out = subprocess.run(

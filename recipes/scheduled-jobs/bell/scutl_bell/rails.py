@@ -46,6 +46,13 @@ class SystemdRail:
         """Typical seconds between consecutive elapses."""
         raise NotImplementedError
 
+    def resolvable(self, exe: str) -> bool:
+        """Whether a bare argv[0] resolves in this rail's execution
+        environment (cst-z3qk). Permissive by default: only a rail
+        that actually execs under a constrained PATH (LiveSystemd)
+        knows enough to refuse."""
+        return True
+
     def render_units(self, job: dict) -> None:
         """Write timer+service units carrying job['spec_hash']."""
         raise NotImplementedError

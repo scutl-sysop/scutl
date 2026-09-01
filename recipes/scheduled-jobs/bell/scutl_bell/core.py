@@ -32,7 +32,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import shutil
 import sys
 import uuid
 from pathlib import Path
@@ -121,8 +120,7 @@ class Manager:
         # cannot resolve would exit 127 at every slot — refuse LOUD
         # at registration, never fail quietly forever (cst-mh7i shape)
         exe = argv[0]
-        if "/" not in exe and shutil.which(
-                exe, path="/usr/bin:/bin:/usr/local/bin") is None:
+        if "/" not in exe and not self.systemd.resolvable(exe):
             raise ValueError(
                 f"argv[0] '{exe}' is a bare name a baseline PATH "
                 f"(/usr/bin:/bin:/usr/local/bin) cannot resolve — the "
