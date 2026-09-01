@@ -47,6 +47,14 @@ building the first three taught us people actually ask for.
    (see `docs/agentmail-x402-recon.md` — five independent blockers
    between our v1 parser and a real 2026 offer). Unlocks every
    x402-priced API on the open market as a pay-for-API recipe family.
+   *REFERENCE-GREEN (promoted 2026-09-01, cst-rjba): full molecule
+   done — component promotes the wallet rev-2 driver with --probe
+   look-before-you-buy and strict bazaar form-lowering; bench seeds
+   from ten merchant failure modes; Qwen 3.6 27B public 69/69,
+   heldout 15/15 first pass (ladder/x402v2/). Design calls ratified:
+   pay-the-offer proxies with disclosed trust chains, auth-not-
+   expenditure at cap exhaustion (panic still freezes), shared
+   identity key with tombstone blast radius disclosed.*
 3. **identity-backup-restore** — export/verify/restore the agent's
    durable identity (keys, wallet, inbox ownership) as a rehearsed
    procedure, not a hope. AgentMail taught us the wallet IS the
