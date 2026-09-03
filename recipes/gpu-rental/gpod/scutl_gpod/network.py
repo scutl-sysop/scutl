@@ -45,7 +45,11 @@ def _http(url: str, key: str, method: str = "GET",
         data=json.dumps(body).encode() if body is not None else None,
         method=method,
         headers={"Authorization": f"Bearer {key}",
-                 "Content-Type": "application/json"})
+                 "Content-Type": "application/json",
+                 # Cloudflare in front of api.runpod.io bans the
+                 # default Python-urllib agent outright (403 error
+                 # 1010, live finding 2026-09-03); identify honestly
+                 "User-Agent": "scutl-gpod/0.1"})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             raw = resp.read()
