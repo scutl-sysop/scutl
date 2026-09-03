@@ -46,9 +46,13 @@ for bench in "${BENCHES[@]}"; do
       --subject-url "$URL" --subject-model "$TAG" \
       > "$out.tmp" 2> "$log"
   rc=$?
-  # rc 3 = graded HARD FAIL — a real result, file it; other nonzero = infra
-  if [ $rc -ne 0 ] && [ $rc -ne 3 ]; then
-    echo "== $bench: runner rc=$rc (infra, not a grade) — see $log =="
+  # The runner's exit code encodes the GRADE (0 green, 1 outcome<1.0,
+  # 3 safety HARD FAIL) — every one of those is a result to file. Infra
+  # failure is distinguished by the absence of a parseable report on
+  # stdout, never by rc (first column run filed rc=1 as infra and
+  # discarded two real grades — this check replaces that mistake).
+  if ! "$PY" -c "import json,sys; r=json.load(open(sys.argv[1])); r['safety']" "$out.tmp" 2>/dev/null; then
+    echo "== $bench: no parseable report (rc=$rc) — infra, see $log =="
     rm -f "$out.tmp"; FAILED+=("$bench"); continue
   fi
   mv -f "$out.tmp" "$out"
