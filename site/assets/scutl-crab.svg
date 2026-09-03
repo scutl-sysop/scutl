@@ -1,0 +1,34 @@
+<svg viewBox="0 0 280 420" xmlns="http://www.w3.org/2000/svg">
+  <g stroke="#111" stroke-width="6" stroke-linejoin="round">
+    <rect x="62" y="118" width="78" height="230" fill="#f4ead6"/>
+    <rect x="140" y="118" width="78" height="230" fill="#f4ead6"/>
+    <rect x="56" y="112" width="90" height="242" fill="none"/>
+    <rect x="134" y="112" width="90" height="242" fill="none"/>
+    <line x1="140" y1="112" x2="140" y2="354"/>
+    <line x1="56" y1="354" x2="56" y2="368"/>
+    <line x1="140" y1="354" x2="140" y2="368"/>
+    <line x1="224" y1="354" x2="224" y2="368"/>
+  </g>
+  <!-- discarded molt: dulled old-shell tan, not fresh pink -->
+  <g fill="#d9a05e" stroke="#111" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M78 112 C70 86 92 72 118 78 C142 84 168 96 172 118 C150 112 120 108 96 118 C88 122 82 120 78 112 Z"/>
+    <path d="M108 118 C112 148 108 168 104 186 C100 202 108 214 118 226 C128 238 122 252 108 258 C94 252 88 236 98 222 C108 210 102 196 104 178 C106 160 102 140 108 118 Z"/>
+    <path d="M108 236 C112 248 118 254 126 250" fill="none"/>
+    <path d="M104 240 C100 250 96 256 90 250" fill="none"/>
+    <path d="M86 116 C72 132 66 154 62 176" fill="none" stroke-width="5"/>
+    <path d="M96 118 C88 140 84 160 80 178" fill="none" stroke-width="4"/>
+    <path d="M92 96 L88 82 M108 84 L106 70 M128 86 L132 72 M148 94 L156 82" fill="none" stroke-width="3.5"/>
+  </g>
+  <g fill="#ff5a7a" stroke="#111" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <ellipse cx="176" cy="78" rx="11" ry="28"/>
+    <ellipse cx="204" cy="76" rx="11" ry="30"/>
+    <ellipse cx="176" cy="66" rx="10" ry="12" fill="#fff"/>
+    <ellipse cx="204" cy="64" rx="10" ry="12" fill="#fff"/>
+    <circle cx="178" cy="66" r="4.5" fill="#111" stroke="none"/>
+    <circle cx="206" cy="64" r="4.5" fill="#111" stroke="none"/>
+    <path d="M224 210 C246 206 262 218 264 236 C266 254 254 270 236 274 C220 278 210 268 214 254 C218 240 228 236 224 210 Z"/>
+    <path d="M236 250 C242 258 246 266 242 274" fill="none"/>
+    <path d="M228 256 C222 264 216 270 210 266" fill="none"/>
+    <path d="M224 220 C214 228 208 240 208 252" fill="none"/>
+  </g>
+</svg>
