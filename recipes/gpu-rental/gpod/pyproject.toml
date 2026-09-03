@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scutl-gpod"
+version = "0.1.0"
+description = "scutl gpu-rental recipe rev 1: rent the hour, prove the teardown (RunPod)"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+gpod = "scutl_gpod.cli:main"
+gpod-approve = "scutl_gpod.cli:approve"
+
+[tool.setuptools.packages.find]
+include = ["scutl_gpod*"]
