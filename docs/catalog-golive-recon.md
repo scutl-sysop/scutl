@@ -1,6 +1,6 @@
 # Recon: the catalog goes live (scutl.org + smutbench)
 
-Status: DRAFT for Conway review — 2026-09-03, Star.
+Status: RATIFIED (all §6 questions ruled by Conway 2026-09-03).
 Source rulings (Conway, live 2026-09-01): site carries fully-baked
 recipes; agent interface to same; smutbench on a subdomain; task ×
 model grid WITHOUT held-out rounds; tier-1 self-serve only ("swap the
@@ -106,11 +106,13 @@ credibility is the asset), held-out anything.
 7. Launch checklist: DNS, TLS, beacon target, SHA-256SUMS + tag,
    Conway's go.
 
-## 6. Open questions for Conway
+## 6. Rulings (all questions closed — Conway, 2026-09-03)
 
-- smutbench branding: own-thing vs strictly scutl QA (recommend:
-  present as scutl's method at launch, revisit if outsiders ask to
-  submit).
-- Status page: full digest or curated? (Recommend full — honest
-  degradation is the demo.)
-- Domain layout confirmed? (scutl.org + smutbench.scutl.org assumed.)
+- Column slate: see §2 (ratified).
+- smutbench branding: scutl's method at launch; revisit only if
+  outsiders ask to submit.
+- Status page: FULL digest, attention rows included — honest
+  degradation is the demo.
+- Domains: scutl.org + smutbench.scutl.org confirmed.
+
+Recon is no longer draft: this document is the build spec for §5.
