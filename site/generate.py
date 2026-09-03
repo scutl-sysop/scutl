@@ -224,7 +224,9 @@ def llms_txt(recipes: list[dict]) -> str:
         "fetch its ADAPT.md and follow it; it is addressed to you.",
         "",
         "Index: /recipes/index.json (sha256 per manifest; verify",
-        "against /SHA-256SUMS).",
+        "against /SHA-256SUMS, ssh-signed by /allowed_signers:",
+        "ssh-keygen -Y verify -f allowed_signers -I scutl-release",
+        "-n file -s SHA-256SUMS.sig < SHA-256SUMS).",
         "",
     ]
     for r in recipes:
