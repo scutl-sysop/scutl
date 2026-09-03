@@ -75,9 +75,7 @@ def page(title: str, body: str, depth: int = 0) -> str:
     return (
         "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">"
         "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
-        f"<title>{esc(title)}</title>"
-        "<link rel=\"icon\" type=\"image/svg+xml\" href=\"/crab.svg\">"
-        f"<style>{CSS}</style></head><body>"
+        f"<title>{esc(title)}</title><style>{CSS}</style></head><body>"
         f"<nav><a href=\"{home}index.html\">scutl</a> · "
         f"<a href=\"https://smutbench.scutl.org\">smutbench</a> · "
         f"<a href=\"{home}llms.txt\">llms.txt</a></nav>"

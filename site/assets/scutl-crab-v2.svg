@@ -1,0 +1,75 @@
+<svg viewBox="0 0 320 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- dressing screen -->
+  <g stroke="#111" stroke-width="7" stroke-linejoin="round">
+    <rect x="70" y="120" width="85" height="230" fill="#f4ead6"/>
+    <rect x="155" y="120" width="85" height="230" fill="#f4ead6"/>
+    <line x1="70" y1="350" x2="70" y2="368"/>
+    <line x1="155" y1="350" x2="155" y2="368"/>
+    <line x1="240" y1="350" x2="240" y2="368"/>
+  </g>
+
+  <!-- discarded molt: a deflated CRAB SILHOUETTE draped over the screen top.
+       carapace = wide flat oval folded over the rail; legs = limp curves
+       hanging in a row, like a costume on a hanger -->
+  <g stroke="#111" stroke-linecap="round">
+    <!-- carapace, folded over -->
+    <path d="M85 121
+             C82 100 100 88 128 88
+             C156 88 176 100 178 118
+             C178 121 176 122 172 121
+             C146 114 108 114 91 122
+             C88 123 86 123 85 121 Z"
+          fill="#c99a5b" stroke-width="6" stroke-linejoin="round"/>
+    <!-- inside face of the folded carapace (hanging down the panel) -->
+    <path d="M92 122
+             C94 138 100 148 112 152
+             C132 158 156 152 170 138
+             C173 132 174 126 172 121
+             C146 114 108 114 92 122 Z"
+          fill="#b3854a" stroke-width="6" stroke-linejoin="round"/>
+    <!-- six limp legs dangling in a row from under the carapace -->
+    <path d="M100 150 C98 172 102 188 96 206" fill="none" stroke="#b3854a" stroke-width="9"/>
+    <path d="M116 155 C116 178 120 194 114 214" fill="none" stroke="#b3854a" stroke-width="9"/>
+    <path d="M132 157 C134 180 138 196 132 218" fill="none" stroke="#b3854a" stroke-width="9"/>
+    <path d="M148 154 C152 176 156 190 152 210" fill="none" stroke="#b3854a" stroke-width="9"/>
+    <!-- empty claw hanging lowest, clearly a pincer -->
+    <path d="M164 146 C170 168 172 184 168 198
+             C166 206 158 212 160 222
+             C162 232 172 236 180 232
+             C190 227 192 216 186 208
+             C180 200 178 188 178 176"
+          fill="none" stroke="#b3854a" stroke-width="9"/>
+    <path d="M160 226 C154 234 152 242 156 248 M180 234 C184 242 184 250 178 254"
+          fill="none" stroke="#b3854a" stroke-width="8"/>
+  </g>
+
+  <!-- live crab peeking from the RIGHT edge: a sliver of body,
+       two attached eyestalks, one claw gripping the frame -->
+  <g stroke="#111" stroke-linecap="round" stroke-linejoin="round">
+    <!-- body sliver behind the screen edge -->
+    <path d="M240 128 C258 120 272 128 278 144
+             C284 162 280 184 268 196
+             C258 206 246 208 240 204 Z"
+          fill="#ff5a7a" stroke-width="6"/>
+    <!-- eyestalks growing FROM the body sliver, leaning over the top -->
+    <path d="M252 130 C250 108 252 92 258 78" fill="none" stroke="#ff5a7a" stroke-width="11"/>
+    <path d="M268 134 C272 112 276 98 284 86" fill="none" stroke="#ff5a7a" stroke-width="11"/>
+    <path d="M252 130 C250 108 252 92 258 78 M268 134 C272 112 276 98 284 86"
+          fill="none" stroke="#111" stroke-width="3" opacity="0"/>
+    <!-- eyes -->
+    <circle cx="258" cy="70" r="13" fill="#fff" stroke-width="5"/>
+    <circle cx="285" cy="78" r="13" fill="#fff" stroke-width="5"/>
+    <circle cx="255" cy="72" r="5.5" fill="#111" stroke="none"/>
+    <circle cx="282" cy="80" r="5.5" fill="#111" stroke="none"/>
+    <!-- claw gripping the screen's right frame: two fingers AROUND the edge -->
+    <path d="M240 236 C226 232 218 240 218 250
+             C218 260 226 266 238 264"
+          fill="#ff5a7a" stroke-width="6"/>
+    <path d="M240 268 C228 268 220 276 222 286
+             C224 296 234 300 244 296"
+          fill="#ff5a7a" stroke-width="6"/>
+    <path d="M240 232 C260 226 276 238 278 258
+             C280 278 268 292 248 294"
+          fill="#ff5a7a" stroke-width="6"/>
+  </g>
+</svg>
