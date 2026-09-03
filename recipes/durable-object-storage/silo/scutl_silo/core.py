@@ -580,6 +580,14 @@ class Manager:
         config.update({"endpoint": result["endpoint"],
                        "subscription_id": result["subscription_id"],
                        "cluster_id": cluster_id, "tier_id": tier_id})
+        # Record the LIVE tier prices so the cap projection reflects the
+        # provisioned tier, not the configure-time defaults (live
+        # finding, grade night 2026-09-03: Standard is $18/0.018 and the
+        # $6/0.006 Legacy defaults understated projected spend 3x).
+        prices = getattr(self._rail, "tier_prices", lambda *a: None)(
+            cluster_id, tier_id)
+        if prices:
+            config["prices"] = prices
         self.state.save_config(config)
         return {"provisioned": True,
                 "subscription_id": result["subscription_id"],

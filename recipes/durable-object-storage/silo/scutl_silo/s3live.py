@@ -135,8 +135,12 @@ class S3Store:
             raise MissingObject(key)
         if status != 200:
             raise StoreUnreachable(f"head {key}: HTTP {status}")
-        return {"size": int(headers.get("Content-Length", -1)),
-                "etag": headers.get("ETag", "").strip('"')}
+        # live RGW (tentacle) sends lowercase header names over HTTP/2;
+        # a cased lookup read every etag as "" and every size as -1
+        # (live finding, grade night 2026-09-03)
+        folded = {k.lower(): v for k, v in headers.items()}
+        return {"size": int(folded.get("content-length", -1)),
+                "etag": folded.get("etag", "").strip('"')}
 
     def list(self) -> dict[str, int]:
         out: dict[str, int] = {}
@@ -222,10 +226,48 @@ class VultrRail:
             raise StoreUnreachable(
                 f"subscription create: HTTP {status} {body[:200]!r}")
         sub = _json.loads(body)["object_storage"]
+        # The create call returns BEFORE the subscription is active, and
+        # the S3 keypair is empty until it is (live finding, grade night
+        # 2026-09-03: the blanks got persisted and every store request
+        # 400'd on signatures built from empty keys). Poll until active.
+        sub = self._await_active(sub)
         return {"subscription_id": sub["id"],
                 "endpoint": sub["s3_hostname"],
                 "access": sub["s3_access_key"],
                 "secret": sub["s3_secret_key"]}
+
+    def _await_active(self, sub: dict, attempts: int = 30,
+                      interval: float = 5.0) -> dict:
+        import json as _json
+        import time
+        for _ in range(attempts):
+            if sub.get("status") == "active" and sub.get("s3_access_key") \
+                    and sub.get("s3_secret_key"):
+                return sub
+            time.sleep(interval)
+            status, body = self._request(
+                "GET", f"/object-storage/{sub['id']}")
+            if status == 200:
+                sub = _json.loads(body)["object_storage"]
+        raise StoreUnreachable(
+            f"subscription {sub['id']} not active with S3 keys after "
+            f"{attempts} polls — it EXISTS and is billing; do not "
+            f"re-create, re-poll it")
+
+    def tier_prices(self, cluster_id: int, tier_id: int) -> dict | None:
+        """Live per-tier prices for the cap math; None if unreadable
+        (the caller keeps its conservative defaults and says so)."""
+        import json as _json
+        status, body = self._request(
+            "GET", f"/object-storage/clusters/{cluster_id}/tiers")
+        if status != 200:
+            return None
+        for t in _json.loads(body).get("tiers", []):
+            if t.get("id") == tier_id:
+                return {"base_usd": float(t["price"]),
+                        "disk_gb_usd": float(t["disk_gb_price"]),
+                        "bw_gb_usd": float(t["bw_gb_price"])}
+        return None
 
     def destroy(self, subscription_id: str) -> None:
         status, body = self._request(

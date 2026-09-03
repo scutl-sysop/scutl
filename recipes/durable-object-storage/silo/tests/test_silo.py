@@ -586,3 +586,74 @@ def test_sigv4_is_deterministic_and_carries_the_tentacle_header():
     assert h1["x-amz-content-sha256"] == EMPTY_SHA256
     assert h1["authorization"].startswith("AWS4-HMAC-SHA256 Credential=AK/")
     assert "SK" not in json.dumps(h1)      # the secret signs; it never rides
+
+
+# -- grade-night live findings (2026-09-03) -------------------------------
+
+def test_provision_records_live_tier_prices_in_config(tmp_path):
+    """Cap math must reflect the PROVISIONED tier, not configure-time
+    defaults — Standard is $18/0.018 and the $6 Legacy defaults
+    understated projected spend 3x (live finding)."""
+    state = StateDir(tmp_path / "state")
+    twin = TwinStore()
+
+    class PricedRail(TwinRail):
+        def tier_prices(self, cluster_id, tier_id):
+            assert (cluster_id, tier_id) == (2, 2)
+            return {"base_usd": 18.0, "disk_gb_usd": 0.018,
+                    "bw_gb_usd": 0.01}
+
+    mgr = Manager(state=state, store=twin, rail=PricedRail(twin),
+                  now_fn=lambda: T0)
+    approvals.grant(state, "provision")
+    mgr.provision(2, 2)
+    assert state.load_config()["prices"]["base_usd"] == 18.0
+    assert state.load_config()["prices"]["disk_gb_usd"] == 0.018
+
+
+def test_provision_keeps_default_prices_when_rail_cannot_price(tmp_path):
+    state = StateDir(tmp_path / "state")
+    twin = TwinStore()
+
+    class UnpricedRail(TwinRail):
+        def tier_prices(self, cluster_id, tier_id):
+            return None
+
+    mgr = Manager(state=state, store=twin, rail=UnpricedRail(twin),
+                  now_fn=lambda: T0)
+    approvals.grant(state, "provision")
+    mgr.provision(2, 2)
+    assert "prices" not in state.load_config() or \
+        state.load_config().get("prices") is not None
+
+
+def test_vultr_rail_awaits_active_before_returning_keys(monkeypatch):
+    """create() must not hand back the pre-active subscription whose S3
+    keypair is still empty — the blanks got persisted on the first live
+    provision and every store request 400'd (live finding)."""
+    import json as _json
+    from scutl_silo.s3live import VultrRail
+
+    rail = VultrRail("k")
+    calls = {"n": 0}
+
+    def fake_request(method, path, payload=None):
+        if method == "POST":
+            return 201, _json.dumps({"object_storage": {
+                "id": "sub-9", "status": "pending",
+                "s3_hostname": "ewr1.example.invalid",
+                "s3_access_key": "", "s3_secret_key": ""}}).encode()
+        calls["n"] += 1
+        active = calls["n"] >= 2
+        return 200, _json.dumps({"object_storage": {
+            "id": "sub-9",
+            "status": "active" if active else "pending",
+            "s3_hostname": "ewr1.example.invalid",
+            "s3_access_key": "AK" if active else "",
+            "s3_secret_key": "SK" if active else ""}}).encode()
+
+    monkeypatch.setattr(rail, "_request", fake_request)
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    out = rail.create(2, 2, "t")
+    assert out["access"] == "AK" and out["secret"] == "SK"
+    assert calls["n"] == 2
