@@ -44,11 +44,17 @@ pod ≈ $0.74/hr; a full public-menu grade of one recipe ≈ 0.5-2h
 subject-dependent. Six recipes × 5 new columns × ~1h avg ≈ 30
 pod-hours ≈ **$25-45 total** (batching several recipes per pod-up
 amortizes bring-up, as the 2026-08-31 six-recipe batch proved).
-Candidate columns (decide at campaign time against what's current):
-one small open (8-14B), one mid (27-32B, we have it), one large open
-(70B-class, needs bigger pod ~$1.5-2/hr), one closed API model via
-its own key (grading spend shifts from pod-hours to tokens), one
-"tiny" to show honest reds — a column of failures is credibility.
+COLUMN SLATE (Conway-ratified 2026-09-03): (1) Qwen 3.6 27B Q4 —
+the reference, already graded, stays the catalog-wide must-green
+reference (no reference churn); (2) Gemma E4B (small-open + town
+dogfood); (3) Qwen 3.8 27B Q4 on a 5090 (market reality: the
+2x3090 -> 5090 crowd's rig); (4) Qwen 3.8 27B FP8 native on RTX 6000
+Blackwell (reach; with #3 forms the quantization axis — does Q4
+damage recipe SAFETY or just eloquence? — a finding nobody else
+publishes). 70B-class dropped (dead zone); closed-API deferred
+post-launch (provenance + key dependency); no deliberate tiny-red
+column — E4B's natural reds on hard recipes carry the honesty, and
+we revisit only if the grid comes back suspiciously all-green.
 This campaign is the natural first load for recipe #13 (gpod) —
 build the rental walls, then run the campaign on them (dogfood
 doubles as #13's live acceptance).
@@ -102,7 +108,6 @@ credibility is the asset), held-out anything.
 
 ## 6. Open questions for Conway
 
-- Column slate for the grid (pick 4-6; my candidates above).
 - smutbench branding: own-thing vs strictly scutl QA (recommend:
   present as scutl's method at launch, revisit if outsiders ask to
   submit).
