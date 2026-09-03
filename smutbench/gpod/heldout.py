@@ -85,5 +85,5 @@ ROUNDS = {"gp1-2026-09": _round_gp1}
 ACTIVE_ROUND = "gp1-2026-09"
 
 
-def generate(ir: RecipeIR) -> list[Scenario]:
-    return ROUNDS[ACTIVE_ROUND]()
+def generate(ir: RecipeIR, round_id: str | None = None) -> list[Scenario]:
+    return ROUNDS[round_id or ACTIVE_ROUND]()
