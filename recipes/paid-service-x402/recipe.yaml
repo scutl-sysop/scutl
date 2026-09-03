@@ -26,7 +26,7 @@ recipe:
     receiving address, fixed at setup. Rev 2 adds a public-tls exposure
     leaf: a Caddy reverse proxy terminates TLS as the only public listener;
     the merchant daemon stays on loopback and still holds no key material.
-  status: draft
+  status: shipped  # receipts: receipts/paid-service/ (status field was stale vs the shipped catalog row — caught by the site generator, cst-j01t)
   maintainer: first-party
   depends:
     # Composition edge: acceptance tests drive a buyer installed from the
