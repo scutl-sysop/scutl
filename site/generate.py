@@ -65,8 +65,12 @@ def esc(s) -> str:
     return html.escape(str(s if s is not None else ""))
 
 
+BUILD_SERIAL = None  # set in main(); rendered into every page footer
+
+
 def page(title: str, body: str, depth: int = 0) -> str:
     home = "../" * depth or "./"
+    serial = f"<!-- beacon serial={BUILD_SERIAL} -->" if BUILD_SERIAL else ""
     return (
         "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">"
         "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
@@ -78,7 +82,7 @@ def page(title: str, body: str, depth: int = 0) -> str:
         "Manifests are the pages: rendered from recipe.yaml at build "
         "time, served verbatim next to them, checksummed in "
         f"<a href=\"{home}SHA-256SUMS\">SHA-256SUMS</a>.</footer>"
-        "</body></html>"
+        f"{serial}</body></html>"
     )
 
 
@@ -227,6 +231,9 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--out", default=str(ROOT / "site" / "out"))
     args = p.parse_args(argv)
+    global BUILD_SERIAL
+    import time
+    BUILD_SERIAL = int(time.time())
     out = Path(args.out)
     if out.exists():
         shutil.rmtree(out)
