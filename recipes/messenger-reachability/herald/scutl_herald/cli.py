@@ -25,7 +25,19 @@ from .approvals import ApprovalRequired
 from .channel import PermanentError, TransientError
 from .core import LimitRefused, Manager
 from .state import (Decommissioned, DuplicateKey, NoCredential,
+
                     NotConfigured, StateDir)
+
+
+class _Parser(argparse.ArgumentParser):
+    """Usage errors exit 1 ('invalid'), never argparse's default 2 —
+    2 is the taxonomy's not-configured and an agent following the
+    protocol would misread a typo as 'run setup first' (cst-qiru)."""
+    def error(self, message):
+        self.print_usage(__import__("sys").stderr)
+        print(f"{self.prog}: error: {message}",
+              file=__import__("sys").stderr)
+        raise SystemExit(1)
 
 
 def _fail(kind: str, message: str, code: int = 1) -> None:
@@ -34,7 +46,7 @@ def _fail(kind: str, message: str, code: int = 1) -> None:
 
 
 def main(argv: list[str] | None = None) -> None:
-    p = argparse.ArgumentParser(prog="herald")
+    p = _Parser(prog="herald")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("status")
@@ -110,7 +122,7 @@ def main(argv: list[str] | None = None) -> None:
 
 
 def approve_main(argv: list[str] | None = None) -> None:
-    p = argparse.ArgumentParser(
+    p = _Parser(
         prog="herald-approve",
         description="HUMAN helper: grant a one-shot approval token for a gated op",
     )

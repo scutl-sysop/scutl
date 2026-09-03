@@ -14,6 +14,17 @@ from decimal import Decimal
 from .chain import ChainAuditClient
 from .core import Reconciler, ApprovalRequired, RESOLVE_OPS
 
+class _Parser(argparse.ArgumentParser):
+    """Usage errors exit 1 ('invalid'), never argparse's default 2 —
+    2 is the taxonomy's not-configured and an agent following the
+    protocol would misread a typo as 'run setup first' (cst-qiru)."""
+    def error(self, message):
+        self.print_usage(__import__("sys").stderr)
+        print(f"{self.prog}: error: {message}",
+              file=__import__("sys").stderr)
+        raise SystemExit(1)
+
+
 
 def _reconciler() -> Reconciler:
     wallet = os.environ.get("SPRECON_WALLET")
@@ -37,7 +48,7 @@ def _emit(doc) -> None:
 
 
 def main(argv: list[str] | None = None) -> None:
-    p = argparse.ArgumentParser(prog="sprecon")
+    p = _Parser(prog="sprecon")
     sub = p.add_subparsers(dest="op", required=True)
     sub.add_parser("status")
     rec = sub.add_parser("reconcile")
@@ -82,7 +93,7 @@ def main(argv: list[str] | None = None) -> None:
 
 def approve(argv: list[str] | None = None) -> None:
     """Out-of-band human approval: sprecon-approve <op>."""
-    p = argparse.ArgumentParser(prog="sprecon-approve")
+    p = _Parser(prog="sprecon-approve")
     p.add_argument("op", choices=RESOLVE_OPS)
     args = p.parse_args(argv)
     _reconciler().grant_approval(args.op)

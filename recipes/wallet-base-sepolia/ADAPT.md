@@ -33,9 +33,12 @@ an approval token, stop — that is the one hard boundary
 ## Step 1 — Install the component
 
 ```bash
-python3 -m venv .adapt-venv && . .adapt-venv/bin/activate   # or your
-                              # harness's venv convention — bare
-                              # `pip install` fails on PEP-668 systems
+python3 -m venv <durable-path>/signer-venv && . <durable-path>/signer-venv/bin/activate
+                              # pick a location OUTSIDE this git tree
+                              # that survives past this session — the
+                              # harness will reference it long-term;
+                              # bare `pip install` fails on PEP-668
+                              # systems
 pip install ./signer          # from this directory; installs THREE
                               # console scripts: signer, signer-approve
                               # (the human's token minter), x402-buy

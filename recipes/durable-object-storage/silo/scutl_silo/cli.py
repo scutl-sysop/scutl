@@ -28,6 +28,17 @@ from .core import (DenyListed, IntegrityError, LimitRefused, Manager,
 from .state import NotConfigured, StateDir
 from .store import StoreUnreachable
 
+class _Parser(argparse.ArgumentParser):
+    """Usage errors exit 1 ('invalid'), never argparse's default 2 —
+    2 is the taxonomy's not-configured and an agent following the
+    protocol would misread a typo as 'run setup first' (cst-qiru)."""
+    def error(self, message):
+        self.print_usage(__import__("sys").stderr)
+        print(f"{self.prog}: error: {message}",
+              file=__import__("sys").stderr)
+        raise SystemExit(1)
+
+
 
 def _scrub(text: str, state: StateDir) -> str:
     try:
@@ -41,7 +52,7 @@ def _scrub(text: str, state: StateDir) -> str:
 
 
 def main(argv: list[str] | None = None) -> None:
-    p = argparse.ArgumentParser(prog="silo")
+    p = _Parser(prog="silo")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("status")
@@ -158,7 +169,7 @@ def main(argv: list[str] | None = None) -> None:
 
 
 def approve(argv: list[str] | None = None) -> None:
-    p = argparse.ArgumentParser(prog="silo-approve")
+    p = _Parser(prog="silo-approve")
     p.add_argument("op", choices=approvals.ADMIN_OPS)
     args = p.parse_args(argv)
     token = approvals.grant(StateDir(), args.op)

@@ -117,11 +117,14 @@ components:
       - name: infra_status      # limits, live instance count, reconciliation
         command: "prov status"
       - name: infra_create      # create ONE instance inside every limit
-        command: "prov create --plan {plan} --region {region} --label {label}"
+        command: "prov create --plan {plan} --region {region} --label {label}[ --ssh-pubkey-file {path}]"
       - name: infra_list
         command: "prov list"
       - name: infra_destroy     # never gated; the safe direction is always open
         command: "prov destroy --id {instance_id}"
+      - name: infra_destroy_all # the emergency form (recover:/smol.emergency);
+                                # same ungated rule
+        command: "prov destroy-all"
       - name: infra_dns         # record CRUD inside the delegated subzone only
         command: "prov dns {op}"
         ops:
@@ -336,8 +339,10 @@ smol:
     2 not-configured (run setup first) · 3 decommissioned (create/dns
     refuse; destroy still works) · 4 approval-required (ask the human to
     run prov-approve <op>, retry once) · 5 limit-refused (report to the
-    human verbatim; do NOT retry with different parameters) · 1 invalid
-    (stop, show the human the exact JSON error).
+    human verbatim; do NOT retry with different parameters — destroy of
+    an unknown id also exits 5, even unconfigured: destroy is never
+    blocked by config errors, but an id the log does not know is
+    foreign) · 1 invalid (stop, show the human the exact JSON error).
   action:
     heading: "Provisioning inside the limits"
     intro: >

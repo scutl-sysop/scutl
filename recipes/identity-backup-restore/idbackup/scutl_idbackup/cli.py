@@ -19,7 +19,19 @@ import json
 import sys
 
 from .core import (ApprovalRequired, Archivist, Panicked, Tombstoned,
+
                    UnverifiedBackup)
+
+
+class _Parser(argparse.ArgumentParser):
+    """Usage errors exit 1 ('invalid'), never argparse's default 2 —
+    2 is the taxonomy's not-configured and an agent following the
+    protocol would misread a typo as 'run setup first' (cst-qiru)."""
+    def error(self, message):
+        self.print_usage(__import__("sys").stderr)
+        print(f"{self.prog}: error: {message}",
+              file=__import__("sys").stderr)
+        raise SystemExit(1)
 
 
 def _fail(kind: str, message: str, code: int = 1) -> None:
@@ -28,7 +40,7 @@ def _fail(kind: str, message: str, code: int = 1) -> None:
 
 
 def main(argv: list[str] | None = None) -> None:
-    p = argparse.ArgumentParser(prog="idbackup")
+    p = _Parser(prog="idbackup")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("status")
@@ -84,7 +96,7 @@ def main(argv: list[str] | None = None) -> None:
 
 
 def approve(argv: list[str] | None = None) -> None:
-    p = argparse.ArgumentParser(
+    p = _Parser(
         prog="idbackup-approve",
         description="HUMAN USE ONLY: grant the rehearse-op approval token.")
     p.add_argument("op", choices=["rehearse"])
@@ -95,7 +107,7 @@ def approve(argv: list[str] | None = None) -> None:
 
 
 def attest(argv: list[str] | None = None) -> None:
-    p = argparse.ArgumentParser(
+    p = _Parser(
         prog="idbackup-attest",
         description="HUMAN USE ONLY: record that an offline copy matching "
                     "the current manifest exists at a location.")

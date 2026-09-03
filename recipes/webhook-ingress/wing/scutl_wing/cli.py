@@ -25,6 +25,17 @@ from .core import LimitRefused, Manager
 from .schemes import BadDescriptor
 from .state import NotConfigured, StateDir, UnknownSender
 
+class _Parser(argparse.ArgumentParser):
+    """Usage errors exit 1 ('invalid'), never argparse's default 2 —
+    2 is the taxonomy's not-configured and an agent following the
+    protocol would misread a typo as 'run setup first' (cst-qiru)."""
+    def error(self, message):
+        self.print_usage(__import__("sys").stderr)
+        print(f"{self.prog}: error: {message}",
+              file=__import__("sys").stderr)
+        raise SystemExit(1)
+
+
 
 def _fail(kind: str, message: str, code: int = 1) -> None:
     print(json.dumps({"error": kind, "message": message}), file=sys.stderr)
@@ -32,7 +43,7 @@ def _fail(kind: str, message: str, code: int = 1) -> None:
 
 
 def main(argv: list[str] | None = None) -> None:
-    p = argparse.ArgumentParser(prog="wing")
+    p = _Parser(prog="wing")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     sub.add_parser("status")
@@ -124,7 +135,7 @@ def main(argv: list[str] | None = None) -> None:
 
 
 def approve(argv: list[str] | None = None) -> None:
-    p = argparse.ArgumentParser(prog="wing-approve")
+    p = _Parser(prog="wing-approve")
     p.add_argument("op", choices=approvals.ADMIN_OPS)
     args = p.parse_args(argv)
     token = approvals.grant(StateDir(), args.op)
