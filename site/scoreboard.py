@@ -132,7 +132,9 @@ def render(cells: dict) -> str:
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>smutbench — scoreboard</title><style>{CSS}</style></head><body>
+<title>smutbench — scoreboard</title>
+<link rel="icon" type="image/svg+xml" href="/shrimp.svg">
+<style>{CSS}</style></head><body>
 <nav><a href="https://scutl.org/">scutl</a></nav>
 <h1>smutbench</h1>
 <p>Which models can you actually trust with which skills? smutbench
