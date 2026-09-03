@@ -1,0 +1,308 @@
+# SCUTL recipe manifest — rev 1 DRAFT (Conway review pending)
+# Recipe #13 (catalog, Substrate): "gpu-rental"
+# Design record: bead cst-j01t (go-live) + cst-05ii (annexation squint,
+# 2026-09-01): NOT annexation-complete — the ladder's pod scripts and
+# POD-RUNBOOK.md are recon-grade raw material with deep operational
+# history, but no code-enforced walls, no destroy+verify, no rental
+# ledger exist anywhere. This manifest transplants provision-vultr's
+# spine (#3, shipped) onto the GPU rail, where the stakes are that
+# recipe times ten per hour.
+#
+# The organizing fact: a GPU pod bills by the hour whether or not
+# anyone remembers it. The recipe's characteristic sin is the orphan —
+# a pod created, used, and forgotten — so destroy+verify is the whole
+# recipe: teardown is done only when the provider says gone AND a
+# fresh read shows no pod under our label, and an undead pod fails
+# LOUDLY with billing-may-be-accruing language. Second fact, learned
+# on grade nights: the persistent network volume is a DELIBERATE
+# exception to destroy-everything (models cost hours to re-download;
+# volume storage is cheap) — so the volume is its own consented
+# object, never auto-created, never auto-destroyed, and reported in
+# every status.
+
+recipe:
+  id: gpod
+  rev: 1
+  title: "Rent the hour, prove the teardown"
+  summary: >
+    Rent inference-grade GPU pods by the hour under code-enforced
+    walls: a GPU-type allowlist, an hourly-price ceiling, a
+    concurrent-pod ceiling, and a destroy path that verifies gone —
+    with every create and destroy recorded in an append-only rental
+    log the live set derives from, reconciled against the provider.
+    The workshop's own grade nights run on exactly this rail
+    (dogfood: every future bench grade is a live acceptance of this
+    recipe).
+  status: draft   # draft | reference-green | shipped
+  maintainer: first-party
+  depends: []    # card-funded rail; wallet caps do not apply (as #3)
+  composes:
+    - { recipe: provision-vultr, rev: 1, seam: prior-art-walls }
+    # the ladder (smutbench grading) becomes this recipe's first
+    # consumer: pod-create.sh/pod-up.sh convert to gpod callers.
+
+# ---------------------------------------------------------------------------
+# DECIDE
+# ---------------------------------------------------------------------------
+decide:
+  - id: provider
+    question: "Whose GPUs?"
+    options:
+      - id: runpod-rest
+        label: >
+          RunPod via rest.runpod.io/v1 (pods CRUD) with the graphql
+          dataCenters query as the stock/availability side-channel
+          (REST has no gputypes surface — banked finding,
+          runpod-euro1-gpu-fallback). Secure cloud only. The account,
+          card, and API key are human-owned; the key rides in the
+          state dir at 0600 exactly as prov's does. (only option in
+          rev 1 — it is the rail the ladder already runs on)
+        blessed: true
+    deferred-options: [vast-ai, lambda-labs, own-metal]
+    # vast/lambda deferred: new billing rails (orphan shape, Conway
+    # signup acts) with no operational history here. own-metal is a
+    # different recipe entirely (no hourly wall to enforce).
+
+  - id: spend-walls
+    question: "What stops a runaway bill?"
+    options:
+      - id: three-walls-plus-ledger
+        label: >
+          In code, before any create call: gpu_type ∈ allowlist AND
+          catalog hourly price ≤ max_hourly_usd AND live pods (rental
+          log reconciled against provider) < max_pods. Every create
+          appends to the rental log BEFORE returning; the live set
+          derives from the log, never from memory. A pod the provider
+          shows but the log does not is FOREIGN: reported, never
+          touched, never destroyed. (only option in rev 1)
+        blessed: true
+    deferred-options: [budget-cap-hours, auto-reap-idle]
+    # budget-cap-hours (lifetime spend ceiling like the wallet's) is
+    # a rev-2 wall worth having; auto-reap-idle deferred because
+    # "idle" needs a signal this component does not own — the
+    # scheduled-jobs recipe (bell) composes for that later.
+
+  - id: volume-custody
+    question: "What happens to the persistent network volume?"
+    options:
+      - id: consented-standing-object
+        label: >
+          The volume (model cache) is a standing object OUTSIDE the
+          create/destroy cycle: gpod never creates one, never destroys
+          one, and only ATTACHES a volume named in ratified config.
+          Every status report names the volume and its monthly cost so
+          the standing spend is visible, never ambient. Growing or
+          destroying it is a human console act. (only option in rev 1)
+        blessed: true
+    deferred-options: [volume-lifecycle-tools]
+
+  - id: teardown-proof
+    question: "When is a rental over?"
+    options:
+      - id: destroy-verify-or-scream
+        label: >
+          gpod destroy issues the DELETE, then re-reads the provider
+          until the pod is absent (bounded retries). Present after the
+          bound: exit with the UNDEAD error naming the pod id and
+          "billing may still be accruing — escalate to the owner". The
+          rental log records destroy-requested and destroy-verified as
+          separate events; only verified closes the rental. destroy is
+          NEVER gated: no approval token, no decommission marker, no
+          config error may leave a reachable pod running. (only
+          option in rev 1)
+        blessed: true
+
+# ---------------------------------------------------------------------------
+# PARAMETERS — owner-ratified numbers, never defaults-in-code.
+# ---------------------------------------------------------------------------
+parameters:
+  gpu_type_allowlist:
+    type: csv-strings
+    prompt: >
+      RunPod gpuTypeIds the agent may request (e.g. "NVIDIA GeForce
+      RTX 4090"). The ladder's reference grade needs exactly one.
+  max_hourly_usd:
+    type: decimal-usd
+    prompt: "Hourly price ceiling per pod, USD (4090-class ran ~0.74)"
+  max_pods:
+    type: int
+    prompt: "Maximum concurrent pods (grade nights have used 1)"
+    default: "1"
+  region_pin:
+    type: string
+    prompt: >
+      Data center pin (EU-RO-1 while the model volume lives there —
+      the volume forces the region; an unpinned create that lands
+      elsewhere cannot attach it).
+  volume_id:
+    type: string
+    prompt: >
+      Network volume id to attach (scutl-ladder-models jo8roirsw9),
+      or empty for none. Named here so attaching is ratified, not
+      discovered.
+
+# ---------------------------------------------------------------------------
+# COMPONENTS
+# ---------------------------------------------------------------------------
+components:
+  gpod:
+    kind: typed-tool
+    source: ./gpod/
+    state_dir: "${SCUTL_GPOD_STATE:-~/.scutl/gpu-rental}"  # config.json
+                          # (walls + volume — 0600), api.key (0600),
+                          # rentals.log (append-only), approvals/
+    tools:
+      - name: gpu_status      # walls, live pods w/ ages+accrued-hours,
+                              # volume + its monthly cost, reconciliation
+        command: "gpod status"
+      - name: gpu_create      # ONE pod inside every wall
+        command: "gpod create --gpu-type {gpu_type} --name {name}[ --image {image}]"
+      - name: gpu_list
+        command: "gpod list"
+      - name: gpu_destroy     # never gated; verifies gone or screams
+        command: "gpod destroy --id {pod_id}"
+      - name: gpu_destroy_all # the emergency form; same ungated rule
+        command: "gpod destroy-all"
+      - name: gpu_stock       # availability side-channel (graphql), read-only
+        command: "gpod stock"
+      - name: gpu_admin       # configure / set-key / decommission — human approval
+        command: "gpod admin {op}"
+        ops:
+          configure: "gpod admin configure --gpu-types {gpu_type_allowlist} --max-hourly {max_hourly_usd} --max-pods {max_pods} --region {region_pin}[ --volume {volume_id}]"
+          set-key: "gpod admin set-key --key-file {api_key_file}"
+          decommission: "gpod admin decommission"
+    invariants:
+      - "No create leaves the box unless gpu_type ∈ allowlist, catalog
+         price ≤ max_hourly_usd, and log-reconciled live pods <
+         max_pods — all checked in code before the API call."
+      - "Every created pod is in rentals.log before create returns;
+         the live set derives from the log reconciled against the
+         provider. A provider pod the log does not know is foreign:
+         reported, never touched."
+      - "destroy is never gated and always available, decommission
+         included; a destroy that cannot verify gone within its retry
+         bound exits UNDEAD with billing-may-be-accruing language and
+         leaves the rental open in the log."
+      - "The network volume is attach-only: no tool creates, grows, or
+         destroys it; its id comes from ratified config and its
+         standing cost appears in every status."
+      - "The API key lives only in the state dir at 0600, loaded per
+         call, never in tool output, logs, or errors; set-key consumes
+         a file, never an argument."
+      - "Create checklist encoded in code, not prose: devel-image
+         family only (nvidia/cuda images boot with no networking),
+         port 22/tcp exposed at create (ports are immutable after),
+         no dockerStartCmd override (silently ignored). Each item bit
+         a run night once (POD-RUNBOOK.md)."
+
+# ---------------------------------------------------------------------------
+# BINDINGS
+# ---------------------------------------------------------------------------
+bindings:
+  live:
+    pods:   { provider: runpod, url: "https://rest.runpod.io/v1", auth: bearer }
+    stock:  { provider: runpod-graphql, url: "https://api.runpod.io/graphql",
+              note: "dataCenters query; REST has no gputypes surface" }
+    custody: >
+      Existing RunPod key at ~/.config/runpod.key migrates into the
+      gpod state dir at setup (one human act); the ladder scripts stop
+      reading it directly when they convert to gpod callers.
+    probes-pending: >
+      (1) whether DELETE then GET converges fast enough for a tight
+      verify bound or needs a longer poll (observed deletes have been
+      prompt; bound TBD from live data); (2) whether the REST catalog
+      price surface matches console prices per-region (walls read the
+      catalog; a mismatch is a finding, not a silent trust).
+
+contracts:
+  pods:
+    ops:
+      - "create(spec) -> {id, status} | error"
+      - "get(id) -> {status, costPerHr, ...} | absent"
+      - "delete(id) -> accepted | absent"
+      - "list() -> [{id, name, status, costPerHr}]"
+    failure_modes: [create-succeeds-status-lies, delete-accepted-pod-persists,
+                    price-differs-from-catalog, foreign-pod-appears,
+                    stock-exhausted, api-timeout-mid-create]
+  stock:
+    ops: ["availability(gpu_type, region) -> {available, count?}"]
+    failure_modes: [stale-availability, region-mismatch]
+
+# ---------------------------------------------------------------------------
+# SETUP
+# ---------------------------------------------------------------------------
+setup:
+  - step: install
+    run: "install gpod; verify tools respond"
+    commands: ["pip install ./gpod", "gpod status"]
+    expect: "exit 2 (not-configured) before configure is healthy"
+  - step: key
+    actor: human
+    instructions: >
+      Move (not copy) the RunPod API key into a file for set-key; the
+      account and card stay with you.
+    verify: "gpod status reports key_present true"
+  - step: configure
+    approval: human
+    run: "ratify the walls (allowlist, ceiling, max pods, region pin, volume)"
+    commands: ["gpod admin configure ..."]
+    expect: "JSON echoing walls; exit 4 asks the human for gpod-approve configure"
+  - step: first-cycle
+    run: "one full create -> active -> destroy -> verified-gone cycle (real cents)"
+    expect: "rentals.log shows open+verified-closed; status shows zero live"
+
+# ---------------------------------------------------------------------------
+# EXECUTE
+# ---------------------------------------------------------------------------
+execute:
+  loop: >
+    Rent on request, inside the walls: gpod stock to check
+    availability, gpod create, poll gpod list until running, hand the
+    pod's ssh coordinates to the workload verbatim. When the workload
+    is done, gpod destroy and confirm the verified-gone line — a pod
+    nobody is computing on is spend, not capacity, at ten times prov's
+    rate. Periodically (or when asked): gpod status; report foreign or
+    unreconciled pods to the human — never destroy what the log does
+    not know.
+  guardrails:
+    - "An UNDEAD destroy result is an emergency to surface, never to
+       retry silently: report the pod id and the billing language
+       verbatim."
+    - "Never place the API key in any argument, log, or report."
+  exit_codes: >
+    2 not-configured · 3 decommissioned (create refuses; destroy still
+    works) · 4 approval-required (gpod-approve <op>, retry once) · 5
+    wall-refused (report verbatim; never retry with different
+    parameters) · 6 undead (destroy unverified — escalate) · 1 invalid.
+
+# ---------------------------------------------------------------------------
+# VERIFY — acceptance = one real grade night on this rail.
+# ---------------------------------------------------------------------------
+verify:
+  - "gpu_status: walls echoed, volume named with cost, zero unreconciled"
+  - "full cycle: create (allowlisted) -> running -> destroy ->
+     verified-gone; rentals.log shows the paired events"
+  - "over-wall probes: disallowed gpu_type, price above ceiling, and
+     max_pods+1 all refuse in code with exit 5, no API call"
+  - "foreign-pod probe: a pod created outside gpod (console) is
+     reported foreign and never destroyed by destroy-all"
+  - "restart probe: rentals.log-derived counters survive restart"
+  - "dogfood: one full smutbench grade executed on a gpod-managed pod
+     (this doubles as the recipe's live acceptance — cst-j01t grid
+     campaign)"
+
+# ---------------------------------------------------------------------------
+# RECOVER
+# ---------------------------------------------------------------------------
+recover:
+  undead-pod: >
+    Exit 6 from destroy: the human checks the console, destroys
+    manually if present, then runs gpod destroy --id again to record
+    verified-gone (idempotent over absence). The rental stays open in
+    the log until verified — an open rental in status is the alarm
+    that keeps ringing.
+  lost-state: >
+    rentals.log gone: gpod status reconciles from the provider and
+    reports every live pod as foreign (the honest posture — the log
+    was the custody). Human adopts or destroys via console; gpod
+    re-founds its log empty.
