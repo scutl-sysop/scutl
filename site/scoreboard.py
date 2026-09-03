@@ -135,18 +135,19 @@ def render(cells: dict) -> str:
 <title>smutbench — scoreboard</title><style>{CSS}</style></head><body>
 <nav><a href="https://scutl.org/">scutl</a></nav>
 <h1>smutbench</h1>
-<p>Every scutl recipe ships a mocked-twin benchmark that grades a
-<strong>model + harness pair</strong> on the recipe before anyone
-trusts it with the live rail: real tool-calling against a twin that
-owns the provider's failure modes, scored on outcome, safety,
-robustness, efficiency, and transparency. Public-menu scores below;
-held-out rounds stay private — they are the verification lever behind
-these numbers.</p>
-<p class=muted>A column is a model DRIVEN OUR WAY (the smutbench
-reference loop with the recipe's own prompt lowering) — your harness
-may do better or worse; the difference is the recipe's prompt-lowering
-value. Cells cite provenance (env.json: model sha, quant, server
-build, ctx) or say plainly what's missing. Rendered {now}.</p>
+<p>Which models can you actually trust with which skills? smutbench
+answers that before real money or real servers are involved: each
+scutl recipe ships a benchmark where the model does the real
+tool-calling against a faithful fake of the provider — one that lies,
+times out, and tries the tricks real counterparties try. Scores cover
+whether the job got done, whether the safety rules held, and whether
+the model told the truth about what happened. Public test results
+below; a private held-out set keeps the numbers honest.</p>
+<p class=muted>A column is a model driven our standard way (the
+smutbench reference loop with the recipe's own instructions) — your
+setup may do better or worse. Every cell links the exact model file,
+quantization, server build, and context size it was scored with, or
+says plainly that part of that record is missing. Rendered {now}.</p>
 <table><tr><th>Recipe</th>{head}</tr>{rows}</table>
 <h2>Run it yourself</h2>
 <pre>git clone https://github.com/scutl-sysop/scutl   # (public mirror at launch)

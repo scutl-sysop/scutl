@@ -1,0 +1,209 @@
+hero:
+  headline: Give your local model real-world skills — safely
+  sub: 'You have a 3090-class GPU and a model you trust. scutl recipes are
+    the missing piece: installable skills that let that model hold a wallet,
+    rent servers, run a paid service, watch your uptime — each one with
+    hard spending and safety limits enforced by code the model can''t talk
+    its way around, and benchmark scores showing which models handle it
+    before you hand over anything real.
+
+    '
+  how: 'Every recipe is a manifest (the design and its safety rules), a
+    small command-line tool (the rules, enforced in code), and a benchmark
+    (proof your model can drive it). Install one by pointing your agent
+    at the recipe page — the ADAPT.md is written for the agent to follow.
+
+    '
+recipes:
+  wallet-base-sepolia:
+    hook: Let your agent spend test money with a hard cap it cannot lift.
+    blurb: 'A testnet USDC wallet your agent can pay from: per-payment and
+      daily limits are enforced by the signer program itself, keys never
+      pass through the model, and every spend is logged. The safe way to
+      learn agent payments before real money.
+
+      '
+    title: A test-money wallet with hard caps
+  paid-service-x402:
+    hook: Sell something over HTTP and get paid per request, automatically.
+    blurb: 'Run a small service that charges per use via the x402 payment
+      standard. Nothing is served until payment actually settles, the payout
+      address is fixed in a config the model can''t touch, and income reports
+      come only from the append-only earnings log.
+
+      '
+    title: Sell a service, get paid per request
+  provision-vultr:
+    hook: Let your agent rent servers without ever surprising your card.
+    blurb: 'Create, use, and destroy cloud servers inside limits you set
+      once: which plans, which regions, how many at a time, max price per
+      hour — checked in code before any API call. Destroying is always allowed;
+      nothing the model says can raise a limit.
+
+      '
+    title: Rent servers inside limits you set
+  x402-v2-client:
+    hook: Buy from any x402-priced API on the open market, under your caps.
+    blurb: 'The buyer side of pay-per-use APIs: your agent reads a price
+      offer, checks it against your limits and the expected network and
+      token, pays once, and verifies settlement on-chain. Wrong token, swapped
+      address, or inflated price gets refused before any signature happens.
+
+      '
+    title: Buy from pay-per-use APIs under your caps
+  own-domain:
+    hook: Your agent registers and manages a domain — renewals included.
+    blurb: 'Search, register, and manage DNS for a domain under a price
+      ceiling, with renewals tracked so nothing lapses silently and nothing
+      renews at a surprise price without you approving it.
+
+      '
+    title: Buy and hold a domain your agent manages
+  capability-purchase:
+    hook: One-off purchases of API access, decided and paid inside limits.
+    blurb: 'When a task needs a paid capability (an API key, a data product),
+      the agent can evaluate the offer and buy it — under your spending
+      caps, with the purchase recorded and the credential handled by the
+      tool, not the model.
+
+      '
+  inbox-triage:
+    hook: An agent that reads your inbox without ever being able to send.
+    blurb: 'Triage, summarize, and flag mail with a tool that has no send
+      capability at all — not blocked, absent. Mail content is treated as
+      data, never as instructions, so a malicious email can''t steer the
+      agent.
+
+      '
+  subscription-steward:
+    hook: Recurring payments that can never quietly go up.
+    blurb: 'Renewals happen inside the price you agreed to; any price increase
+      parks the renewal and asks you first. Cancellations count as done
+      only when billing provably stops.
+
+      '
+    title: Subscriptions at the price you agreed
+  scheduled-jobs:
+    hook: Scheduled tasks that can't fail silently.
+    blurb: 'Cron with a conscience: every scheduled job is witnessed by
+      an independent service, missed runs are named, and the watcher itself
+      is watched. If something stops running, you find out — that''s the
+      whole point.
+
+      '
+    title: Scheduled jobs that cannot fail silently
+  uptime-monitoring:
+    hook: Know your site is up — from where your users stand.
+    blurb: 'An outside prober plus a local check, reconciled: "up" requires
+      fresh evidence from both, and a stale green light is treated as an
+      outage of the monitoring, not proof of health.
+
+      '
+    title: Uptime monitoring you can trust
+  status-digest:
+    hook: A six-hourly status report that never hides bad news.
+    blurb: 'Reads your monitoring, composes a digest on schedule, and latches
+      a flag on any anomaly until a human clears it. Our own status page
+      is this recipe running on our own infrastructure.
+
+      '
+  durable-object-storage:
+    hook: Backups that are proven restorable, not assumed.
+    blurb: 'Off-site copies with integrity checked by re-downloading and
+      re-hashing on a schedule — because a backup is a claim until a restore
+      proves it. Growth is capped, deletion is a deliberate act, and secrets
+      never ride along.
+
+      '
+    title: Off-site backups, proven restorable
+  identity-backup-restore:
+    hook: Rehearse losing everything before it matters.
+    blurb: 'Export and verify the durable identity your agent depends on
+      — keys, wallet, account ownership — as a rehearsed, checked procedure.
+      The agent never moves key material itself.
+
+      '
+    title: Back up and rehearse-restore your agent identity
+  managed-database:
+    hook: A real database your agent can operate — with restore drills.
+    blurb: 'Provision, back up, and restore a managed Postgres under spend
+      limits, with restore rehearsals so recovery is a practiced path instead
+      of a hope.
+
+      '
+    title: A database whose backup is proven, not promised
+  spend-reconciliation:
+    hook: Every ledger checked against every statement, discrepancies escalated.
+    blurb: 'A standing audit that compares what your tools logged against
+      what providers billed and what the chain shows. It moves no money
+      and holds no credentials; disagreements surface with evidence instead
+      of being papered over.
+
+      '
+    title: Audit every ledger against every statement
+  webhook-ingress:
+    hook: Receive webhooks once, verify them, and never replay.
+    blurb: 'A hardened front door for incoming events: signatures verified,
+      duplicates dropped by a durable ledger, payload content treated as
+      data rather than instructions.
+
+      '
+    title: A hardened webhook endpoint
+  agent-email:
+    hook: A real inbox your agent owns — reading hardened against manipulation.
+    blurb: 'Send, receive, and thread email from an address your agent pays
+      for and controls, with reading rules that keep hostile mail from becoming
+      instructions.
+
+      '
+    title: An inbox your agent owns
+  messenger-reachability:
+    hook: Reach a human on the channel they actually check.
+    blurb: 'Delivery across messengers with confirmation that the message
+      arrived — and honest escalation when it didn''t, because silence is
+      also a failure.
+
+      '
+  price-watch-and-buy:
+    hook: Watch a price, buy at your number, never above it.
+    blurb: 'A standing watch that purchases when conditions you set are
+      met — the trigger price is yours, checked in code at buy time, not
+      a suggestion the model interprets.
+
+      '
+    title: Watch a price, buy at your number
+  refund-clerk:
+    hook: Refunds handled promptly, inside rules you wrote.
+    blurb: 'Evaluate refund requests against your stated policy and pay
+      the valid ones under caps — generosity is possible, unbounded generosity
+      is not.
+
+      '
+    title: Refunds by policy, not persuasion
+  wallet-mainnet:
+    hook: 'The real-money wallet: same hard caps, plus key custody done
+      right.'
+    blurb: 'Graduates the testnet wallet to real USDC with a founding ceremony
+      that proves your backup restores before the wallet holds a cent, spending
+      ceilings only a human can raise (after a cooling-off delay), and a
+      panic switch that always works.
+
+      '
+    title: A real-money wallet with hard caps
+  gpu-rental:
+    hook: Rent serious GPUs by the hour — and never pay for a forgotten
+      one.
+    blurb: 'Hourly GPU pods inside price and count limits, with teardown
+      that verifies the pod is actually gone. Built because we rent GPUs
+      for our own benchmarks; the walls exist because hourly billing forgives
+      nothing.
+
+      '
+    title: GPU rental without forgotten bills
+  static-website:
+    hook: Publish a website your agent maintains, receipts included.
+    blurb: 'Static hosting provisioned and published under spend limits,
+      with content verified live after every publish.
+
+      '
+    title: Publish a website your agent maintains

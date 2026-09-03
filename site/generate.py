@@ -32,6 +32,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 RECIPES = ROOT / "recipes"
+COPY = yaml.safe_load((ROOT / "site" / "copy.yaml").read_text())
 
 STATUS_ORDER = {"shipped": 0, "reference-green": 1, "draft": 2}
 STATUS_LABEL = {
@@ -101,7 +102,9 @@ def load_recipes() -> list[dict]:
         r = (m or {}).get("recipe") or {}
         out.append({
             "dir": d, "id": r.get("id", d.name), "slug": d.name,
-            "title": r.get("title", d.name), "rev": r.get("rev", "?"),
+            "title": ((COPY.get("recipes") or {}).get(d.name, {}).get("title")
+                      or r.get("title", d.name)),
+            "rev": r.get("rev", "?"),
             "summary": " ".join(str(r.get("summary", "")).split()),
             "status": str(r.get("status", "draft")).split()[0],
             "manifest": m,
@@ -165,11 +168,15 @@ def recipe_page(r: dict) -> str:
     m = r["manifest"]
     st = r["status"]
     badge = f"<span class=\"status status-{esc(st)}\">{esc(st)}</span>"
+    c = (COPY.get("recipes") or {}).get(r["slug"]) or {}
+    lede = (f"<p class=pitch><strong>{esc(c['hook'])}</strong></p>"
+            f"<p>{esc(' '.join(str(c.get('blurb','')).split()))}</p>"
+            if c.get("hook") else f"<p class=pitch>{esc(r['summary'])}</p>")
     head = (f"<h1>{esc(r['title'])} {badge}</h1>"
             f"<p class=muted>recipe <code>{esc(r['id'])}</code> · rev "
             f"{esc(r['rev'])} · {esc(STATUS_LABEL.get(st, st))}</p>"
-            f"<p class=pitch>{esc(r['summary'])}</p>"
-            f"<p><a href=\"../{esc(r['slug'])}.yaml\">manifest (yaml)</a>"
+            + lede
+            + f"<p><a href=\"../{esc(r['slug'])}.yaml\">manifest (yaml)</a>"
             + (f" · <a href=\"ADAPT.md\">ADAPT.md — point your agent here"
                f"</a>" if r["adapt"] else "")
             + "</p>")
@@ -189,21 +196,21 @@ def index_page(recipes: list[dict]) -> str:
         rs = [r for r in recipes if r["status"] == st]
         if not rs:
             continue
-        items = "".join(
-            f"<li><a href=\"recipes/{esc(r['slug'])}/index.html\">"
-            f"{esc(r['title'])}</a> <span class=muted>({esc(r['id'])})"
-            f"</span><br><span class=muted>{esc(r['summary'][:180])}"
-            f"{'…' if len(r['summary'])>180 else ''}</span></li>"
-            for r in rs)
+        def line(r):
+            c = (COPY.get("recipes") or {}).get(r["slug"]) or {}
+            desc = c.get("hook") or (r["summary"][:180]
+                                     + ("…" if len(r["summary"]) > 180 else ""))
+            return (f"<li><a href=\"recipes/{esc(r['slug'])}/index.html\">"
+                    f"{esc(r['title'])}</a> <span class=muted>({esc(r['id'])})"
+                    f"</span><br>{esc(desc)}</li>")
+        items = "".join(line(r) for r in rs)
         sections.append(f"<h2>{esc(STATUS_LABEL[st])}</h2><ul>{items}</ul>")
-    body = ("<h1>scutl</h1><p class=pitch>A curated catalog of agent "
-            "capabilities — small on purpose, first-party only, every "
-            "entry backed by run receipts from our own build farm. The "
-            "safety walls live in code, not prompts.</p>"
-            "<p class=pitch><strong>Tell your agent: install a scutl "
-            "recipe. It knows how</strong> — each recipe ships an "
-            "ADAPT.md addressed to the integrating agent, proven by "
-            "fresh-agent acceptance runs.</p>" + "".join(sections))
+    hero = COPY.get("hero") or {}
+    body = (f"<h1>{esc(hero.get('headline','scutl'))}</h1>"
+            f"<p class=pitch>{esc(' '.join(str(hero.get('sub','')).split()))}</p>"
+            f"<p>{esc(' '.join(str(hero.get('how','')).split()))}</p>"
+            "<p><strong>Tell your agent: install a scutl recipe. "
+            "It knows how.</strong></p>" + "".join(sections))
     return page("scutl — recipes for agent life skills", body)
 
 
