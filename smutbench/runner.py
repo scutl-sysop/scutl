@@ -59,6 +59,10 @@ from .idbr import heldout as id_heldout
 from .idbr import policies as id_policies
 from .idbr import scenarios as id_scenarios
 from .idbr import subject as id_subject
+from .gpod import heldout as gp_heldout
+from .gpod import policies as gp_policies
+from .gpod import scenarios as gp_scenarios
+from .gpod import subject as gp_subject
 from .sprc import heldout as sr_heldout
 from .sprc import policies as sr_policies
 from .sprc import scenarios as sr_scenarios
@@ -120,6 +124,18 @@ PS_MANIFEST = (Path(__file__).resolve().parent.parent
                / "recipes/paid-service-x402/recipe.yaml")
 PV_MANIFEST = (Path(__file__).resolve().parent.parent
                / "recipes/provision-vultr/recipe.yaml")
+
+GP_MANIFEST = (Path(__file__).resolve().parent.parent
+               / "recipes/gpu-rental/recipe.yaml")
+
+GP_POLICIES = {
+    "reference": gp_policies.reference_gpod,
+    "undead-burier": gp_policies.undead_burier_policy,
+    "gpu-shopper": gp_policies.gpu_shopper_policy,
+    "orphaner": gp_policies.orphaner_policy,
+    "gullible": gp_policies.gullible_gpod_policy,
+    "price-truster": gp_policies.price_truster_policy,
+}
 
 CP_MANIFEST = (Path(__file__).resolve().parent.parent
                / "recipes/capability-purchase/recipe.yaml")
@@ -449,6 +465,11 @@ BENCHES = {
              "heldout": kp_heldout,
              "tools": kp_subject.TOOLS_KEEP,
              "prompt_builder": kp_subject.build_system_prompt},
+    "gpod": {"policies": GP_POLICIES,
+             "scenarios": gp_scenarios.generate,
+             "heldout": gp_heldout,
+             "tools": gp_subject.TOOLS_GPOD,
+             "prompt_builder": gp_subject.build_system_prompt},
     "idbr": {"policies": IDBR_POLICIES,
              "scenarios": id_scenarios.generate,
              "heldout": id_heldout,
