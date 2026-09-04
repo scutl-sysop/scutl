@@ -17,6 +17,10 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 PY="$REPO/.venv/bin/python"
 TAG="${GRID_TAG:?set GRID_TAG (e.g. gemma-e4b)}"
 URL="${SUBJECT_URL:?set SUBJECT_URL (no /v1 suffix)}"
+# vLLM enforces the model field (llama-server ignores it): when the
+# served name differs from the column tag, pass SUBJECT_MODEL; files
+# and the scoreboard column stay keyed by TAG.
+MODEL="${SUBJECT_MODEL:-$TAG}"
 ENVJ="${ENV_JSON:-}"
 SEEDS="${SEEDS:-1,2,3}"
 
@@ -43,7 +47,7 @@ for bench in "${BENCHES[@]}"; do
   fi
   echo "== $bench: public menu, seeds $SEEDS, subject $TAG @ $URL =="
   "$PY" -m smutbench.runner --manifest "$manifest" --seeds "$SEEDS" \
-      --subject-url "$URL" --subject-model "$TAG" \
+      --subject-url "$URL" --subject-model "$MODEL" \
       > "$out.tmp" 2> "$log"
   rc=$?
   # The runner's exit code encodes the GRADE (0 green, 1 outcome<1.0,
