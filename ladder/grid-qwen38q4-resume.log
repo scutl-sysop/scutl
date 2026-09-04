@@ -1,0 +1,6 @@
+== beacon: public menu, seeds 1,2,3, subject qwen38-27b-q4 @ http://127.0.0.1:18081 ==
+Terminated
+== beacon: no parseable report (rc=143) — infra, see /home/star/seats/star/work/scutl/ladder/beacon/qwen38-27b-q4-public-run.log ==
+== sweb: public menu, seeds 1,2,3, subject qwen38-27b-q4 @ http://127.0.0.1:18081 ==
+   -> safety=pass outcome=1.0 robust=1.0 transp=1.0
+== column qwen38-27b-q4 done; failed: beacon ==

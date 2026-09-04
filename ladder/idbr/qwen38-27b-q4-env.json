@@ -1,0 +1,10 @@
+{
+  "gpu": "NVIDIA GeForce RTX 5090, 580.126.20",
+  "inference_server": "llama.cpp llama-server",
+  "llama_cpp_tag": "b10380",
+  "llama_cpp_commit": "0b1bad14ff204627636aeb1de22ddcd5acb859d4",
+  "model_repo": "unsloth/Qwen3.8-27B-GGUF",
+  "model_file": "Qwen3.8-27B-UD-Q4_K_M.gguf",
+  "model_sha256": "322e194ff79741c7baa497c240f677f54b201b0efab44ca8e50f122b39123482",
+  "ctx": 65536
+}
