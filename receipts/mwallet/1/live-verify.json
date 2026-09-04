@@ -1,0 +1,67 @@
+{
+ "receipt_format": "scutl-live-verify-1",
+ "recipe": "mwallet",
+ "rev": 1,
+ "date": "2026-09-04",
+ "operator": "Star (seat) + owner live in session (all tokens and custody params human-ratified live)",
+ "network": "eip155:8453 (Base mainnet)",
+ "address": "0xB5147b5c5e33e08da4199F61009975af761Eb7e0",
+ "ceremony": {
+  "order_enforced": "keygen -> backup-verify -> restore-rehearsal before any funding; spend tools locked until 3/3",
+  "keygen": {
+   "caps": {
+    "per_tx": "0.50",
+    "daily": "1.00",
+    "lifetime": "5.00"
+   },
+   "ratchet_delay_hours": "24"
+  },
+  "backup": "offline copy held by owner; fingerprint 2c5d28924e0539413aece01041f972fdfcbe84283184dc8ea46b9010b245a6b1",
+  "restore_rehearsal": {
+   "passed": true,
+   "at": "2026-09-04T01:21:32Z",
+   "note": "backup copy decrypted, address-matched, while balance was 0"
+  }
+ },
+ "funding": {
+  "micro_first": "0.25 USDC confirmed on-chain before main",
+  "main": "2.00 USDC",
+  "gas": "zero ETH \u2014 gasless by construction (EIP-3009; counterparty submits)"
+ },
+ "live_drills": [
+  {
+   "drill": "cap-wall",
+   "result": "1.00 USDC offer refused at per-tx cap 0.50 before any signature"
+  },
+  {
+   "drill": "ratchet",
+   "result": "raise 0.50->1.00 queued with ABSOLUTE effective_at, pending-visible in status, still refusing during delay (proven), applied only after maturity (0.05h delay: one-night override ratified by owner, restored to 24h after)"
+  },
+  {
+   "drill": "live-purchase",
+   "result": "1.00 USDC x402 v2 purchase from calendars.stockql.ai/calendars/americas; settle tx 0x4d67145666ac6974c0bf5eb688249af2ff1ffce0705b434738e468a4d7c62fdc confirmed; content delivered; immediate re-invocation returned idempotent_replay=true (no double spend)"
+  },
+  {
+   "drill": "panic",
+   "result": "mw_panic ungated mid-session; spend (authorize) and admin (ratchet) both refused under panic; status remained readable; unpanic required human token (proven)"
+  }
+ ],
+ "sweep": "not exercised \u2014 owner elected to keep the wallet live (runbook marks sweep rehearsal optional first night)",
+ "final_state": {
+  "balance_usdc": "1.250000",
+  "spent_lifetime": "1.000000",
+  "panic": null,
+  "tombstoned": false,
+  "caps": {
+   "per_tx": "1.00 (owner re-ratified post-drill: the raised number stands)",
+   "daily": "1.00",
+   "lifetime": "5.00"
+  }
+ },
+ "accounting": {
+  "in": "2.25 USDC (owner)",
+  "out": "1.00 USDC to the estate's own calendars service (round-trip)",
+  "held": "1.25 USDC"
+ },
+ "disposition": "wallet kept LIVE by owner decision (balance 1.25 USDC, caps 1.00/1.00/5.00, ratchet delay 24h)"
+}

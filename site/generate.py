@@ -39,6 +39,7 @@ STATUS_ORDER = {"shipped": 0, "reference-green": 1, "draft": 2}
 # recipe slug -> receipts/ subtree holding its live run evidence
 # (cst-ravb: receipts are served, not merely claimed)
 RECEIPT_DIR = {
+    "wallet-mainnet": "mwallet",
     "wallet-base-sepolia": "wallet",
     "paid-service-x402": "paid-service",
     "provision-vultr": "provision",

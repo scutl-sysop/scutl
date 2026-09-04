@@ -23,7 +23,7 @@ recipe:
     Mainnet is unforgiving: the recipe's job is to make every
     irreversible step either code-gated, human-performed, or preceded by
     a micro-probe that proves the path before real money follows it.
-  status: draft  # draft | reference-green | shipped
+  status: shipped  # draft | reference-green | shipped — live-verified 2026-09-04 (receipts/mwallet/1)
   maintainer: first-party
 
 # ---------------------------------------------------------------------------
