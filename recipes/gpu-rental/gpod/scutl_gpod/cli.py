@@ -50,7 +50,16 @@ def main(argv: list[str] | None = None) -> None:
     cp.add_argument("--gpu-type", required=True)
     cp.add_argument("--name", required=True)
     cp.add_argument("--image", default=None,
-                    help="-devel family only (checklist wall)")
+                    help="-devel family, or a ratified serving image")
+    cp.add_argument("--port", action="append", default=None, dest="ports",
+                    help="serving images only: port to expose, e.g. "
+                         "8000/http (repeatable; immutable after create)")
+    cp.add_argument("--cmd-arg", action="append", default=None,
+                    dest="cmd_args",
+                    help="serving images only: CMD argument (repeatable)")
+    cp.add_argument("--no-volume", action="store_true",
+                    help="do not attach the configured volume (serving "
+                         "pods that pull from HF need no model cache)")
 
     dp = sub.add_parser("destroy")
     dp.add_argument("--id", required=True, dest="pod_id")
@@ -68,6 +77,10 @@ def main(argv: list[str] | None = None) -> None:
     gp.add_argument("--region", required=True, dest="region_pin")
     gp.add_argument("--volume", default=None, dest="volume_id",
                     help="network volume id to attach (attach-only)")
+    gp.add_argument("--serving-image", action="append", default=None,
+                    dest="serving_images",
+                    help="exact image pin allowed to run as a serving "
+                         "pod (repeatable; ratified like every wall)")
     kp = asub.add_parser("set-key")
     kp.add_argument("--key-file", required=True)
     asub.add_parser("decommission")
@@ -86,7 +99,9 @@ def main(argv: list[str] | None = None) -> None:
         elif args.cmd == "stock":
             out = manager.stock(args.gpu_type)
         elif args.cmd == "create":
-            out = manager.create(args.gpu_type, args.name, args.image)
+            out = manager.create(args.gpu_type, args.name, args.image,
+                                 ports=args.ports, cmd_args=args.cmd_args,
+                                 attach_volume=not args.no_volume)
         elif args.cmd == "destroy":
             out = manager.destroy(args.pod_id)
         elif args.cmd == "destroy-all":
@@ -95,7 +110,8 @@ def main(argv: list[str] | None = None) -> None:
             from decimal import Decimal
             out = manager.configure(
                 args.gpu_types.split(","), Decimal(args.max_hourly),
-                args.max_pods, args.region_pin, args.volume_id)
+                args.max_pods, args.region_pin, args.volume_id,
+                serving_images=args.serving_images)
         elif args.cmd == "admin" and args.op == "set-key":
             out = manager.set_key(args.key_file)
         else:  # admin decommission

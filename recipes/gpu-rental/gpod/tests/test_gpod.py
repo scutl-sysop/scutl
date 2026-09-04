@@ -248,3 +248,58 @@ def test_key_never_in_outputs_or_log(tmp_path):
     pod = mgr.create("NVIDIA GeForce RTX 4090", "x")
     blob = json.dumps([mgr.status(), pod, state.read_rental_events()])
     assert "TWIN_API_KEY_SHH" not in blob
+
+
+# -- serving images (vLLM amendment, 2026-09-04) ------------------------
+
+def _serving_rig(tmp_path):
+    state, mgr, pods = rig(tmp_path)
+    config = state.load_config()
+    config["serving_images"] = ["vllm/vllm-openai:v0.11.0"]
+    state.save_config(config)
+    return state, mgr, pods
+
+
+def test_serving_image_allowed_with_ports_and_cmd(tmp_path):
+    state, mgr, pods = _serving_rig(tmp_path)
+    out = mgr.create("NVIDIA GeForce RTX 4090", "fp8",
+                     image="vllm/vllm-openai:v0.11.0",
+                     ports=["8000/http"],
+                     cmd_args=["--model", "Qwen/Qwen3.8-27B-FP8"],
+                     attach_volume=False)
+    spec = pods.pods[out["id"]]["spec"]
+    assert spec["ports"] == ["8000/http"]
+    assert spec["dockerStartCmd"] == ["--model", "Qwen/Qwen3.8-27B-FP8"]
+    assert "networkVolumeId" not in spec
+
+
+def test_serving_image_requires_declared_port(tmp_path):
+    state, mgr, pods = _serving_rig(tmp_path)
+    with pytest.raises(LimitRefused):
+        mgr.create("NVIDIA GeForce RTX 4090", "fp8",
+                   image="vllm/vllm-openai:v0.11.0")
+    assert pods.pods == {}
+
+
+def test_unratified_serving_image_refused(tmp_path):
+    state, mgr, pods = rig(tmp_path)   # no serving_images in config
+    with pytest.raises(LimitRefused):
+        mgr.create("NVIDIA GeForce RTX 4090", "fp8",
+                   image="vllm/vllm-openai:v0.11.0", ports=["8000/http"])
+    assert pods.pods == {}
+
+
+def test_cmd_args_refused_on_ssh_worker_image(tmp_path):
+    state, mgr, pods = _serving_rig(tmp_path)
+    with pytest.raises(LimitRefused):
+        mgr.create("NVIDIA GeForce RTX 4090", "x",
+                   cmd_args=["--anything"])
+    assert pods.pods == {}
+
+
+def test_ssh_worker_path_unchanged(tmp_path):
+    state, mgr, pods = _serving_rig(tmp_path)
+    out = mgr.create("NVIDIA GeForce RTX 4090", "worker")
+    spec = pods.pods[out["id"]]["spec"]
+    assert spec["ports"] == ["22/tcp"]
+    assert "dockerStartCmd" not in spec

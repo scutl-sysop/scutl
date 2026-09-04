@@ -146,7 +146,9 @@ class Manager:
 
     # -- create: every wall checked before the API call ----------------
     def create(self, gpu_type: str, name: str,
-               image: str | None = None) -> dict:
+               image: str | None = None, ports: list[str] | None = None,
+               cmd_args: list[str] | None = None,
+               attach_volume: bool = True) -> dict:
         self.state.check_not_decommissioned()
         config = self.state.load_config()
 
@@ -172,14 +174,33 @@ class Manager:
                 f"{config['max_pods']}")
 
         image = image or DEFAULT_IMAGE
-        # Checklist wall (manifest invariant: each item bit a run night
-        # once). devel-family only — nvidia/cuda base images boot with
-        # no networking on this provider.
-        if "-devel" not in image:
-            raise LimitRefused(
-                f"image '{image}' is not a -devel family image; "
-                f"non-devel images have booted with no networking "
-                f"(POD-RUNBOOK.md); refusing")
+        serving = image in (config.get("serving_images") or [])
+        # Image wall, two families (each rule is a run-night scar):
+        #  - ssh workers: -devel only (nvidia/cuda base images boot with
+        #    no networking), 22/tcp declared at create, and NO
+        #    dockerStartCmd/dockerEntrypoint (overriding eats /start.sh
+        #    and sshd never starts). Those scars are runpod/pytorch
+        #    facts, not universal truths.
+        #  - serving images (config-ratified allowlist, exact pins):
+        #    the image IS the server — CMD args and its own ports are
+        #    the mechanism, ssh is not involved (FP8/vLLM, 2026-09-04).
+        if not serving:
+            if "-devel" not in image:
+                raise LimitRefused(
+                    f"image '{image}' is not a -devel family image and "
+                    f"is not on the ratified serving_images allowlist; "
+                    f"non-devel images have booted with no networking "
+                    f"(POD-RUNBOOK.md); refusing")
+            if cmd_args:
+                raise LimitRefused(
+                    "cmd args are only for ratified serving images — "
+                    "overriding CMD on an ssh worker eats /start.sh")
+            ports = ["22/tcp"]
+        else:
+            if not ports:
+                raise LimitRefused(
+                    f"serving image '{image}' needs its API port "
+                    f"declared at create (ports are immutable after)")
 
         spec = {
             "name": name,
@@ -189,12 +210,12 @@ class Manager:
             "gpuCount": 1,
             "imageName": image,
             "containerDiskInGb": 60,
-            "ports": ["22/tcp"],   # immutable after create; declared now
-            # deliberately NO dockerStartCmd / dockerEntrypoint:
-            # overriding eats /start.sh and sshd never starts
+            "ports": ports,
         }
+        if serving and cmd_args:
+            spec["dockerStartCmd"] = list(cmd_args)
         vol = config.get("volume")
-        if vol:
+        if vol and attach_volume:
             spec["networkVolumeId"] = vol["id"]
 
         pod = self.pods.create_pod(spec)
@@ -263,7 +284,8 @@ class Manager:
     # -- admin (human-approved) ----------------------------------------
     def configure(self, gpu_types: list[str], max_hourly_usd: Decimal,
                   max_pods: int, region_pin: str,
-                  volume_id: str | None = None) -> dict:
+                  volume_id: str | None = None,
+                  serving_images: list[str] | None = None) -> dict:
         approvals.consume(self.state, "configure")
         if not gpu_types:
             raise ValueError("gpu_types allowlist must not be empty")
@@ -278,6 +300,8 @@ class Manager:
             "max_pods": max_pods,
             "region_pin": region_pin,
         }
+        if serving_images:
+            config["serving_images"] = list(serving_images)
         if volume_id:
             vol: dict = {"id": volume_id}
             # Best-effort enrichment so status can name the standing
