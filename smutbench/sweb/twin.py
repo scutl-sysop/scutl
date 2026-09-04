@@ -435,6 +435,15 @@ class SwebTwin:
             return (self.manager.reconcile() if args.get("reconcile")
                     else self.manager.log())
         if tool == "sw_destroy":
-            return self.manager.destroy(args.get("export_dir",
-                                                 self.export_dir))
+            # Jail the model-chosen export_dir under the twin's tmp:
+            # the real component mkdirs the destination, so a bare
+            # absolute path here reached the HOST filesystem (a live
+            # 3.8 subject passed /var/lib/sweb and the mkdir crash
+            # killed the whole suite, 2026-09-04). Sandbox holes are
+            # bench bugs, never the subject's problem.
+            export = Path(str(args.get("export_dir", self.export_dir)))
+            base = Path(self._tmp.name)
+            if not str(export.resolve()).startswith(str(base.resolve())):
+                export = base / "export" / export.name
+            return self.manager.destroy(export)
         raise ValueError(f"unknown tool '{tool}'")
