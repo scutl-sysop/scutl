@@ -35,6 +35,14 @@ RECIPES = ROOT / "recipes"
 COPY = yaml.safe_load((ROOT / "site" / "copy.yaml").read_text())
 
 STATUS_ORDER = {"shipped": 0, "reference-green": 1, "draft": 2}
+
+# recipe slug -> receipts/ subtree holding its live run evidence
+# (cst-ravb: receipts are served, not merely claimed)
+RECEIPT_DIR = {
+    "wallet-base-sepolia": "wallet",
+    "paid-service-x402": "paid-service",
+    "provision-vultr": "provision",
+}
 STATUS_LABEL = {
     "shipped": "Shipped — manifest, enforcing CLI, agent installer "
                "(ADAPT.md), live-proven",
@@ -82,7 +90,8 @@ def page(title: str, body: str, depth: int = 0) -> str:
         f"<nav><a href=\"{home}index.html\">scutl</a> · "
         f"<a href=\"https://smutbench.scutl.org\">smutbench</a> · "
         f"<a href=\"{home}llms.txt\">llms.txt</a></nav>"
-        f"{body}<footer>"
+        f"{body}<footer>Shipped recipes link their run receipts from "
+        "their pages. "
         "Manifests are the pages: rendered from recipe.yaml at build "
         "time, served verbatim next to them, checksummed in "
         f"<a href=\"{home}SHA-256SUMS\">SHA-256SUMS</a>.</footer>"
@@ -182,6 +191,9 @@ def recipe_page(r: dict) -> str:
             + f"<p><a href=\"../{esc(r['slug'])}.yaml\">manifest (yaml)</a>"
             + (f" · <a href=\"ADAPT.md\">ADAPT.md — point your agent here"
                f"</a>" if r["adapt"] else "")
+            + (f" · <a href=\"../../receipts/"
+               f"{esc(RECEIPT_DIR[r['slug']])}/index.html\">run receipts"
+               f"</a>" if r["slug"] in RECEIPT_DIR else "")
             + "</p>")
     exec_block = m.get("execute") or {}
     guard = exec_block.get("guardrails") or []
@@ -269,6 +281,33 @@ def main(argv=None) -> int:
             (d / "ADAPT.md").write_bytes(ab)
             sums.append((f"recipes/{r['slug']}/ADAPT.md",
                          hashlib.sha256(ab).hexdigest()))
+
+    # Receipts: copy each shipped recipe's run-evidence tree and give it
+    # a browsable index (the host serves no directory listings).
+    slug_by_dir = {v: k for k, v in RECEIPT_DIR.items()}
+    for rdir in sorted(set(RECEIPT_DIR.values())):
+        src = ROOT / "receipts" / rdir
+        if not src.is_dir():
+            continue
+        dst = out / "receipts" / rdir
+        shutil.copytree(src, dst)
+        items = []
+        for f in sorted(dst.rglob("*")):
+            if f.is_file():
+                rel = f.relative_to(dst)
+                items.append(f"<li><a href=\"{esc(str(rel))}\">"
+                             f"{esc(str(rel))}</a> <span class=muted>"
+                             f"({f.stat().st_size:,} bytes)</span></li>")
+        slug = slug_by_dir[rdir]
+        body = (f"<h1>Run receipts — {esc(slug)}</h1>"
+                f"<p>Every file below is a live-run record for "
+                f"<a href=\"../../recipes/{esc(slug)}/index.html\">"
+                f"{esc(slug)}</a>: pinned environment, protocol, and "
+                f"per-repetition verdicts, committed as produced. "
+                f"Directories are numbered by recipe rev.</p>"
+                f"<ul>{''.join(items)}</ul>")
+        (dst / "index.html").write_text(
+            page(f"receipts — {slug}", body, depth=2))
 
     (out / "index.html").write_text(index_page(recipes))
     (out / "llms.txt").write_text(llms_txt(recipes))
