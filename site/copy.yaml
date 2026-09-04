@@ -4,14 +4,16 @@ hero:
     the missing piece: installable skills that let that model hold a wallet,
     rent servers, run a paid service, watch your uptime — each one with
     hard spending and safety limits enforced by code the model can''t talk
-    its way around, and benchmark scores showing which models handle it
-    before you hand over anything real.
+    its way around, and a growing benchmark grid showing which
+    models handle which recipes before you hand over anything real.
 
     '
-  how: 'Every recipe is a manifest (the design and its safety rules), a
-    small command-line tool (the rules, enforced in code), and a benchmark
-    (proof your model can drive it). Install one by pointing your agent
-    at the recipe page — the ADAPT.md is written for the agent to follow.
+  how: 'Shipped recipes pair a manifest (the design and its safety rules),
+    an enforcing command-line tool, an agent-facing ADAPT.md installer,
+    and live receipts. Benchmarked recipes have model results but no live
+    provider proof yet. Drafts publish the design and whatever components
+    exist today. Install a shipped recipe by pointing your agent at its
+    page — the ADAPT.md is written for the agent to follow.
 
     '
 recipes:
@@ -34,7 +36,8 @@ recipes:
       '
     title: Sell a service, get paid per request
   provision-vultr:
-    hook: Let your agent rent servers without ever surprising your card.
+    hook: Rent servers only in the plans, regions, hourly prices, and instance
+      counts you set — with teardown always available.
     blurb: 'Create, use, and destroy cloud servers inside limits you set
       once: which plans, which regions, how many at a time, max price per
       hour — checked in code before any API call. Destroying is always allowed;
@@ -43,7 +46,8 @@ recipes:
       '
     title: Rent servers inside limits you set
   x402-v2-client:
-    hook: Buy from any x402-priced API on the open market, under your caps.
+    hook: Buy from compatible x402 APIs on the network and token you configured,
+      under your wallet caps.
     blurb: 'The buyer side of pay-per-use APIs: your agent reads a price
       offer, checks it against your limits and the expected network and
       token, pays once, and verifies settlement on-chain. Wrong token, swapped
@@ -70,9 +74,9 @@ recipes:
   inbox-triage:
     hook: An agent that reads your inbox without ever being able to send.
     blurb: 'Triage, summarize, and flag mail with a tool that has no send
-      capability at all — not blocked, absent. Mail content is treated as
-      data, never as instructions, so a malicious email can''t steer the
-      agent.
+      operation at all — not blocked, absent. Message bodies arrive marked
+      untrusted, and with no send surface there is nothing for a hostile
+      email to fire.
 
       '
   subscription-steward:
@@ -142,7 +146,7 @@ recipes:
       '
     title: Audit every ledger against every statement
   webhook-ingress:
-    hook: Receive webhooks once, verify them, and never replay.
+    hook: Verify incoming webhooks, record each event once, and reject replays.
     blurb: 'A hardened front door for incoming events: signatures verified,
       duplicates dropped by a durable ledger, payload content treated as
       data rather than instructions.
@@ -150,10 +154,10 @@ recipes:
       '
     title: A hardened webhook endpoint
   agent-email:
-    hook: A real inbox your agent owns — reading hardened against manipulation.
+    hook: A real inbox your agent owns — recipients confined, sends capped.
     blurb: 'Send, receive, and thread email from an address your agent pays
-      for and controls, with reading rules that keep hostile mail from becoming
-      instructions.
+      for and controls. Recipients are confined to an allowlist, send volume
+      is capped in code, and incoming bodies arrive marked untrusted.
 
       '
     title: An inbox your agent owns
@@ -173,7 +177,8 @@ recipes:
       '
     title: Watch a price, buy at your number
   refund-clerk:
-    hook: Refunds handled promptly, inside rules you wrote.
+    hook: Refund valid claims by your policy, never above the recorded payment
+      or period cap.
     blurb: 'Evaluate refund requests against your stated policy and pay
       the valid ones under caps — generosity is possible, unbounded generosity
       is not.
@@ -191,8 +196,8 @@ recipes:
       '
     title: A real-money wallet with hard caps
   gpu-rental:
-    hook: Rent serious GPUs by the hour — and never pay for a forgotten
-      one.
+    hook: Rent serious GPUs inside hourly-price and pod-count limits, with
+      teardown that verifies a deleted pod is really gone.
     blurb: 'Hourly GPU pods inside price and count limits, with teardown
       that verifies the pod is actually gone. Built because we rent GPUs
       for our own benchmarks; the walls exist because hourly billing forgives

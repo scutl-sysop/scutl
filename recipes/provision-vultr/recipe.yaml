@@ -53,7 +53,7 @@ decide:
     question: "Which provider rents the compute?"
     options:
       - id: vultr
-        label: "Vultr (account + card, scoped API key; snapshot/restore proven in town ops)"
+        label: "Vultr (account + card, scoped API key; snapshot/restore proven in our own operations)"
         blessed: true
     # Owner ruling 2026-08-14: no bearer-token/no-KYC leaf (SporeStack et
     # al.) — funding a token is the same human ceremony as a card, on a

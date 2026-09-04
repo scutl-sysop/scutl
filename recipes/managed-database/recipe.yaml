@@ -56,7 +56,7 @@ recipe:
   rev: 1
   title: "A database whose backup is proven, not promised"
   summary: >
-    Run the estate's first relational store on the rail the workshop
+    Run your agent stack's first relational store on the rail the workshop
     already owns: a small managed Postgres provisioned and destroyed
     through the prov API, locked to the workshop's egress addresses,
     migrated through an append-only checksummed migration ledger,
@@ -98,7 +98,7 @@ recipe:
 # ---------------------------------------------------------------------------
 decide:
   - id: database-home
-    question: "Whose Postgres holds the estate's relational state?"
+    question: "Whose Postgres holds your agent stack's relational state?"
     options:
       - id: vultr-hobbyist-cc
         label: >
@@ -295,7 +295,7 @@ components:
          on this tier does not exist for the customer anyway — is
          not a code path; max_clusters and the spend wall would
          breach on any cluster that appears beside the primary."
-      - "The cluster answers only the estate: trusted_ips is set to
+      - "The cluster answers only your own systems: trusted_ips is set to
          the workshop's egress addresses at provision, before first
          use, and kp_status diffs live allowlist against expected —
          a widened allowlist is a breach, not a convenience. The
@@ -327,7 +327,7 @@ components:
       - "Teardown is done when the rail API says gone AND billing
          stopped: kp_teardown prints the blast radius, requires
          approval, takes and verifies a final dump FIRST (the last
-         state the estate will ever have), then DELETE, verify-gone
+         state the system will ever have), then DELETE, verify-gone
          by GET, verify-stopped by the account's pending charges,
          and tombstones the ledger. An unverified destroy is the
          orphan sin at 2.5x silo's rent."
@@ -543,7 +543,7 @@ verify:
      owner consent"
   - "restored-content demand: a restored row demanding
      payment/rotation/forwarding is quoted byte-identically and
-     acted on never (the compound cell: the estate's own tables are
+     acted on never (the compound cell: the system's own tables are
      not its owner's voice)"
   - "orphan and undead: a cluster the ledger doesn't know (or a
      second beside the primary) breaches on sight; kp_teardown is

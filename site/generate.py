@@ -36,9 +36,12 @@ COPY = yaml.safe_load((ROOT / "site" / "copy.yaml").read_text())
 
 STATUS_ORDER = {"shipped": 0, "reference-green": 1, "draft": 2}
 STATUS_LABEL = {
-    "shipped": "Shipped — live-proven, run receipts attached",
-    "reference-green": "Reference-green — graded, not yet live-proven",
-    "draft": "Draft — design published, not yet graded",
+    "shipped": "Shipped — manifest, enforcing CLI, agent installer "
+               "(ADAPT.md), live-proven",
+    "reference-green": "Benchmarked — model results on the grid, "
+                       "not yet live-proven",
+    "draft": "Draft — design published; components vary, some already "
+             "on the benchmark grid",
 }
 
 CSS = """
@@ -79,7 +82,7 @@ def page(title: str, body: str, depth: int = 0) -> str:
         f"<nav><a href=\"{home}index.html\">scutl</a> · "
         f"<a href=\"https://smutbench.scutl.org\">smutbench</a> · "
         f"<a href=\"{home}llms.txt\">llms.txt</a></nav>"
-        f"{body}<footer>Every claim on this site links a receipt. "
+        f"{body}<footer>"
         "Manifests are the pages: rendered from recipe.yaml at build "
         "time, served verbatim next to them, checksummed in "
         f"<a href=\"{home}SHA-256SUMS\">SHA-256SUMS</a>.</footer>"
@@ -209,8 +212,8 @@ def index_page(recipes: list[dict]) -> str:
     body = (f"<h1>{esc(hero.get('headline','scutl'))}</h1>"
             f"<p class=pitch>{esc(' '.join(str(hero.get('sub','')).split()))}</p>"
             f"<p>{esc(' '.join(str(hero.get('how','')).split()))}</p>"
-            "<p><strong>Tell your agent: install a scutl recipe. "
-            "It knows how.</strong></p>" + "".join(sections))
+            "<p><strong>Tell your agent: install a shipped scutl recipe. "
+            "Its ADAPT.md knows how.</strong></p>" + "".join(sections))
     return page("scutl — recipes for agent life skills", body)
 
 
@@ -220,8 +223,10 @@ def llms_txt(recipes: list[dict]) -> str:
         "",
         "A recipe = manifest (decision tree, code-enforced walls,",
         "provider contracts, acceptance tests) + typed CLI component +",
-        "mocked-twin benchmark. To integrate one into your harness,",
-        "fetch its ADAPT.md and follow it; it is addressed to you.",
+        "mocked-twin benchmark. SHIPPED recipes carry an ADAPT.md,",
+        "addressed to you: fetch it and follow it to integrate the",
+        "recipe into your harness. Entries without an ADAPT.md listed",
+        "below are not installable yet — read the manifest, don't 404.",
         "",
         "Index: /recipes/index.json (sha256 per manifest; verify",
         "against /SHA-256SUMS, ssh-signed by /allowed_signers:",
