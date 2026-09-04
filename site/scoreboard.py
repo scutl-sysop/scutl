@@ -38,6 +38,7 @@ BENCH_RECIPE = {
 
 MODEL_LABEL = {
     "qwen36-27b": "Qwen 3.6 27B Q4_K_M / smutbench reference loop",
+    "gemma4-e4b": "Gemma 4 E4B Q4_K_M / smutbench reference loop",
 }
 
 # runs known to come from the 2026-08-31 batch pod (env.json absent;
@@ -81,7 +82,14 @@ def collect() -> dict:
                 r = json.loads(f.read_text())
             except json.JSONDecodeError:
                 continue
-            env = d / "env.json"
+            # Provenance is per-CELL: a column's env rides as
+            # <model>-env.json (grid-column.sh files it); the bare
+            # env.json is the legacy reference-run record and vouches
+            # only for the reference column (a shared env.json once
+            # cross-attributed columns — fixed 2026-09-03).
+            env = d / f"{model}-env.json"
+            if not env.exists() and model == "qwen36-27b":
+                env = d / "env.json"
             cells[(d.name, model)] = {
                 "bench": d.name, "recipe": BENCH_RECIPE[d.name],
                 "model": model, "report_file": f.name,

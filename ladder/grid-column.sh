@@ -56,7 +56,9 @@ for bench in "${BENCHES[@]}"; do
     rm -f "$out.tmp"; FAILED+=("$bench"); continue
   fi
   mv -f "$out.tmp" "$out"
-  [ -n "$ENVJ" ] && cp -f "$ENVJ" "$REPO/ladder/$bench/env.json"
+  # per-model env file: the bare env.json belongs to the legacy
+  # reference runs; sharing it cross-attributes provenance
+  [ -n "$ENVJ" ] && cp -f "$ENVJ" "$REPO/ladder/$bench/$TAG-env.json"
   "$PY" - "$out" <<'EOF'
 import json, sys
 r = json.load(open(sys.argv[1]))
