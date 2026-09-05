@@ -36,6 +36,10 @@ COPY = yaml.safe_load((ROOT / "site" / "copy.yaml").read_text())
 
 STATUS_ORDER = {"shipped": 0, "reference-green": 1, "draft": 2}
 
+# Progressive risk grouping + factual chips (cst-plem, Sun's persona
+# review): risk is the primary browse order, maturity stays a badge.
+RISK = yaml.safe_load((ROOT / "site" / "risk.yaml").read_text())
+
 # recipe slug -> receipts/ subtree holding its live run evidence
 # (cst-ravb: receipts are served, not merely claimed)
 RECEIPT_DIR = {
@@ -76,6 +80,10 @@ pre{padding:1rem;overflow-x:auto} code{padding:.1em .3em}
 .status-shipped{background:#d8efd8;color:#1d5c1d}
 .status-reference-green{background:#e3ecf7;color:#1d3f6e}
 .status-draft{background:#eee8dc;color:#6e5c1d}
+.chips{display:inline-flex;flex-wrap:wrap;gap:.35em;margin-top:.25em}
+.chip{display:inline-block;padding:.05em .5em;border:1px solid #ddd6c8;
+ border-radius:1em;font-size:.78em;color:#555;background:#f6f4ef}
+.chip b{font-weight:600;color:#333}
 table{border-collapse:collapse;width:100%}
 td,th{border:1px solid #ddd;padding:.4em .6em;text-align:left;
  vertical-align:top}
@@ -217,21 +225,51 @@ def recipe_page(r: dict) -> str:
     return page(f"{r['title']} — scutl", body, depth=2)
 
 
+def chips_html(slug: str) -> str:
+    chips = ((RISK.get("recipes") or {}).get(slug) or {}).get("chips") or {}
+    if not chips:
+        return ""
+    order = ["money", "authority", "attendance", "data", "reversibility"]
+    spans = "".join(
+        f"<span class=chip><b>{esc(k)}</b> {esc(str(chips[k]))}</span>"
+        for k in order if k in chips)
+    return f"<span class=chips>{spans}</span>"
+
+
 def index_page(recipes: list[dict]) -> str:
+    def line(r):
+        c = (COPY.get("recipes") or {}).get(r["slug"]) or {}
+        desc = c.get("hook") or (r["summary"][:180]
+                                 + ("…" if len(r["summary"]) > 180 else ""))
+        badge = (f"<span class=\"status status-{esc(r['status'])}\">"
+                 f"{esc(r['status'])}</span>")
+        return (f"<li><a href=\"recipes/{esc(r['slug'])}/index.html\">"
+                f"{esc(r['title'])}</a> <span class=muted>({esc(r['id'])})"
+                f"</span> {badge}<br>{esc(desc)}<br>"
+                f"{chips_html(r['slug'])}</li>")
+
+    by_slug = {r["slug"]: r for r in recipes}
+    assigned: set[str] = set()
     sections = []
-    for st in ("shipped", "reference-green", "draft"):
-        rs = [r for r in recipes if r["status"] == st]
+    for g in RISK.get("groups") or []:
+        slugs = [s for s, meta in (RISK.get("recipes") or {}).items()
+                 if meta.get("group") == g["id"] and s in by_slug]
+        rs = sorted((by_slug[s] for s in slugs),
+                    key=lambda r: (STATUS_ORDER.get(r["status"], 9),
+                                   r["slug"]))
+        assigned.update(slugs)
         if not rs:
             continue
-        def line(r):
-            c = (COPY.get("recipes") or {}).get(r["slug"]) or {}
-            desc = c.get("hook") or (r["summary"][:180]
-                                     + ("…" if len(r["summary"]) > 180 else ""))
-            return (f"<li><a href=\"recipes/{esc(r['slug'])}/index.html\">"
-                    f"{esc(r['title'])}</a> <span class=muted>({esc(r['id'])})"
-                    f"</span><br>{esc(desc)}</li>")
-        items = "".join(line(r) for r in rs)
-        sections.append(f"<h2>{esc(STATUS_LABEL[st])}</h2><ul>{items}</ul>")
+        blurb = " ".join(str(g.get("blurb", "")).split())
+        sections.append(f"<h2>{esc(g['title'])}</h2>"
+                        f"<p class=muted>{esc(blurb)}</p>"
+                        f"<ul>{''.join(line(r) for r in rs)}</ul>")
+    # A recipe missing from risk.yaml stays visible — loudly, never hidden
+    leftovers = sorted((r for r in recipes if r["slug"] not in assigned),
+                       key=lambda r: r["slug"])
+    if leftovers:
+        sections.append("<h2>Ungrouped (risk metadata pending)</h2><ul>"
+                        + "".join(line(r) for r in leftovers) + "</ul>")
     hero = COPY.get("hero") or {}
     body = (f"<h1>{esc(hero.get('headline','scutl'))}</h1>"
             f"<p class=pitch>{esc(' '.join(str(hero.get('sub','')).split()))}</p>"

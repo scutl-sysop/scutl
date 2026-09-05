@@ -1,0 +1,110 @@
+# Progressive risk grouping + factual chips (cst-plem, from Sun's
+# persona review cst-ahk1). Site-side data by design: chips are
+# user-facing browse metadata, and holding them here avoids churning 23
+# checksummed manifests; if the chips prove load-bearing they migrate
+# into recipe.yaml as a schema field later. Maturity (shipped/
+# reference-green/draft) stays a per-card badge and is NEVER the
+# primary sort — maturity and risk are orthogonal (Sun's ruling).
+#
+# Group assignments are Star's best call 2026-09-05 (Conway authorized
+# best-call-and-document); review welcome. A recipe missing here lands
+# in an "ungrouped" section at the bottom — visible, never hidden.
+
+groups:
+  - id: try-safely
+    title: "Try safely"
+    blurb: >
+      Disposable or testnet-only. No real spend, no public write, no
+      provider account. Being wrong here costs nothing.
+  - id: observe
+    title: "Observe"
+    blurb: >
+      Read-only against real systems. The risk is access and privacy,
+      not action — these recipes see things but change nothing.
+  - id: act-with-approval
+    title: "Act with approval"
+    blurb: >
+      External but reversible acts, with a human at every consequential
+      step.
+  - id: act-within-hard-limits
+    title: "Act within hard limits"
+    blurb: >
+      Unattended external actions under code-enforced caps, approval
+      gates for anything above them, and verified teardown.
+  - id: real-money-infra
+    title: "Real money & persistent infrastructure"
+    blurb: >
+      Billable, public, identity-bearing, or irreversible effects.
+      Every one is code-capped and ceremony-gated — and this is still
+      the deep end.
+
+recipes:
+  wallet-base-sepolia:
+    group: try-safely
+    chips: {money: testnet only, authority: pays (test USDC), attendance: setup ceremony, data: local, reversibility: disposable}
+  uptime-monitoring:
+    group: observe
+    chips: {money: free, authority: read-only probes, attendance: unattended, data: own services, reversibility: disposable}
+  spend-reconciliation:
+    group: observe
+    chips: {money: free (reads bills), authority: read-only, attendance: unattended, data: own billing records, reversibility: disposable}
+  inbox-triage:
+    group: observe
+    chips: {money: free, authority: read-only (no send op), attendance: unattended, data: private mail, reversibility: disposable}
+  identity-backup-restore:
+    group: act-with-approval
+    chips: {money: free, authority: handles key material, attendance: human at each step, data: local secrets, reversibility: rehearsed restore}
+  messenger-reachability:
+    group: act-with-approval
+    chips: {money: free, authority: sends messages to humans, attendance: human-configured targets, data: contact channels, reversibility: reversible}
+  scheduled-jobs:
+    group: act-within-hard-limits
+    chips: {money: free, authority: runs own jobs, attendance: unattended under caps, data: local, reversibility: reversible}
+  webhook-ingress:
+    group: act-within-hard-limits
+    chips: {money: free, authority: admits senders (standing ingress), attendance: unattended under caps, data: inbound events, reversibility: teardown required}
+  status-digest:
+    group: act-within-hard-limits
+    chips: {money: free, authority: publishes own status, attendance: unattended, data: own service evidence, reversibility: reversible}
+  x402-v2-client:
+    group: act-within-hard-limits
+    chips: {money: probe free · buys via wallet caps, authority: pays, attendance: unattended under caps, data: public offers, reversibility: payments final}
+  price-watch-and-buy:
+    group: act-within-hard-limits
+    chips: {money: real (capped), authority: pays, attendance: unattended under caps, data: public prices, reversibility: purchases final}
+  capability-purchase:
+    group: act-within-hard-limits
+    chips: {money: real (capped), authority: pays, attendance: unattended under caps, data: public offers, reversibility: purchases final}
+  refund-clerk:
+    group: act-within-hard-limits
+    chips: {money: real (capped outflow), authority: pays refunds, attendance: unattended under caps, data: payment records, reversibility: refunds final}
+  subscription-steward:
+    group: act-within-hard-limits
+    chips: {money: real recurring, authority: renews/cancels, attendance: unattended under caps, data: own subscriptions, reversibility: cancelable}
+  wallet-mainnet:
+    group: real-money-infra
+    chips: {money: real USDC, authority: pays, attendance: founding ceremony + unattended under caps, data: local key (never in context), reversibility: irreversible spends}
+  agent-email:
+    group: real-money-infra
+    chips: {money: real (x402-purchased inbox), authority: sends mail (confined recipients), attendance: unattended under caps, data: own inbox, reversibility: teardown required}
+  paid-service-x402:
+    group: real-money-infra
+    chips: {money: earns real USDC, authority: serves the public, attendance: unattended under caps, data: public internet, reversibility: teardown required}
+  provision-vultr:
+    group: real-money-infra
+    chips: {money: real billing, authority: creates/destroys servers, attendance: unattended under caps, data: provider account, reversibility: destroy-verified teardown}
+  gpu-rental:
+    group: real-money-infra
+    chips: {money: real billing (hourly), authority: rents/destroys pods, attendance: unattended under caps, data: provider account, reversibility: destroy-verified-or-UNDEAD}
+  managed-database:
+    group: real-money-infra
+    chips: {money: real billing, authority: owns stateful infra, attendance: unattended under caps, data: application state, reversibility: teardown + proven restore}
+  durable-object-storage:
+    group: real-money-infra
+    chips: {money: real subscription, authority: owns the backup store, attendance: unattended under caps, data: backup bytes (non-secret only), reversibility: teardown must verify}
+  static-website:
+    group: real-money-infra
+    chips: {money: real billing, authority: publishes publicly, attendance: unattended under caps, data: public internet, reversibility: unpublishable but cached}
+  own-domain:
+    group: real-money-infra
+    chips: {money: real billing (yearly), authority: registers identity, attendance: human at registration, data: public registration, reversibility: hard to undo}
