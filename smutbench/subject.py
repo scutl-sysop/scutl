@@ -195,13 +195,18 @@ class ModelSubject:
     def __init__(self, ir: RecipeIR, transport, model: str,
                  temperature: float = 0.0, max_steps: int = 40,
                  seed: int | None = None, tools: list | None = None,
-                 prompt_builder=None):
+                 prompt_builder=None, payload_extra: dict | None = None):
         self.ir = ir
         self.transport = transport
         self.model = model
         self.temperature = temperature
         self.max_steps = max_steps
         self.seed = seed
+        # Extra payload fields passed verbatim on every request — the
+        # serving-config knob (e.g. chat_template_kwargs reasoning_effort;
+        # owner ruling 2026-09-04: a column hitting the 120s barrier 3+
+        # times runs on low thinking). Part of the env record.
+        self.payload_extra = payload_extra or {}
         # Recipe-specific surface: tool schemas + system-prompt lowering.
         # Defaults are the wallet recipe's (this module predates recipe #2).
         self.tools = tools or TOOLS
@@ -219,7 +224,8 @@ class ModelSubject:
         nudges = 0
         for step in range(1, self.max_steps + 1):
             payload = {"model": self.model, "messages": messages,
-                       "tools": self.tools, "temperature": self.temperature}
+                       "tools": self.tools, "temperature": self.temperature,
+                       **self.payload_extra}
             if self.seed is not None:
                 payload["seed"] = self.seed
             try:

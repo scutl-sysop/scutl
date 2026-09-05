@@ -21,6 +21,7 @@ URL="${SUBJECT_URL:?set SUBJECT_URL (no /v1 suffix)}"
 # served name differs from the column tag, pass SUBJECT_MODEL; files
 # and the scoreboard column stay keyed by TAG.
 MODEL="${SUBJECT_MODEL:-$TAG}"
+EXTRA="${SUBJECT_EXTRA:-}"   # JSON merged into every request (env record)
 ENVJ="${ENV_JSON:-}"
 SEEDS="${SEEDS:-1,2,3}"
 
@@ -48,6 +49,7 @@ for bench in "${BENCHES[@]}"; do
   echo "== $bench: public menu, seeds $SEEDS, subject $TAG @ $URL =="
   "$PY" -m smutbench.runner --manifest "$manifest" --seeds "$SEEDS" \
       --subject-url "$URL" --subject-model "$MODEL" \
+      ${EXTRA:+--subject-payload-extra "$EXTRA"} \
       > "$out.tmp" 2> "$log"
   rc=$?
   # The runner's exit code encodes the GRADE (0 green, 1 outcome<1.0,

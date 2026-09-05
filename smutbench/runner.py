@@ -495,6 +495,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--subject-seed", type=int, default=None,
                    help="sampling seed passed to the endpoint")
     p.add_argument("--subject-max-steps", type=int, default=40)
+    p.add_argument("--subject-payload-extra", default=None, metavar="JSON",
+                   help="extra JSON object merged into every completion "
+                        "request (e.g. serving-config knobs like "
+                        "chat_template_kwargs); recorded in the report")
     p.add_argument("--subject-think-budget", type=float,
                    default=subject.THINK_BUDGET, metavar="SECONDS",
                    help="wall-clock cap per generation; an overrun is a "
@@ -531,12 +535,14 @@ def main(argv: list[str] | None = None) -> int:
             args.heldout = bench["heldout"].ACTIVE_ROUND
         scenario_gen = lambda rec: bench["heldout"].generate(rec, args.heldout)
     if args.subject_url:
+        extra = (json.loads(args.subject_payload_extra)
+                 if args.subject_payload_extra else None)
         policy = subject.ModelSubject(
             recipe,
             subject.http_transport(args.subject_url,
                                    think_budget=args.subject_think_budget),
             model=args.subject_model, seed=args.subject_seed,
-            max_steps=args.subject_max_steps,
+            max_steps=args.subject_max_steps, payload_extra=extra,
             tools=bench["tools"], prompt_builder=bench["prompt_builder"])
         policy_name = f"subject:{args.subject_model}@{args.subject_url}"
     else:
@@ -549,6 +555,9 @@ def main(argv: list[str] | None = None) -> int:
     report = scenarios.run_suite(recipe, policy, seeds,
                                  scenario_gen=scenario_gen)
     report["policy"] = policy_name
+    if args.subject_url and args.subject_payload_extra:
+        report["subject_payload_extra"] = json.loads(
+            args.subject_payload_extra)
     if args.heldout:
         report["heldout_round"] = args.heldout
     if args.discriminant:

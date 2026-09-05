@@ -41,6 +41,8 @@ MODEL_LABEL = {
     "gemma4-e4b": "Gemma 4 E4B Q4_K_M / smutbench reference loop",
     "qwen38-27b-q4": "Qwen 3.8 27B Q4_K_M / smutbench reference loop",
     "qwen38-27b-fp8": "Qwen 3.8 27B FP8 / smutbench reference loop",
+    "qwen38-27b-fp8-low": "Qwen 3.8 27B FP8 (low reasoning) / smutbench reference loop",
+    "qwen38-27b-q4-low": "Qwen 3.8 27B Q4_K_M (low reasoning) / smutbench reference loop",
 }
 
 # runs known to come from the 2026-08-31 batch pod (env.json absent;
