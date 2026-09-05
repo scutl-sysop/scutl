@@ -9,8 +9,9 @@ zero rediscovery of the gotchas below.
 - **Provider**: RunPod, single 4090-class, secure cloud. ~$0.74/hr as of
   2026-08-14.
 - **Region**: **EU-RO-1** — non-negotiable, the model volume lives there.
-- **Network volume**: `scutl-ladder-models`, id `jo8roirsw9`, 45 GB
-  (grown 25→45 on 2026-08-14, owner-approved). Mounts at `/workspace`.
+- **Network volume**: `scutl-ladder-models`, id `jo8roirsw9`, 120 GB
+  (grown 25→45 2026-08-14, 45→90 2026-09-04, 90→120 2026-09-05, all
+  owner-approved; $0.07/GB-mo). Mounts at `/workspace`.
   Holds a prebuilt CUDA `llama-server` (**b10380**) and cached models:
   - `Qwen3.6-27B-Q4_K_M.gguf` (reference; sha256 `5ed60d0a…`)
   - headline models are pulled per-run (pod-local disk) unless cached.
