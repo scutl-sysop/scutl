@@ -282,9 +282,80 @@ def index_page(recipes: list[dict]) -> str:
     body = (f"<h1>{esc(hero.get('headline','scutl'))}</h1>"
             f"<p class=pitch>{esc(' '.join(str(hero.get('sub','')).split()))}</p>"
             f"<p>{esc(' '.join(str(hero.get('how','')).split()))}</p>"
-            "<p><strong>Tell your agent: install a shipped scutl recipe. "
-            "Its ADAPT.md knows how.</strong></p>" + "".join(sections))
+            "<p><strong><a href=\"start-here.html\">Start here</a></strong> "
+            "— what a harness is, a two-minute proof with nothing at "
+            "stake, and the first safe rung. Already harnessed? Tell "
+            "your agent: <em>fetch "
+            "https://scutl.org/recipes/wallet-base-sepolia/ADAPT.md "
+            "and follow it.</em></p>" + "".join(sections))
     return page("scutl — recipes for agent life skills", body)
+
+
+def start_here_page() -> str:
+    """The onboarding route (cst-y9kx, Sun's persona review): explain
+    the pieces, prove the pipeline with nothing at stake, then climb."""
+    body = """
+<h1>Start here</h1>
+<p class=pitch>You have a local model running — maybe llama.cpp,
+Ollama, or vLLM behind a chat UI — and you want it to actually
+<em>do</em> things: hold money, rent servers, keep backups, without
+trusting it not to mess up. That is exactly what scutl recipes are
+for. No programming required; you will run a few terminal commands and
+approve the consequential ones.</p>
+
+<h2>1 · The three pieces</h2>
+<table>
+<tr><td><strong>Your local model</strong></td><td>the reasoning. Any
+model behind an OpenAI-compatible endpoint (llama.cpp
+<code>llama-server --jinja</code>, vLLM, Ollama's <code>/v1</code>).
+The <a href="https://smutbench.scutl.org/">benchmark grid</a> shows
+how tested models handle each recipe.</td></tr>
+<tr><td><strong>A harness</strong></td><td>the hands: something that
+lets the model run tools/shell commands, keeps instructions in its
+context, and shows you what it's doing. A chat UI alone is usually
+NOT a harness — OpenWebUI out of the box only chats; its tool runner
+must be configured before it counts. Anything that can run shell
+commands and carry a system prompt works: Claude Code, Codex, Open
+Interpreter, an OpenWebUI tool server, or your own loop.</td></tr>
+<tr><td><strong>A scutl recipe</strong></td><td>the guard rails:
+careful instructions plus a typed CLI that enforces the limits in
+code — spending caps, approval gates, teardown checks. The model can
+propose; the code decides. Your harness cannot weaken that and
+doesn't need to implement it.</td></tr>
+</table>
+
+<h2>2 · Prove the pipeline — nothing at stake</h2>
+<p>One command runs a real benchmark against a <em>fake</em>
+provider: no account, no key, no payment, nothing persistent. It
+includes scenarios where the only correct move is to refuse, so a
+pass means the walls held, not just that the task got done.</p>
+<pre>git clone https://github.com/scutl-sysop/scutl
+cd scutl
+./tools/first-proof.sh                     # no model needed: proves
+                                           # the pipeline end to end
+./tools/first-proof.sh http://localhost:8080   # grades YOUR model</pre>
+<p class=muted>It ends with a plain PASS or a plain list of what
+failed. Delete <code>.first-proof-venv/</code> afterward and nothing
+remains.</p>
+
+<h2>3 · First real rung: the testnet wallet</h2>
+<p><strong>Free · testnet only · creates a local key · short human
+ceremony.</strong> Your agent holds test-money USDC with a spending
+cap it cannot lift, and buys a real x402-priced resource — every
+motion of the real-money recipe, nothing at stake. Point your
+harnessed agent at the installer and it does the rest, pausing for
+your approvals:</p>
+<pre>Fetch https://scutl.org/recipes/wallet-base-sepolia/ADAPT.md and follow it.</pre>
+
+<h2>4 · Then climb</h2>
+<p>The <a href="index.html">catalog</a> is ordered by exposure: read-only
+recipes first, then reversible acts with you at the consequential
+step, then unattended action under hard caps, and only at the bottom
+real money and persistent infrastructure. Every card's chips say what
+a recipe can spend, touch, and undo — climb at whatever pace your
+trust has earned.</p>
+"""
+    return page("Start here — scutl", body)
 
 
 def llms_txt(recipes: list[dict]) -> str:
@@ -371,6 +442,7 @@ def main(argv=None) -> int:
             page(f"receipts — {slug}", body, depth=2))
 
     (out / "index.html").write_text(index_page(recipes))
+    (out / "start-here.html").write_text(start_here_page())
     (out / "llms.txt").write_text(llms_txt(recipes))
     (out / "recipes" / "index.json").write_text(json.dumps({
         "generator": "scutl-site rev1", "recipes": [{
