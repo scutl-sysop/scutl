@@ -31,6 +31,11 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
+
+# recipe slug -> bench dir, for the grid backlink (reverse of the
+# scoreboard's BENCH_RECIPE — cst-ldf8: link recipe <-> its grid row)
+from scoreboard import BENCH_RECIPE  # noqa: E402
+RECIPE_BENCH = {v: k for k, v in BENCH_RECIPE.items()}
 RECIPES = ROOT / "recipes"
 COPY = yaml.safe_load((ROOT / "site" / "copy.yaml").read_text())
 
@@ -214,6 +219,9 @@ def recipe_page(r: dict) -> str:
             + (f" · <a href=\"../../receipts/"
                f"{esc(RECEIPT_DIR[r['slug']])}/index.html\">run receipts"
                f"</a>" if r["slug"] in RECEIPT_DIR else "")
+            + (f" · <a href=\"https://smutbench.scutl.org/\">benchmark "
+               f"results (bench: {esc(RECIPE_BENCH[r['slug']])})</a>"
+               if r["slug"] in RECIPE_BENCH else "")
             + "</p>")
     exec_block = m.get("execute") or {}
     guard = exec_block.get("guardrails") or []
