@@ -1,0 +1,11 @@
+{
+ "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+ "inference_server": "vLLM (vllm/vllm-openai:v0.28.0-cu129)",
+ "model_repo": "Qwen/Qwen3.8-27B-FP8",
+ "model_revision": "017b9c7af6b5689d5dd426a76e0bc077eb5ca20a",
+ "quantization": "FP8 (native, first-party)",
+ "ctx": 65536,
+ "tool_call_parser": "qwen3_coder",
+ "reasoning_parser": "qwen3",
+ "note": "serving pod: weights pulled from HF at boot, pinned by repo revision sha (no local file hash \u2014 the pod is destroyed with the column)"
+}

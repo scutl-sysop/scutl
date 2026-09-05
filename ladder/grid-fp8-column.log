@@ -1,0 +1,27 @@
+== amail: public menu, seeds 1,2,3, subject qwen38-27b-fp8 @ https://yj88pdbc529se1-8000.proxy.runpod.net ==
+== amail: no parseable report (rc=1) — infra, see /home/star/seats/star/work/scutl/ladder/amail/qwen38-27b-fp8-public-run.log ==
+== beacon: public menu, seeds 1,2,3, subject qwen38-27b-fp8 @ https://yj88pdbc529se1-8000.proxy.runpod.net ==
+== beacon: no parseable report (rc=1) — infra, see /home/star/seats/star/work/scutl/ladder/beacon/qwen38-27b-fp8-public-run.log ==
+== bell: public menu, seeds 1,2,3, subject qwen38-27b-fp8 @ https://yj88pdbc529se1-8000.proxy.runpod.net ==
+== bell: no parseable report (rc=1) — infra, see /home/star/seats/star/work/scutl/ladder/bell/qwen38-27b-fp8-public-run.log ==
+== idbr: public menu, seeds 1,2,3, subject qwen38-27b-fp8 @ https://yj88pdbc529se1-8000.proxy.runpod.net ==
+== idbr: no parseable report (rc=1) — infra, see /home/star/seats/star/work/scutl/ladder/idbr/qwen38-27b-fp8-public-run.log ==
+== keep: public menu, seeds 1,2,3, subject qwen38-27b-fp8 @ https://yj88pdbc529se1-8000.proxy.runpod.net ==
+== keep: no parseable report (rc=1) — infra, see /home/star/seats/star/work/scutl/ladder/keep/qwen38-27b-fp8-public-run.log ==
+== mwallet: public menu, seeds 1,2,3, subject qwen38-27b-fp8 @ https://yj88pdbc529se1-8000.proxy.runpod.net ==
+== mwallet: no parseable report (rc=1) — infra, see /home/star/seats/star/work/scutl/ladder/mwallet/qwen38-27b-fp8-public-run.log ==
+== odom: public menu, seeds 1,2,3, subject qwen38-27b-fp8 @ https://yj88pdbc529se1-8000.proxy.runpod.net ==
+== odom: no parseable report (rc=1) — infra, see /home/star/seats/star/work/scutl/ladder/odom/qwen38-27b-fp8-public-run.log ==
+== pulse: public menu, seeds 1,2,3, subject qwen38-27b-fp8 @ https://yj88pdbc529se1-8000.proxy.runpod.net ==
+== pulse: no parseable report (rc=1) — infra, see /home/star/seats/star/work/scutl/ladder/pulse/qwen38-27b-fp8-public-run.log ==
+== silo: public menu, seeds 1,2,3, subject qwen38-27b-fp8 @ https://yj88pdbc529se1-8000.proxy.runpod.net ==
+== silo: no parseable report (rc=1) — infra, see /home/star/seats/star/work/scutl/ladder/silo/qwen38-27b-fp8-public-run.log ==
+== sprc: public menu, seeds 1,2,3, subject qwen38-27b-fp8 @ https://yj88pdbc529se1-8000.proxy.runpod.net ==
+== sprc: no parseable report (rc=1) — infra, see /home/star/seats/star/work/scutl/ladder/sprc/qwen38-27b-fp8-public-run.log ==
+== sweb: public menu, seeds 1,2,3, subject qwen38-27b-fp8 @ https://yj88pdbc529se1-8000.proxy.runpod.net ==
+== sweb: no parseable report (rc=1) — infra, see /home/star/seats/star/work/scutl/ladder/sweb/qwen38-27b-fp8-public-run.log ==
+== wing: public menu, seeds 1,2,3, subject qwen38-27b-fp8 @ https://yj88pdbc529se1-8000.proxy.runpod.net ==
+== wing: no parseable report (rc=1) — infra, see /home/star/seats/star/work/scutl/ladder/wing/qwen38-27b-fp8-public-run.log ==
+== x402v2: public menu, seeds 1,2,3, subject qwen38-27b-fp8 @ https://yj88pdbc529se1-8000.proxy.runpod.net ==
+== x402v2: no parseable report (rc=1) — infra, see /home/star/seats/star/work/scutl/ladder/x402v2/qwen38-27b-fp8-public-run.log ==
+== column qwen38-27b-fp8 done; failed: amail beacon bell idbr keep mwallet odom pulse silo sprc sweb wing x402v2 ==
