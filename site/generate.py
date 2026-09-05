@@ -53,6 +53,17 @@ STATUS_LABEL = {
              "on the benchmark grid",
 }
 
+def status_label(r: dict) -> str:
+    """Honest per-recipe label: a shipped recipe without an ADAPT.md
+    must not claim the agent installer it doesn't serve (cst-ahk1
+    finding 8 — trust labels contradicting artifacts)."""
+    st = r["status"]
+    if st == "shipped" and not r["adapt"]:
+        return ("Shipped — manifest, enforcing CLI, live-proven; "
+                "agent installer (ADAPT.md) pending, not installable yet")
+    return STATUS_LABEL.get(st, st)
+
+
 CSS = """
 body{margin:0 auto;max-width:72rem;padding:2rem 1rem;font:16px/1.55
  system-ui,sans-serif;color:#1a1a1a;background:#fbfaf8}
@@ -187,7 +198,7 @@ def recipe_page(r: dict) -> str:
             if c.get("hook") else f"<p class=pitch>{esc(r['summary'])}</p>")
     head = (f"<h1>{esc(r['title'])} {badge}</h1>"
             f"<p class=muted>recipe <code>{esc(r['id'])}</code> · rev "
-            f"{esc(r['rev'])} · {esc(STATUS_LABEL.get(st, st))}</p>"
+            f"{esc(r['rev'])} · {esc(status_label(r))}</p>"
             + lede
             + f"<p><a href=\"../{esc(r['slug'])}.yaml\">manifest (yaml)</a>"
             + (f" · <a href=\"ADAPT.md\">ADAPT.md — point your agent here"
@@ -248,7 +259,10 @@ def llms_txt(recipes: list[dict]) -> str:
         "",
     ]
     for r in recipes:
-        lines.append(f"- {r['id']} rev {r['rev']} [{r['status']}]: "
+        st = r["status"]
+        if st == "shipped" and not r["adapt"]:
+            st = "shipped, ADAPT pending — not installable yet"
+        lines.append(f"- {r['id']} rev {r['rev']} [{st}]: "
                      f"/recipes/{r['slug']}.yaml"
                      + (f" + /recipes/{r['slug']}/ADAPT.md" if r["adapt"] else ""))
     return "\n".join(lines) + "\n"
