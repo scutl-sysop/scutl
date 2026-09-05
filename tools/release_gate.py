@@ -78,6 +78,12 @@ def main(argv=None) -> int:
     st, llms = fetch(f"{args.site}/llms.txt")
     llms_text = llms.decode("utf-8", "replace") if st == 200 else ""
 
+    # the onboarding path is a promise too (cst-y9kx): its pages must
+    # answer from the public side like any shipped artifact
+    for pg in ("start-here.html", "harnesses.html"):
+        st, _ = fetch(f"{args.site}/{pg}")
+        (ok if st == 200 else failures).append(f"{pg}: HTTP {st}")
+
     shipped = [r for r in index if r.get("status") == "shipped"]
     print(f"gate: {len(shipped)} shipped recipes of {len(index)}")
 

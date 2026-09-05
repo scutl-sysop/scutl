@@ -316,7 +316,10 @@ context, and shows you what it's doing. A chat UI alone is usually
 NOT a harness — OpenWebUI out of the box only chats; its tool runner
 must be configured before it counts. Anything that can run shell
 commands and carry a system prompt works: Claude Code, Codex, Open
-Interpreter, an OpenWebUI tool server, or your own loop.</td></tr>
+Interpreter, an OpenWebUI tool server, or your own loop.
+<strong><a href="harnesses.html">Get a harness</a></strong> — a
+shortest path plus alternatives, each with install steps, the three
+endpoint values, and a preflight that proves it has hands.</td></tr>
 <tr><td><strong>A scutl recipe</strong></td><td>the guard rails:
 careful instructions plus a typed CLI that enforces the limits in
 code — spending caps, approval gates, teardown checks. The model can
@@ -356,6 +359,136 @@ a recipe can spend, touch, and undo — climb at whatever pace your
 trust has earned.</p>
 """
     return page("Start here — scutl", body)
+
+
+def harnesses_page() -> str:
+    """Per-harness install guides (cst-y9kx, Sun's route step 2): one
+    blessed shortest path plus secondaries, each with install, the
+    three local-endpoint values, and a preflight proving shell access,
+    tool calling, system-context persistence, and exit-code
+    visibility. Honesty rule carried from the rest of the site: each
+    guide states exactly what we have verified ourselves."""
+    body = """
+<h1>Get a harness</h1>
+<p class=pitch>A harness is the part that gives your model hands:
+shell commands, files, tool calls, persistent instructions, and a
+place for you to approve the consequential steps. Your chat UI is
+probably not one — this page gets you one, points it at the model you
+already run, and proves it works before anything is at stake.</p>
+
+<h2>The three values every harness asks for</h2>
+<p>Whatever server runs your model, a harness needs exactly three
+things about it:</p>
+<table>
+<tr><th></th><th>Base URL</th><th>Model id</th><th>API key</th></tr>
+<tr><td><strong>llama.cpp</strong> (<code>llama-server --jinja</code>)</td>
+<td><code>http://localhost:8080/v1</code></td>
+<td>whatever <code>/v1/models</code> reports (often the GGUF name;
+many builds accept any string)</td>
+<td>any non-empty string, unless you started the server with
+<code>--api-key</code></td></tr>
+<tr><td><strong>Ollama</strong></td>
+<td><code>http://localhost:11434/v1</code></td>
+<td>the tag you pull, e.g. <code>qwen3:32b</code></td>
+<td>any non-empty string</td></tr>
+<tr><td><strong>vLLM</strong></td>
+<td><code>http://localhost:8000/v1</code></td>
+<td>the <code>--served-model-name</code> you launched with</td>
+<td>any non-empty string, unless launched with
+<code>--api-key</code></td></tr>
+</table>
+<p class=muted>Check the first two in one line before touching any
+harness: <code>curl -s http://localhost:8080/v1/models</code> should
+return JSON naming your model. If it doesn't, fix that first —
+no harness can help.</p>
+
+<h2 id=preflight>The preflight — run this in ANY harness before any
+recipe</h2>
+<p>Paste this to your harnessed agent, verbatim:</p>
+<pre>Preflight, four checks. (1) Run the shell command
+`echo scutl-shell-ok; exit 42` and report the exact stdout and the
+exact numeric exit code. (2) Write a file scutl-preflight.txt
+containing the word HELD, read it back to me, then delete it.
+(3) From now on, begin every reply with the word ANCHOR.
+(4) Tell me which tool you used for each step.</pre>
+<p>It passes only if: stdout is <code>scutl-shell-ok</code> and the
+exit code is reported as the number 42 (not "it failed"); the file
+round-trips; <em>subsequent</em> replies still start with ANCHOR
+(ask it something unrelated to check); and it names real tools. An
+agent that answers from imagination — wrong exit code, success
+without running anything, ANCHOR forgotten two turns later — is
+chat, not hands. Recipes put their walls in code your harness runs;
+a harness that can't run code or see exit codes holds no walls.</p>
+
+<h2>Shortest path: Codex CLI against your local server</h2>
+<p><strong>Free · open source · runs your model, not a cloud
+one.</strong> Codex is a terminal harness with shell tools and
+approval prompts, and it speaks to any OpenAI-compatible endpoint.</p>
+<pre>npm install -g @openai/codex      # or: brew install --cask codex</pre>
+<p>Then put your three values in <code>~/.codex/config.toml</code>:</p>
+<pre>model = "YOUR-MODEL-ID"           # value two
+model_provider = "local"
+
+[model_providers.local]
+name = "my local server"
+base_url = "http://localhost:8080/v1"   # value one
+wire_api = "chat"                 # local servers speak chat, not
+                                  # the Responses API</pre>
+<p>Local servers that don't check keys need no key entry; if yours
+does, add <code>env_key = "LOCAL_API_KEY"</code> and export that
+variable (value three). Start it with <code>codex</code>, run the
+preflight above, then prove the whole pipeline with nothing at
+stake:</p>
+<pre>git clone https://github.com/scutl-sysop/scutl
+cd scutl
+./tools/first-proof.sh http://localhost:8080</pre>
+<p class=muted>Verified by us: the install commands are current
+upstream (checked 2026-09-05) and first-proof.sh passes end-to-end
+from a clean public clone. Not yet verified by us: a full
+Codex-against-llama.cpp session on our own hardware — the config
+format above is from Codex's own reference; if your Codex version
+rejects it, its bundled config docs win.</p>
+
+<h2>Alternative: Claude Code (subscription)</h2>
+<p>If you already pay for Claude, Claude Code is a fully proven
+harness — it is what we run our own acceptance tests in. The catch
+for this site's purpose: it drives Anthropic's models, not the one
+on your GPU. That still matters here, because a recipe's walls live
+in code, not in the model: you can let Claude Code do the one-time
+ADAPT.md installation of a recipe, and the installed walls then hold
+for <em>any</em> agent you point at them afterwards — including your
+local model in another harness.</p>
+<pre>npm install -g @anthropic-ai/claude-code
+claude</pre>
+<p class=muted>Verified by us: daily use, and every fresh-agent
+acceptance run behind the Shipped badges. The preflight passes.</p>
+
+<h2>Alternative: OpenWebUI you already have</h2>
+<p>Out of the box, OpenWebUI chats — it is the front end you talk
+through, not hands. It only becomes a harness once its tool runner /
+function-calling is configured to execute real commands, which is its
+own project with its own docs. We have not validated a specific
+OpenWebUI tool-server path, so we won't pretend to bless one. The
+test is not the brand: configure it however you like, and if the
+preflight above passes — real stdout, real exit code, ANCHOR
+surviving — it counts.</p>
+
+<h2>Alternative: your own loop</h2>
+<p>Any ~hundred-line loop that feeds a system prompt, executes tool
+calls in a shell, and returns exit codes is a harness. The benchmark
+harness in <a
+href="https://github.com/scutl-sysop/scutl">the repo</a>
+(<code>smutbench/</code>) is a working reference: it is exactly what
+graded every cell on <a
+href="https://smutbench.scutl.org/">the grid</a>.</p>
+
+<h2>Then</h2>
+<p>Back to <a href="start-here.html">Start here</a>: run the
+disposable proof, then the testnet wallet. The
+<a href="index.html">catalog</a> is ordered by exposure when you're
+ready to climb.</p>
+"""
+    return page("Get a harness — scutl", body)
 
 
 def llms_txt(recipes: list[dict]) -> str:
@@ -443,6 +576,7 @@ def main(argv=None) -> int:
 
     (out / "index.html").write_text(index_page(recipes))
     (out / "start-here.html").write_text(start_here_page())
+    (out / "harnesses.html").write_text(harnesses_page())
     (out / "llms.txt").write_text(llms_txt(recipes))
     (out / "recipes" / "index.json").write_text(json.dumps({
         "generator": "scutl-site rev1", "recipes": [{
