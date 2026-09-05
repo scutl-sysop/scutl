@@ -301,7 +301,7 @@ the exact model file, quantization, hash, server build, and context
 size the column ran with.</li>
 </ul>
 <h2>Run it yourself</h2>
-<pre>git clone https://github.com/scutl-sysop/scutl   # repo goes public at launch — 404 until then
+<pre>git clone https://github.com/scutl-sysop/scutl
 python -m smutbench.runner --subject-url http://localhost:8080 \\
        --manifest recipes/&lt;id&gt;/recipe.yaml</pre>
 <p class=muted>Any OpenAI-compatible endpoint (llama.cpp llama-server

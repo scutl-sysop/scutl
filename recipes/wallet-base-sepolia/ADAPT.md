@@ -32,6 +32,16 @@ an approval token, stop — that is the one hard boundary
 
 ## Step 1 — Install the component
 
+If you are reading this on scutl.org (no local checkout), get the
+source first — the component installs from the repo, not the web:
+
+```bash
+git clone https://github.com/scutl-sysop/scutl
+cd scutl/recipes/wallet-base-sepolia
+```
+
+Then:
+
 ```bash
 python3 -m venv <durable-path>/signer-venv && . <durable-path>/signer-venv/bin/activate
                               # pick a location OUTSIDE this git tree

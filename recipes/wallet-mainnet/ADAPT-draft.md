@@ -47,6 +47,14 @@ an approval token, stop — that is the one hard boundary
 
 ## Step 1 — Install the component
 
+If you are reading this on scutl.org (no local checkout), get the
+source first — the components install from the repo, not the web:
+
+```bash
+git clone https://github.com/scutl-sysop/scutl
+cd scutl/recipes/wallet-mainnet
+```
+
 `msigner` depends on `scutl-signer`, the sibling wallet-base-sepolia
 package (not on PyPI). Install both, in order:
 
