@@ -324,21 +324,31 @@ bindings:
       by finding, and should keep 403ing — blast-radius isolation
       between compute and backup rails). Stored 0600, outside the
       prov state dir, echoed nowhere.
+    probes-answered: >
+      (0) Backend identity of Standard: byte-checked at grade
+      night 2026-09-03 as Ceph RGW tentacle (same family as
+      Legacy). (1) x-amz-checksum-sha256, probed live 2026-09-05:
+      ACCEPTED BUT NOT VERIFIED — a PUT with a deliberately wrong
+      sha256 checksum returns 200, GET with x-amz-checksum-mode
+      echoes nothing, GetObjectAttributes returns an empty
+      <Checksum>. Provider checksums on this backend are
+      decorative; the agent-side SHA-256 wall stays the ONLY
+      integrity source (the recipe's "nothing changes if no"
+      branch). (2) Versioning + object-lock, probed live
+      2026-09-05 on throwaway buckets (never the live silo
+      bucket — enabling versioning is a one-way bucket-state
+      change): versioning AVAILABLE (Enable/Suspend round-trip
+      verified); object-lock AVAILABLE when the bucket is created
+      with x-amz-bucket-object-lock-enabled — rev-2
+      belt-and-suspenders is a real option but requires bucket
+      recreation, so it lands only with a migration step.
+      (4) Runner-egress allowlist: resolved at grade night —
+      live put/get/restore ran from the dedi-2 runner.
     probes-pending: >
-      Component-step questions needing live creds: (0) backend
-      identity of the Standard tier (Server header + behavior —
-      the tentacle finding was Legacy's); (1) does the Standard
-      backend accept and verify x-amz-checksum-sha256 end-to-end
-      (advisory cross-check if yes; nothing changes if no);
-      (2) bucket versioning / object-lock availability (rev-2
-      belt-and-suspenders question); (3) billing granularity of
-      the $18 Standard base (included quota vs platform fee —
-      affects cap math, from the first invoice or billing API);
-      (4) runner-egress IP allowlist: service-user access is
-      restricted to Justice's egress until Conway adds the grade
-      runner's exact subnet (owner ruling 2026-08-30 — never
-      grant Manage Users, never self-widen; preflight must name
-      a blocked-source-IP 401 clearly).
+      (3) billing granularity of the $18 Standard base (included
+      quota vs platform fee — affects cap math, from the first
+      invoice or billing API; first invoice expected early
+      October for the 2026-09-03 provision).
     notes: >
       Tier table re-read live 2026-09-01: Legacy $6 (DEPRECATED,
       zero deployable locations); Standard $18 base / $0.018 GB-mo
