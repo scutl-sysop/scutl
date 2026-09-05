@@ -1,0 +1,17 @@
+{
+ "gpu": "NVIDIA GeForce RTX 5090, 570.211.01",
+ "inference_server": "llama.cpp llama-server",
+ "llama_cpp_tag": "b10380",
+ "llama_cpp_commit": "0b1bad14ff204627636aeb1de22ddcd5acb859d4",
+ "model_repo": "unsloth/Qwen3.8-27B-GGUF",
+ "model_file": "Qwen3.8-27B-UD-Q4_K_M.gguf",
+ "model_sha256": "322e194ff79741c7baa497c240f677f54b201b0efab44ca8e50f122b39123482",
+ "ctx": 65536,
+ "reasoning_effort": "low (community-standard per Willison 2026-08-16; owner rule: low = primary record for 3.8-class)",
+ "subject_payload_extra": {
+  "chat_template_kwargs": {
+   "reasoning_effort": "low"
+  }
+ },
+ "smoke_test": "request-level chat_template_kwargs honored on b10380 llama-server: reasoning 224 chars (low) vs 320 (xhigh), same prompt, 2026-09-05"
+}
