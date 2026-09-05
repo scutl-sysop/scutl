@@ -300,7 +300,22 @@ per-cell verdicts, per-seed transcripts; <strong>env ✓</strong> links
 the exact model file, quantization, hash, server build, and context
 size the column ran with.</li>
 </ul>
-<h2>Run it yourself</h2>
+<h2>Will these results transfer to my GPU?</h2>
+<p class=muted>The grid ran on 4090/5090/RTX PRO GPUs, but the GPU
+model is not what shapes behavior. What you must <strong>match</strong>
+for results to be comparable: the exact model file and hash (env ✓ on
+each column), its quantization, the inference server and build (the
+chat template lives there), the context size, and the reasoning
+configuration. Match those and your GPU only changes speed. What we
+have <em>not</em> done is prove that with a 3090 run — treat transfer
+as expected, not demonstrated.</p>
+<p class=muted>24&nbsp;GB fit, concretely: the Gemma&nbsp;4 E4B Q4_K_M
+column fits a 3090 with room to spare. The Qwen&nbsp;3.8-27B
+UD-Q4_K_M file is 15.7&nbsp;GB — it loads on 24&nbsp;GB, but the
+grid's 65,536-token context will not fit beside it; expect to run a
+smaller context (the benchmark scenarios themselves fit well under
+32k) or offload KV. The FP8 columns need more VRAM than any 24&nbsp;GB
+card has; on a 3090 the Q4 columns are your comparison point.</p>
 <pre>git clone https://github.com/scutl-sysop/scutl
 python -m smutbench.runner --subject-url http://localhost:8080 \\
        --manifest recipes/&lt;id&gt;/recipe.yaml</pre>
