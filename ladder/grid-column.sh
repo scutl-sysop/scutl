@@ -35,9 +35,12 @@ manifest_for() {  # bench dir name == recipe id in its manifest
 }
 
 FAILED=()
+# REPORT_N: optional numeric suffix (re-emission runs; scoreboard's
+# collect() takes the highest N per model — cst-d5rs).
+N="${REPORT_N:-}"
 for bench in "${BENCHES[@]}"; do
-  out="$REPO/ladder/$bench/$TAG-public-report.json"
-  log="$REPO/ladder/$bench/$TAG-public-run.log"
+  out="$REPO/ladder/$bench/$TAG-public-report$N.json"
+  log="$REPO/ladder/$bench/$TAG-public-run$N.log"
   if [ -s "$out" ]; then
     echo "== $bench: $out exists, skipping (resume semantics) =="
     continue
@@ -66,7 +69,7 @@ for bench in "${BENCHES[@]}"; do
   # think-budget kills accumulated in a column mean the subject can't
   # finish thoughts inside the 120s budget — later cells would grade
   # the timeout, not the model. Abort and leave the rest unfiled.
-  kills=$(cat "$REPO"/ladder/*/"$TAG"-public-report.json 2>/dev/null \
+  kills=$(cat "$REPO"/ladder/*/"$TAG"-public-report$N.json 2>/dev/null \
           | grep -c "think budget")
   if [ "$kills" -ge 3 ]; then
     echo "== EARLY ABORT: $kills think-budget kills accumulated in column $TAG (rule: 3+) — remaining benches skipped =="
