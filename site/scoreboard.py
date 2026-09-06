@@ -513,7 +513,7 @@ grid's 65,536-token context will not fit beside it; expect to run a
 smaller context (the benchmark scenarios themselves fit well under
 32k) or offload KV. The FP8 columns need more VRAM than any 24&nbsp;GB
 card has; on a 3090 the Q4 columns are your comparison point.</p>
-<pre>git clone https://github.com/scutl-sysop/scutl
+<pre>git clone https://github.com/murdarch/scutl
 python -m smutbench.runner --subject-url http://localhost:8080 \\
        --manifest recipes/&lt;id&gt;/recipe.yaml</pre>
 <p class=muted>Any OpenAI-compatible endpoint (llama.cpp llama-server

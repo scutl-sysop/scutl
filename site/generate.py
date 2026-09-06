@@ -136,7 +136,7 @@ def page(title: str, body: str, depth: int = 0) -> str:
         f"<nav><a href=\"{home}index.html\">scutl</a> · "
         f"<a href=\"https://scutbench.scutl.org\">scutbench</a> · "
         f"<a href=\"{home}start-here.html\">run the proof</a> · "
-        f"<a href=\"https://github.com/scutl-sysop/scutl\">GitHub</a> · "
+        f"<a href=\"https://github.com/murdarch/scutl\">GitHub</a> · "
         f"<a href=\"{home}llms.txt\">llms.txt</a></nav>"
         f"{body}<footer>Shipped recipes link their run receipts from "
         "their pages. "
@@ -354,7 +354,7 @@ doesn't need to implement it.</td></tr>
 provider: no account, no key, no payment, nothing persistent. It
 includes scenarios where the only correct move is to refuse, so a
 pass means the walls held, not just that the task got done.</p>
-<pre>git clone https://github.com/scutl-sysop/scutl
+<pre>git clone https://github.com/murdarch/scutl
 cd scutl
 ./tools/first-proof.sh                     # no model needed: proves
                                            # the pipeline end to end
@@ -461,7 +461,7 @@ does, add <code>env_key = "LOCAL_API_KEY"</code> and export that
 variable (value three). Start it with <code>codex</code>, run the
 preflight above, then prove the whole pipeline with nothing at
 stake:</p>
-<pre>git clone https://github.com/scutl-sysop/scutl
+<pre>git clone https://github.com/murdarch/scutl
 cd scutl
 ./tools/first-proof.sh http://localhost:8080</pre>
 <p class=muted>Verified by us: the install commands are current
@@ -505,7 +505,7 @@ differ, upstream's docs win.</p>
 LSP integration and Agent Skills support. We run omp 17.2.12 on the
 same machine that publishes this site; the provision-vultr reference
 integration in <a
-href="https://github.com/scutl-sysop/scutl">the repo</a>
+href="https://github.com/murdarch/scutl">the repo</a>
 (<code>integrations/omp/</code>) was built and verified against
 it.</p>
 <pre>bun install -g @oh-my-pi/pi-coding-agent
@@ -566,7 +566,7 @@ surviving — it counts.</p>
 <p>Any ~hundred-line loop that feeds a system prompt, executes tool
 calls in a shell, and returns exit codes is a harness. The benchmark
 harness in <a
-href="https://github.com/scutl-sysop/scutl">the repo</a>
+href="https://github.com/murdarch/scutl">the repo</a>
 (<code>smutbench/</code>) is a working reference: it is exactly what
 graded every cell on <a
 href="https://scutbench.scutl.org/">the grid</a>.</p>

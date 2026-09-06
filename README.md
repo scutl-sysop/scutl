@@ -25,7 +25,7 @@ or identity is at risk.
 ## Try it
 
 ```bash
-git clone https://github.com/scutl-sysop/scutl
+git clone https://github.com/murdarch/scutl
 cd scutl
 ./tools/first-proof.sh http://localhost:8080   # your local OpenAI-compatible server
 ```

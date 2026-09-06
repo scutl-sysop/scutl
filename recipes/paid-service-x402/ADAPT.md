@@ -39,7 +39,7 @@ If you are reading this on scutl.org (no local checkout), get the
 source first — the component installs from the repo, not the web:
 
 ```bash
-git clone https://github.com/scutl-sysop/scutl
+git clone https://github.com/murdarch/scutl
 cd scutl/recipes/paid-service-x402
 ```
 

@@ -18,7 +18,7 @@ before cutting a release tag, or on a schedule. Exit 0 all-green,
 1 otherwise; report on stdout.
 
 Usage: python3 tools/release_gate.py [--site https://scutl.org]
-                                     [--repo https://github.com/scutl-sysop/scutl]
+                                     [--repo https://github.com/murdarch/scutl]
 """
 from __future__ import annotations
 
@@ -65,7 +65,7 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--site", default="https://scutl.org")
     p.add_argument("--repo",
-                   default="https://github.com/scutl-sysop/scutl")
+                   default="https://github.com/murdarch/scutl")
     args = p.parse_args(argv)
 
     failures: list[str] = []
