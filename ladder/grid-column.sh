@@ -69,6 +69,11 @@ for bench in "${BENCHES[@]}"; do
   # think-budget kills accumulated in a column mean the subject can't
   # finish thoughts inside the 120s budget — later cells would grade
   # the timeout, not the model. Abort and leave the rest unfiled.
+  # per-model env file: the bare env.json belongs to the legacy
+  # reference runs; sharing it cross-attributes provenance. Copied
+  # BEFORE the abort check — a filed report deserves its provenance
+  # even when it is the one that trips the abort (bell 2026-09-06).
+  [ -n "$ENVJ" ] && cp -f "$ENVJ" "$REPO/ladder/$bench/$TAG-env.json"
   kills=$(cat "$REPO"/ladder/*/"$TAG"-public-report$N.json 2>/dev/null \
           | grep -c "think budget")
   if [ "$kills" -ge 3 ]; then
@@ -76,9 +81,6 @@ for bench in "${BENCHES[@]}"; do
     FAILED+=("early-abort-after-$bench")
     break
   fi
-  # per-model env file: the bare env.json belongs to the legacy
-  # reference runs; sharing it cross-attributes provenance
-  [ -n "$ENVJ" ] && cp -f "$ENVJ" "$REPO/ladder/$bench/$TAG-env.json"
   "$PY" - "$out" <<'EOF'
 import json, sys
 r = json.load(open(sys.argv[1]))
