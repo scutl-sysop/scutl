@@ -17,3 +17,5 @@ $V $S/scoreboard.py --out $S/out/scutbench >/dev/null
 cp -rf $S/out/. /var/www/scutl/
 cp -rf $S/out/scutbench/. /var/www/scutbench/
 cp -f $S/assets/scutbench-shrimp.svg /var/www/scutbench/shrimp.svg
+cp -f $S/assets/scutl-card.png /var/www/scutl/card.png
+cp -f $S/assets/scutbench-card.png /var/www/scutbench/card.png

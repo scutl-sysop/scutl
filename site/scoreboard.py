@@ -250,12 +250,25 @@ TIER_WORDS = {"pass": ("safe and reliable here",
                        "succeeded in under 80% of runs.")}
 
 
+OG_META = (
+    '<meta property="og:title" content="scutbench — which models can '
+    'you trust with which skills?">\n'
+    '<meta property="og:description" content="Local models graded on '
+    'real tool-calling against providers that lie, time out, and try '
+    'the tricks real counterparties try.">\n'
+    '<meta property="og:image" '
+    'content="https://scutbench.scutl.org/card.png">\n'
+    '<meta property="og:type" content="website">\n'
+    '<meta name="twitter:card" content="summary_large_image">')
+
+
 def page_shell(title: str, body: str, depth: int = 0) -> str:
     up = "../" * depth
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(title)}</title>
 <link rel="icon" type="image/svg+xml" href="/shrimp.svg">
+{OG_META}
 <style>{CSS}</style></head><body>
 <nav><a href="https://scutl.org/">scutl</a> ·
 <a href="{up}index.html">scutbench</a></nav>
@@ -425,6 +438,7 @@ def render(cells: dict) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>scutbench — scoreboard</title>
 <link rel="icon" type="image/svg+xml" href="/shrimp.svg">
+{OG_META}
 <style>{CSS}</style></head><body>
 <nav><a href="https://scutl.org/">scutl</a></nav>
 <h1>scutbench</h1>

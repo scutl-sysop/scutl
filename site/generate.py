@@ -62,6 +62,17 @@ STATUS_LABEL = {
              "on the benchmark grid",
 }
 
+def badge_html(r: dict) -> str:
+    """Badge matches the honest label (Sol's review, 2026-09-06): a
+    shipped recipe without an ADAPT.md must not wear the plain badge
+    the installable ones earn."""
+    st = r["status"]
+    text = st
+    if st == "shipped" and not r["adapt"]:
+        text = "shipped · installer pending"
+    return f"<span class=\"status status-{esc(st)}\">{esc(text)}</span>"
+
+
 def status_label(r: dict) -> str:
     """Honest per-recipe label: a shipped recipe without an ADAPT.md
     must not claim the agent installer it doesn't serve (cst-ahk1
@@ -111,9 +122,21 @@ def page(title: str, body: str, depth: int = 0) -> str:
     return (
         "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">"
         "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
-        f"<title>{esc(title)}</title><style>{CSS}</style></head><body>"
+        f"<title>{esc(title)}</title>"
+        '<meta property="og:title" content="scutl — real-world '
+        'skills, hard limits">'
+        '<meta property="og:description" content="Code-enforced '
+        'capabilities for local agents: wallets, servers, payments — '
+        'inside walls the model can\'t talk its way around.">'
+        '<meta property="og:image" '
+        'content="https://scutl.org/card.png">'
+        '<meta property="og:type" content="website">'
+        '<meta name="twitter:card" content="summary_large_image">'
+        f"<style>{CSS}</style></head><body>"
         f"<nav><a href=\"{home}index.html\">scutl</a> · "
         f"<a href=\"https://scutbench.scutl.org\">scutbench</a> · "
+        f"<a href=\"{home}start-here.html\">run the proof</a> · "
+        f"<a href=\"https://github.com/scutl-sysop/scutl\">GitHub</a> · "
         f"<a href=\"{home}llms.txt\">llms.txt</a></nav>"
         f"{body}<footer>Shipped recipes link their run receipts from "
         "their pages. "
@@ -204,7 +227,7 @@ def render_failures(m: dict) -> str:
 def recipe_page(r: dict) -> str:
     m = r["manifest"]
     st = r["status"]
-    badge = f"<span class=\"status status-{esc(st)}\">{esc(st)}</span>"
+    badge = badge_html(r)
     c = (COPY.get("recipes") or {}).get(r["slug"]) or {}
     lede = (f"<p class=pitch><strong>{esc(c['hook'])}</strong></p>"
             f"<p>{esc(' '.join(str(c.get('blurb','')).split()))}</p>"
@@ -249,8 +272,7 @@ def index_page(recipes: list[dict]) -> str:
         c = (COPY.get("recipes") or {}).get(r["slug"]) or {}
         desc = c.get("hook") or (r["summary"][:180]
                                  + ("…" if len(r["summary"]) > 180 else ""))
-        badge = (f"<span class=\"status status-{esc(r['status'])}\">"
-                 f"{esc(r['status'])}</span>")
+        badge = badge_html(r)
         return (f"<li><a href=\"recipes/{esc(r['slug'])}/index.html\">"
                 f"{esc(r['title'])}</a> <span class=muted>({esc(r['id'])})"
                 f"</span> {badge}<br>{esc(desc)}<br>"
