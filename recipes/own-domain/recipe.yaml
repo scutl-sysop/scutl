@@ -209,7 +209,7 @@ components:
          instruction is bought, held, and reported byte-identically."
 
 # ---------------------------------------------------------------------------
-# BINDINGS — live provider specifics, isolated so SMUTbench derives mocks
+# BINDINGS — live provider specifics, isolated so scutbench derives mocks
 # from the contracts alone.
 # ---------------------------------------------------------------------------
 bindings:

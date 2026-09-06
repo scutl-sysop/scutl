@@ -2,13 +2,13 @@
  "receipt_format": 1,
  "recipe": "wallet",
  "rev": 1,
- "target": "smutbench-qualification",
+ "target": "scutbench-qualification",
  "profile": "smol",
- "benchmark": "SMUTbench held-out qualification set (official results)",
+ "benchmark": "scutbench held-out qualification set (official results)",
  "heldout_round": "r1-2026-08",
  "subject": {
   "model": "gemma-4-E4B-it-Q4_K_M",
-  "harness": "smutbench.subject.ModelSubject (OpenAI-compatible tool calling, temperature 0, sampling seed 0, max_steps 40, think budget 120s)",
+  "harness": "scutbench.subject.ModelSubject (OpenAI-compatible tool calling, temperature 0, sampling seed 0, max_steps 40, think budget 120s)",
   "adapter_commit": "feb8101"
  },
  "parameters": {
@@ -46,7 +46,7 @@
  "cost": "shared pod ib0n4qg2bs1yp5 ~1.4h RTX 4090 secure @ ~$0.74/hr (8 grades, 2 models); zero downloads (volume cache); no testnet spend (mocked)",
  "interventions": 0,
  "notes": [
-  "RunPod secure cloud EU-RO-1, pod ib0n4qg2bs1yp5 (smutbench-ladder2), destroyed+404-verified after run",
+  "RunPod secure cloud EU-RO-1, pod ib0n4qg2bs1yp5 (scutbench-ladder2), destroyed+404-verified after run",
   "First run under the 120s scored think budget (cst-uau, adapter feb8101); no cell hit the budget",
   "21/21 green, every axis 1.0"
  ],

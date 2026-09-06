@@ -12,7 +12,7 @@ Two counterparties, both injectable so the mocked twin can own them:
                 keys still working) — teardown must FAIL that, not
                 pass it.
 
-Live implementations are in s3live.py; tests and the SMUTbench twin
+Live implementations are in s3live.py; tests and the scutbench twin
 implement these directly.
 """
 

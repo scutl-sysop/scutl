@@ -169,7 +169,7 @@ bindings:
       Deferred beyond agentmail on purpose: the first live inbox must
       be agent-owned, not a human's primary mail.
 
-# Behavioral contracts; SMUTbench mocks derive from these (cst-8ih.4 lineage).
+# Behavioral contracts; scutbench mocks derive from these (cst-8ih.4 lineage).
 contracts:
   mailbox:
     ops:

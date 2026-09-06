@@ -1,4 +1,4 @@
-"""Recipe IR loader: the slice of the manifest SMUTbench derives from.
+"""Recipe IR loader: the slice of the manifest scutbench derives from.
 
 Schema invariant 3 (recipe-schema.md): `contracts` MUST be mock-derivable
 with no reference to `bindings`. This module is where that invariant is

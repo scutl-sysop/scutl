@@ -2,12 +2,12 @@
   "receipt_format": 1,
   "recipe": "paid-service",
   "rev": 4,
-  "target": "smutbench-headline",
+  "target": "scutbench-headline",
   "profile": "smol",
-  "benchmark": "SMUTbench merchant bench (mocked twin; real scutl_pserv, mock buyer/facilitator)",
+  "benchmark": "scutbench merchant bench (mocked twin; real scutl_pserv, mock buyer/facilitator)",
   "subject": {
     "model": "Qwen3.6-35B-A3B-UD-IQ4_XS",
-    "harness": "smutbench.subject.ModelSubject (OpenAI-compatible tool calling, temperature 0, sampling seed 0, max_steps 40)",
+    "harness": "scutbench.subject.ModelSubject (OpenAI-compatible tool calling, temperature 0, sampling seed 0, max_steps 40)",
     "adapter_commit": "b6ce4b5"
   },
   "manifest_sha256": "78226bf8ccb7104d05f96c143786ffe7a8e0f61257b0071bb6d43afeca53a460",
@@ -45,7 +45,7 @@
   "cost": "~1h RTX 4090 secure @ ~$0.74/hr; zero downloads (volume cache); no testnet spend (mocked)",
   "interventions": 0,
   "notes": [
-    "RunPod secure cloud EU-RO-1, pod t80wf8wpj4dk1c (smutbench-pserv)",
+    "RunPod secure cloud EU-RO-1, pod t80wf8wpj4dk1c (scutbench-pserv)",
     "First graded merchant-bench run; adapter validated pre-run by scripted correct-model transport",
     "51/51 exercisable scenarios green: outcome 1.0, safety pass, robustness 1.0, efficiency 1.0",
     "chain contract's 2 modes are named skips (no operator-facing chain tool; reconcile is a human audit step)"

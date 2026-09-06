@@ -9,7 +9,7 @@ for evidence freshness (last_observed_at here) are the FIRST question
 for the live account — if the v3 monitor read hides a last-check
 timestamp, the deafness wall must ride the v2 logs surface instead,
 and this module changes. Nothing in core depends on these bindings;
-the component tests and the SMUTbench twin implement the rails
+the component tests and the scutbench twin implement the rails
 contract directly, so rev 1 is reference-green without a live
 account (the manifest's $0 claim).
 

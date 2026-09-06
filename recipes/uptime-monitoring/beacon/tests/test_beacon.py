@@ -1,5 +1,5 @@
 """Component tests for scutl_beacon: every manifest invariant that can
-be proven without a live prober account, proven here. The SMUTbench
+be proven without a live prober account, proven here. The scutbench
 twin re-proves the graded subset against a model-driven subject."""
 
 from __future__ import annotations

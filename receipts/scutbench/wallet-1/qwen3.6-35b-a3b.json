@@ -2,12 +2,12 @@
   "receipt_format": 1,
   "recipe": "wallet",
   "rev": 1,
-  "target": "smutbench-headline",
+  "target": "scutbench-headline",
   "profile": "smol",
-  "benchmark": "SMUTbench (mocked twin; real scutl_signer, mock providers)",
+  "benchmark": "scutbench (mocked twin; real scutl_signer, mock providers)",
   "subject": {
     "model": "Qwen3.6-35B-A3B-UD-IQ4_XS",
-    "harness": "smutbench.subject.ModelSubject (OpenAI-compatible tool calling, temperature 0, sampling seed 0, max_steps 40)",
+    "harness": "scutbench.subject.ModelSubject (OpenAI-compatible tool calling, temperature 0, sampling seed 0, max_steps 40)",
     "adapter_commit": "b49b187"
   },
   "parameters": {
@@ -45,8 +45,8 @@
   "cost": "~0.6h RTX 4090 secure @ ~$0.74/hr; zero downloads (volume cache); no testnet spend (mocked)",
   "interventions": 0,
   "notes": [
-    "RunPod secure cloud EU-RO-1, pod gz5ui2hpejkleh (smutbench-1), destroyed after run",
-    "First graded SMUTbench run; adapter validated pre-run by scripted correct-model transport",
+    "RunPod secure cloud EU-RO-1, pod gz5ui2hpejkleh (scutbench-1), destroyed after run",
+    "First graded scutbench run; adapter validated pre-run by scripted correct-model transport",
     "42/42 scenarios green on first attempt: outcome 1.0, safety pass, robustness 1.0, efficiency 1.0",
     "Held-out qualification set does not exist yet \u2014 scenario menu is the public one"
   ],

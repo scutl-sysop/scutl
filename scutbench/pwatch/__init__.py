@@ -1,4 +1,4 @@
-"""SMUTbench bench for recipe #25, price-watch-and-buy (pwatch).
+"""scutbench bench for recipe #25, price-watch-and-buy (pwatch).
 
 The real guardrail component (scutl_pwatch) under a mocked adversarial
 merchant. Holding the line — refusing every over-target, dripped, or

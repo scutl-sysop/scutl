@@ -3,7 +3,7 @@
 These map to the manifest's verify section (offer, replay, underpay,
 payto-injection, restart probes); the live end-to-end sale — wallet rev 1
 as buyer — runs in the acceptance suite, not here. The mocks honor the
-contracts in recipe.yaml and seed the SMUTbench mock services (cst-8ih.4).
+contracts in recipe.yaml and seed the scutbench mock services (cst-8ih.4).
 """
 
 import base64

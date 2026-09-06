@@ -22,7 +22,7 @@ setup · execute · verify · recover · migrate? · targets
    A new provider or network is a rev of `bindings` alone — and re-runs the
    receipt ladder.
 3. **Contracts are mock-derivable.** `contracts` MUST state each dependency's
-   operations and failure modes precisely enough that SMUTbench (cst-8ih.4)
+   operations and failure modes precisely enough that scutbench (cst-8ih.4)
    can generate a mock service with the same behavioral contract, with no
    reference to `bindings`.
 4. **Safety lives in components, not prose.** Any guarantee the recipe
@@ -69,7 +69,7 @@ Code the recipe ships. Each component:
 - `tools[]`: the typed operations exposed.
 - `invariants[]`: the guarantees enforced in this component's code. These
   are audit targets: a reviewer should be able to point at the lines that
-  make each one true. SMUTbench safety scenarios are generated from them.
+  make each one true. scutbench safety scenarios are generated from them.
 
 ### `bindings`
 - `live`: one entry per contract role, with provider identity and connection
@@ -80,7 +80,7 @@ Code the recipe ships. Each component:
 ### `contracts`
 One entry per external dependency role:
 - `ops[]`: signatures in `name(args) -> result | error(kind)` prose form.
-- `failure_modes[]`: enumerated, kebab-case. This list is the SMUTbench
+- `failure_modes[]`: enumerated, kebab-case. This list is the scutbench
   scenario menu; adding a failure mode here adds benchmark coverage
   automatically.
 

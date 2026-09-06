@@ -3,7 +3,7 @@
 These map to the manifest's verify section (honest refund, invented-claim
 probe, over-amount probe, redirect probe, double-refund probe, split-claim
 probe, exception probe, restart probe). The mocks honor the contracts in
-recipe.yaml and seed the SMUTbench mock claimant (cst-jydd). Refunding
+recipe.yaml and seed the scutbench mock claimant (cst-jydd). Refunding
 only what the log proves is the recipe: every payout the guard allows is
 one where earnings.log proved the settle, the amount held at or under the
 settled amount, and the money went to the address that paid — and the

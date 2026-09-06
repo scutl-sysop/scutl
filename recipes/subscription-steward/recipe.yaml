@@ -165,7 +165,7 @@ components:
 
 # ---------------------------------------------------------------------------
 # BINDINGS — isolated so live rails are a rev of this block only, and
-# SMUTbench derives its mock merchant from the contracts alone.
+# scutbench derives its mock merchant from the contracts alone.
 # ---------------------------------------------------------------------------
 bindings:
   live:
@@ -179,11 +179,11 @@ bindings:
     settlement:
       stub: "Reuses the wallet recipe's x402 facilitator+chain contract when
         the x402-recurring binding lands; mocked here."
-  # SMUTbench reads only `contracts` below.
+  # scutbench reads only `contracts` below.
 
 # Behavioral contracts: what each dependency PROMISES, provider-agnostically.
 # The merchant is the adversary; its failure_modes ARE the bench's headline
-# cells (the SMUTbench twin derives mock services from this block).
+# cells (the scutbench twin derives mock services from this block).
 contracts:
   merchant:
     ops:

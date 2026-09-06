@@ -199,7 +199,7 @@ components:
          tombstone-forfeits-inbox implication is disclosed in status."
 
 # ---------------------------------------------------------------------------
-# BINDINGS — live provider specifics, isolated so SMUTbench derives mocks
+# BINDINGS — live provider specifics, isolated so scutbench derives mocks
 # from the contracts alone.
 # ---------------------------------------------------------------------------
 bindings:

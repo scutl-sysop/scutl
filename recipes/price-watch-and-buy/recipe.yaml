@@ -134,7 +134,7 @@ components:
          never double-pays (idempotent)."
 
 # ---------------------------------------------------------------------------
-# BINDINGS — isolated so live rails are a rev of this block only, and SMUTbench
+# BINDINGS — isolated so live rails are a rev of this block only, and scutbench
 # derives its mock merchant from the contracts alone (schema invariant 3).
 # ---------------------------------------------------------------------------
 bindings:
@@ -149,11 +149,11 @@ bindings:
     settlement:
       stub: "Reuses the wallet recipe's x402 facilitator+chain contract when the
         x402-merchant binding lands; mocked here."
-  # SMUTbench reads only `contracts` below.
+  # scutbench reads only `contracts` below.
 
 # Behavioral contracts: what each dependency PROMISES, provider-agnostically.
 # The merchant is the adversary; its failure_modes ARE the bench's headline
-# cells (SMUTbench derives mock services from this block, bead cst-8ih.4).
+# cells (scutbench derives mock services from this block, bead cst-8ih.4).
 contracts:
   merchant:
     ops:

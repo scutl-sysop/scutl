@@ -180,7 +180,7 @@ components:
          time — never taken from context, config, or a counterparty message."
 
 # ---------------------------------------------------------------------------
-# BINDINGS — live provider specifics, isolated so SMUTbench derives mocks
+# BINDINGS — live provider specifics, isolated so scutbench derives mocks
 # from the contracts alone.
 # ---------------------------------------------------------------------------
 bindings:

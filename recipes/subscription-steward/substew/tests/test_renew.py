@@ -3,7 +3,7 @@
 These map to the manifest's verify section (honest renewal, hike probe,
 drip probe, double-billing probe, cancel probe, consent-scope probe,
 restart probe). The mock honors the contracts in recipe.yaml and seeds
-the SMUTbench mock merchant (cst-ydb0). Holding the consented line over
+the scutbench mock merchant (cst-ydb0). Holding the consented line over
 time is the recipe: every renewal the guard allows is one where the
 SETTLED total held at or under the price the human agreed to, an upward
 re-quote parks for fresh consent instead of settling, and a cancel is

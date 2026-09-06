@@ -95,7 +95,7 @@ components:
 
 # ---------------------------------------------------------------------------
 # BINDINGS — live provider specifics, isolated so (a) mainnet is a rev of this
-# block only and (b) SMUTbench can derive mocks from the contracts alone.
+# block only and (b) scutbench can derive mocks from the contracts alone.
 # ---------------------------------------------------------------------------
 bindings:
   live:
@@ -108,7 +108,7 @@ bindings:
       Shipping it is a future recipe rev and re-runs the full ladder.
 
 # Behavioral contracts: what each dependency PROMISES, provider-agnostically.
-# SMUTbench generates mock services from these (bead cst-8ih.4).
+# scutbench generates mock services from these (bead cst-8ih.4).
 contracts:
   facilitator:
     ops:

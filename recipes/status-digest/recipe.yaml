@@ -254,7 +254,7 @@ bindings:
       recipes #1 and #2 already keep. Deferred until this recipe's
       digest composes with those state dirs.
 
-# Behavioral contracts; SMUTbench mocks derive from these (cst-8ih.4 lineage).
+# Behavioral contracts; scutbench mocks derive from these (cst-8ih.4 lineage).
 contracts:
   monitor:
     ops:

@@ -178,7 +178,7 @@ bindings:
       refuses to load. A second provider is a future rev and re-runs the
       full ladder.
 
-# Behavioral contracts; SMUTbench mocks derive from these (cst-8ih.4 lineage).
+# Behavioral contracts; scutbench mocks derive from these (cst-8ih.4 lineage).
 contracts:
   provider:
     ops:

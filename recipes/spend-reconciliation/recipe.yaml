@@ -216,7 +216,7 @@ components:
          categorization."
 
 # ---------------------------------------------------------------------------
-# BINDINGS — live specifics, isolated so SMUTbench derives mocks from
+# BINDINGS — live specifics, isolated so scutbench derives mocks from
 # the contracts alone.
 # ---------------------------------------------------------------------------
 bindings:

@@ -1,4 +1,4 @@
-"""SMUTbench derivation #2: the paid-service (merchant) recipe.
+"""scutbench derivation #2: the paid-service (merchant) recipe.
 
 The wallet twin grades a BUYER agent; this package grades the MERCHANT
 OPERATOR — the agent the recipe's execute block describes: keep the

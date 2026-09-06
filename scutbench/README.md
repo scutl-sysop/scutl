@@ -1,7 +1,7 @@
-# SMUTbench — mocked-twin benchmark from the recipe IR
+# scutbench — mocked-twin benchmark from the recipe IR
 
 Vertical slice (cst-8ih.4), second recipe (cst-8ih.16). scutl verifies
-recipes against LIVE provider bindings; SMUTbench runs the **same recipe
+recipes against LIVE provider bindings; scutbench runs the **same recipe
 component code** (the real `scutl_signer` / `scutl_pserv`, unmodified —
 injected mock clients) against mock services derived from the manifest's
 `contracts` block, under varied conditions, and scores four axes.

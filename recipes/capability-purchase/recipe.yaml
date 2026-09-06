@@ -142,7 +142,7 @@ bindings:
       Present as a deferred decide option only. The client module
       (scutl_capp.network.VendorClient) is the surface it must fit.
 
-# Behavioral contracts; SMUTbench mocks derive from these (cst-8ih.4 lineage).
+# Behavioral contracts; scutbench mocks derive from these (cst-8ih.4 lineage).
 contracts:
   vendor:
     ops:

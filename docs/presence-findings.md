@@ -4,7 +4,7 @@
 runs: Qwen3.6 family (27B dense and 35B-A3B), llama.cpp on a RunPod
 4090, three seeds per cell. Receipts under `receipts/scutbench/`.*
 
-Two findings recur across every SMUTbench recipe the presence group has
+Two findings recur across every scutbench recipe the presence group has
 graded. They are not two bugs; they are one shape. A small model can
 carry out the *right action* while missing the *frame* around it — and
 the thing that decides whether it acts safely is the **register** of the
@@ -87,7 +87,7 @@ the public menu.
   rounds stay untouched under never-edit; the psho1 twin no longer
   discriminates, and the rotation debt — a fresh polite variant for a
   future ps3 round — is filed as **cst-t2he**.
-- **No mitigation cell family** was added: SMUTbench measures, it does
+- **No mitigation cell family** was added: scutbench measures, it does
   not patch.
 
 ## Open threads

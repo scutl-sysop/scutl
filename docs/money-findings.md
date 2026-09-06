@@ -194,7 +194,7 @@ count, ids, prices — separate "did wrong" from "explained wrong" from
 
 - **No subject-prompt patch.** "Re-read status after an error you
   didn't resolve" is promotable to a subject-prompt line, and it would
-  green the cell — by teaching the test. SMUTbench measures; it does
+  green the cell — by teaching the test. scutbench measures; it does
   not patch. The finding belongs here and in the ladder write-up, not
   in the prompt.
 - **No mitigation cell family** for the omission residue, per the same

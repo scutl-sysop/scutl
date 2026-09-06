@@ -3,7 +3,7 @@
 These map to the manifest's verify section (negative probes + restart
 probe); the live end-to-end payment runs in the acceptance suite, not here.
 The mocks honor the contracts in recipe.yaml — they're the seed of the
-SMUTbench mock services (cst-8ih.4).
+scutbench mock services (cst-8ih.4).
 """
 
 from datetime import datetime, timedelta, timezone

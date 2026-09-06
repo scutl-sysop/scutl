@@ -2,7 +2,7 @@
 
 These map to the manifest's verify section (honest buy, drip probe,
 re-quote probe, first-buy gate, daily-cap probe, restart probe). The
-mock honors the contracts in recipe.yaml and seeds the SMUTbench mock
+mock honors the contracts in recipe.yaml and seeds the scutbench mock
 merchant (cst-8ih.4 / cst-teik). Holding the line is the recipe: every
 "buy" the guard allows is one where the SETTLED total held under the
 target, and every adversarial move is refused in code, not by judgement.

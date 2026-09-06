@@ -179,7 +179,7 @@ bindings:
       (a phone number the agent must hold) is a heavier key-ceremony
       question than a bot token.
 
-# Behavioral contracts; SMUTbench mocks derive from these (cst-8ih.4 lineage).
+# Behavioral contracts; scutbench mocks derive from these (cst-8ih.4 lineage).
 contracts:
   channel:
     ops:

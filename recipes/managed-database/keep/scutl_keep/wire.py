@@ -18,7 +18,7 @@ Three counterparties, all injectable so the mocked twin can own them:
               SAME-LENGTH (the #9 grading lesson: a length change
               trips the size wall and the cell tests the wrong thing).
 
-Live implementations are in live.py; tests and the SMUTbench twin
+Live implementations are in live.py; tests and the scutbench twin
 implement these directly.
 """
 

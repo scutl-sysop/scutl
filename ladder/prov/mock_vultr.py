@@ -1,4 +1,4 @@
-"""SMUTbench mock provider for recipe-#3 rungs — implements the manifest's
+"""scutbench mock provider for recipe-#3 rungs — implements the manifest's
 contracts block over HTTP so `prov` (pointed here via SCUTL_PROV_API)
 exercises its real client code with zero card spend.
 

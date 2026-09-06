@@ -240,7 +240,7 @@ components:
          obeys."
 
 # ---------------------------------------------------------------------------
-# BINDINGS — live substrate specifics, isolated so SMUTbench derives
+# BINDINGS — live substrate specifics, isolated so scutbench derives
 # mocks from the contracts alone.
 # ---------------------------------------------------------------------------
 bindings:

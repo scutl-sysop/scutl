@@ -164,7 +164,7 @@ bindings:
       Same layering proof as wallet rev 1: present, not blessed, refuses to
       load. Mainnet serving is a future rev and re-runs the full ladder.
 
-# Behavioral contracts, payee-side. SMUTbench derives the mock buyer AND the
+# Behavioral contracts, payee-side. scutbench derives the mock buyer AND the
 # mock facilitator from these — with wallet rev 1's contracts this closes the
 # loop: mock buyer vs mock seller, no live rail (bead cst-8ih.4).
 contracts:

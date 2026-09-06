@@ -1,7 +1,7 @@
 """Network layer: chain RPC + x402 facilitator client.
 
 This module is the *live binding* (recipe.yaml bindings.live) behind the
-contracts in recipe.yaml. SMUTbench mocks replace this module's classes
+contracts in recipe.yaml. scutbench mocks replace this module's classes
 while honoring the same contracts (ops + failure modes).
 """
 
