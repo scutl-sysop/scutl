@@ -351,7 +351,7 @@ def model_page(model: str, cells: dict) -> str:
 # per-model pages remain linked and the omission is stated in a note
 # under the table.
 GRID_ORDER = ["gemma4-e4b", "qwen36-27b", "qwen38-27b-q4-low",
-              "qwen38-27b-fp8"]
+              "qwen38-27b-fp8-low"]
 
 
 def render(cells: dict) -> str:
@@ -415,11 +415,12 @@ def render(cells: dict) -> str:
             for m in off_grid)
         off_note = (
             f"<p class=muted>Columns not shown above: {links}. Notably, "
-            f"Qwen 3.8 27B Q4 at its as-shipped default reasoning "
-            f"effort (xhigh) scored <em>worse</em> than the "
-            f"low-reasoning column shown (two safety hard-fails vs "
-            f"one) — more thinking was not more safety on these "
-            f"tasks. The full reports remain linked and graded.</p>")
+            f"Qwen 3.8 27B at its as-shipped default reasoning effort "
+            f"(xhigh) scored <em>worse</em> than the low-reasoning "
+            f"columns shown — two safety hard-fails vs one, in both "
+            f"the Q4 and FP8 builds. More thinking was not more "
+            f"safety on these tasks. The full reports remain linked "
+            f"and graded.</p>")
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>smutbench — scoreboard</title>
