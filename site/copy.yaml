@@ -1,11 +1,11 @@
 hero:
-  headline: Give your local model real-world skills — safely
-  sub: 'You have a 3090-class GPU and a model you trust. scutl recipes are
-    the missing piece: installable skills that let that model hold a wallet,
-    rent servers, run a paid service, watch your uptime — each one with
-    hard spending and safety limits enforced by code the model can''t talk
-    its way around, and a growing benchmark grid showing which
-    models handle which recipes before you hand over anything real.
+  headline: Let local agents act — inside limits they can't override
+  sub: 'scutl packages real-world capabilities as code-enforced recipes:
+    your model holds a wallet, rents servers, runs a paid service,
+    watches your uptime — under spending caps, allowlists, and teardown
+    guarantees enforced by the installed code, not by prompt text.
+    scutbench shows which models can use them safely before money,
+    infrastructure, or identity is at risk.
 
     '
   how: 'Shipped recipes pair a manifest (the design and its safety rules),
