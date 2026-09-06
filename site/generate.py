@@ -452,10 +452,15 @@ rejects it, its bundled config docs win.</p>
 <h2>Alternative: Hermes Agent (Nous Research)</h2>
 <p><strong>Free · open source · MIT.</strong> If you're here from the
 Hermes community you may already run it. It is a real harness — shell
-tools, files, approval flow — and it is what drives every graded cell
-on <a href="https://smutbench.scutl.org/">the smutbench grid</a>: our
-ladder invokes <code>hermes</code> against a llama.cpp pod for each
-rep.</p>
+tools, files, approval flow — and it is the harness behind the
+live-rail evidence on this site: every Shipped badge's acceptance
+reps (real testnet purchases, real merchant runs) were driven by
+<code>hermes</code> giving the subject model hands against a llama.cpp
+pod, precisely because it's the modal local-harness setup. (The <a
+href="https://smutbench.scutl.org/">grid</a> cells are a different
+rig: smutbench's own loop against mocked services — and grading is
+neither harness's job; our graders inspect artifacts after the
+fact.)</p>
 <pre>curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash</pre>
 <p>Point it at your local server (value one), and it can read the
 model id off the server itself:</p>
