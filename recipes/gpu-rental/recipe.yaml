@@ -33,7 +33,7 @@ recipe:
     The workshop's own grade nights run on exactly this rail
     (dogfood: every future bench grade is a live acceptance of this
     recipe).
-  status: reference-green   # draft | reference-green | shipped
+  status: shipped   # draft | reference-green | shipped
   maintainer: first-party
   depends: []    # card-funded rail; wallet caps do not apply (as #3)
   composes:

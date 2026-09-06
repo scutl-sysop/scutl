@@ -39,6 +39,7 @@ ENTRY = {
     "paid-service-x402": ("pserv", ["pserv", "status"]),
     "provision-vultr": ("prov", ["prov", "status"]),
     "wallet-mainnet": ("msigner", ["msigner", "status"]),
+    "gpu-rental": ("gpod", ["gpod", "status"]),
 }
 # recipes whose component depends on another recipe's package (install
 # order matters; dependency installed first from the same clone)

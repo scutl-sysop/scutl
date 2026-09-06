@@ -54,9 +54,13 @@ python3 -m venv <durable-path>/gpod-venv && . <durable-path>/gpod-venv/bin/activ
                               # harness will reference it long-term;
                               # bare `pip install` fails on PEP-668
                               # systems
-pip install ./gpod            # from this directory; installs the
-                              # console scripts: gpod and gpod-approve
-                              # (the human's approval-token minter)
+pip install /abs/path/to/scutl/recipes/gpu-rental/gpod
+                              # absolute path on purpose: agent
+                              # harnesses often reset cwd between
+                              # commands, and the venv lives outside
+                              # the tree. Installs the console
+                              # scripts: gpod and gpod-approve (the
+                              # human's approval-token minter)
 gpod status
 ```
 
@@ -102,7 +106,7 @@ harness's tool format; `{slots}` are filled at call time. Preserve:
 - **Exit-code taxonomy is the protocol**: 0 success · 2
   not-configured · 3 decommissioned (create refuses; destroy still
   works) · 4 approval-required (ask the human, retry once) · 5
-  limit-refused (report verbatim; do NOT retry with different
+  wall-refused (report verbatim; do NOT retry with different
   parameters — a refusal is a limit working, not an obstacle) · 6
   UNDEAD (see above) · 1 invalid. Surface exit codes to the agent;
   don't collapse them.
@@ -154,10 +158,17 @@ idle) and need the human's go-ahead:
    with its monthly cost, zero unreconciled
 2. full cycle: `gpu_stock` → `gpu_create` (allowlisted type) → poll
    `gpu_list` to running → `gpu_destroy` → verified-gone line;
-   `rentals.log` shows open + verified-closed
+   `rentals.log` shows open + verified-closed. "Running" in the
+   list JSON is `desiredStatus: RUNNING` plus a populated
+   `publicIp`/`portMappings` — there is no bare `status` field.
+   Run the max_pods probe (below) while this cycle's pod is still
+   up; it needs a live pod to refuse against.
 3. over-limit probes: a create outside the allowlist, above the
    price ceiling, or beyond max_pods each refuse **in code** with
-   exit 5, no API call made
+   exit 5 (`wall-refused` — the manifest's name for limit-refused),
+   no API call made. A probe the ratified walls make unreachable
+   (e.g. no allowlisted type prices above the ceiling) is N/A —
+   say so rather than forcing it
 4. restart probe: state and rentals log survive a process restart
 
 Report results as a checklist with actual outputs, pod ids copied
