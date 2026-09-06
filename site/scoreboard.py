@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""smutbench scoreboard generator (cst-j01t §5.4, ratified).
+"""scutbench scoreboard generator (cst-j01t §5.4, ratified).
 
 Scans ladder/<bench>/<model>-public-report[N].json (latest N wins) and
 renders the task × model grid. Public-menu scores only — held-out
@@ -8,9 +8,9 @@ env.json when present; a cell whose run predates env.json discipline
 renders with a visible PARTIAL-PROVENANCE marker citing the batch
 commit — shown honestly, never hidden, never dressed up.
 
-Emits: out/smutbench/index.html (methodology + grid) and
-out/smutbench/scoreboard.json.
-Usage: python site/scoreboard.py [--out site/out/smutbench]
+Emits: out/scutbench/index.html (methodology + grid) and
+out/scutbench/scoreboard.json.
+Usage: python site/scoreboard.py [--out site/out/scutbench]
 """
 from __future__ import annotations
 
@@ -37,12 +37,12 @@ BENCH_RECIPE = {
 }
 
 MODEL_LABEL = {
-    "qwen36-27b": "Qwen 3.6 27B Q4_K_M / smutbench reference loop",
-    "gemma4-e4b": "Gemma 4 E4B Q4_K_M / smutbench reference loop",
-    "qwen38-27b-q4": "Qwen 3.8 27B Q4_K_M / smutbench reference loop",
-    "qwen38-27b-fp8": "Qwen 3.8 27B FP8 / smutbench reference loop",
-    "qwen38-27b-fp8-low": "Qwen 3.8 27B FP8 (low reasoning) / smutbench reference loop",
-    "qwen38-27b-q4-low": "Qwen 3.8 27B Q4_K_M (low reasoning) / smutbench reference loop",
+    "qwen36-27b": "Qwen 3.6 27B Q4_K_M / scutbench reference loop",
+    "gemma4-e4b": "Gemma 4 E4B Q4_K_M / scutbench reference loop",
+    "qwen38-27b-q4": "Qwen 3.8 27B Q4_K_M / scutbench reference loop",
+    "qwen38-27b-fp8": "Qwen 3.8 27B FP8 / scutbench reference loop",
+    "qwen38-27b-fp8-low": "Qwen 3.8 27B FP8 (low reasoning) / scutbench reference loop",
+    "qwen38-27b-q4-low": "Qwen 3.8 27B Q4_K_M (low reasoning) / scutbench reference loop",
 }
 
 # runs known to come from the 2026-08-31 batch pod (env.json absent;
@@ -258,7 +258,7 @@ def page_shell(title: str, body: str, depth: int = 0) -> str:
 <link rel="icon" type="image/svg+xml" href="/shrimp.svg">
 <style>{CSS}</style></head><body>
 <nav><a href="https://scutl.org/">scutl</a> ·
-<a href="{up}index.html">smutbench</a></nav>
+<a href="{up}index.html">scutbench</a></nav>
 {body}
 <footer>Rendered pages summarize the graded evidence; the JSON report
 is the evidence itself and wins any disagreement.</footer>
@@ -305,7 +305,7 @@ def report_page(c: dict) -> str:
             f"<table><tr><th>Scenario</th><th>Result</th>"
             f"<th>What went wrong (plain language)</th></tr>{rows}</table>"
             + ex_html)
-    return page_shell(f"{c['recipe']} × {c['model']} — smutbench",
+    return page_shell(f"{c['recipe']} × {c['model']} — scutbench",
                       body, depth=2)
 
 
@@ -342,7 +342,7 @@ def model_page(model: str, cells: dict) -> str:
             f"tiers follow the scoreboard legend (three seeds per "
             f"scenario — treat single-flake differences as noise).</p>"
             + secs)
-    return page_shell(f"{model} — smutbench", body, depth=1)
+    return page_shell(f"{model} — scutbench", body, depth=1)
 
 
 # Main-grid column set and order (Conway, 2026-09-06): capability
@@ -361,7 +361,7 @@ def render(cells: dict) -> str:
     benches = sorted({c["bench"] for c in cells.values()},
                      key=lambda b: BENCH_RECIPE[b])
     head = "".join(
-        f"<th>{esc(MODEL_LABEL.get(m, m + ' / smutbench reference loop'))}</th>"
+        f"<th>{esc(MODEL_LABEL.get(m, m + ' / scutbench reference loop'))}</th>"
         for m in models)
     rows = ""
     for b in benches:
@@ -423,12 +423,12 @@ def render(cells: dict) -> str:
             f"and graded.</p>")
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>smutbench — scoreboard</title>
+<title>scutbench — scoreboard</title>
 <link rel="icon" type="image/svg+xml" href="/shrimp.svg">
 <style>{CSS}</style></head><body>
 <nav><a href="https://scutl.org/">scutl</a></nav>
-<h1>smutbench</h1>
-<p>Which models can you actually trust with which skills? smutbench
+<h1>scutbench</h1>
+<p>Which models can you actually trust with which skills? scutbench
 answers that before real money or real servers are involved: each
 scutl recipe ships a benchmark where the model does the real
 tool-calling against a faithful fake of the provider — one that lies,
@@ -439,7 +439,7 @@ below; a private held-out set keeps the numbers honest.</p>
 <p><strong>Can my model do this?</strong> Pick the tested model nearest
 yours: {model_links}. Each gives a plain-language verdict per recipe.</p>
 <p class=muted>A column is a model driven our standard way (the
-smutbench reference loop with the recipe's own instructions) — your
+scutbench reference loop with the recipe's own instructions) — your
 setup may do better or worse. Every cell links the exact model file,
 quantization, server build, and context size it was scored with, or
 says plainly that part of that record is missing. Rendered {now}.</p>
@@ -512,7 +512,7 @@ recipe's current rev is marked stale, not silently kept.</footer>
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser()
-    p.add_argument("--out", default=str(ROOT / "site" / "out" / "smutbench"))
+    p.add_argument("--out", default=str(ROOT / "site" / "out" / "scutbench"))
     args = p.parse_args(argv)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)

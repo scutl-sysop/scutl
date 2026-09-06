@@ -113,7 +113,7 @@ def page(title: str, body: str, depth: int = 0) -> str:
         "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
         f"<title>{esc(title)}</title><style>{CSS}</style></head><body>"
         f"<nav><a href=\"{home}index.html\">scutl</a> · "
-        f"<a href=\"https://smutbench.scutl.org\">smutbench</a> · "
+        f"<a href=\"https://scutbench.scutl.org\">scutbench</a> · "
         f"<a href=\"{home}llms.txt\">llms.txt</a></nav>"
         f"{body}<footer>Shipped recipes link their run receipts from "
         "their pages. "
@@ -219,7 +219,7 @@ def recipe_page(r: dict) -> str:
             + (f" · <a href=\"../../receipts/"
                f"{esc(RECEIPT_DIR[r['slug']])}/index.html\">run receipts"
                f"</a>" if r["slug"] in RECEIPT_DIR else "")
-            + (f" · <a href=\"https://smutbench.scutl.org/\">benchmark "
+            + (f" · <a href=\"https://scutbench.scutl.org/\">benchmark "
                f"results (bench: {esc(RECIPE_BENCH[r['slug']])})</a>"
                if r["slug"] in RECIPE_BENCH else "")
             + "</p>")
@@ -308,7 +308,7 @@ approve the consequential ones.</p>
 <tr><td><strong>Your local model</strong></td><td>the reasoning. Any
 model behind an OpenAI-compatible endpoint (llama.cpp
 <code>llama-server --jinja</code>, vLLM, Ollama's <code>/v1</code>).
-The <a href="https://smutbench.scutl.org/">benchmark grid</a> shows
+The <a href="https://scutbench.scutl.org/">benchmark grid</a> shows
 how tested models handle each recipe.</td></tr>
 <tr><td><strong>A harness</strong></td><td>the hands: something that
 lets the model run tools/shell commands, keeps instructions in its
@@ -457,8 +457,8 @@ live-rail evidence on this site: every Shipped badge's acceptance
 reps (real testnet purchases, real merchant runs) were driven by
 <code>hermes</code> giving the subject model hands against a llama.cpp
 pod, precisely because it's the modal local-harness setup. (The <a
-href="https://smutbench.scutl.org/">grid</a> cells are a different
-rig: smutbench's own loop against mocked services — and grading is
+href="https://scutbench.scutl.org/">grid</a> cells are a different
+rig: scutbench's own loop against mocked services — and grading is
 neither harness's job; our graders inspect artifacts after the
 fact.)</p>
 <pre>curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash</pre>
@@ -547,7 +547,7 @@ harness in <a
 href="https://github.com/scutl-sysop/scutl">the repo</a>
 (<code>smutbench/</code>) is a working reference: it is exactly what
 graded every cell on <a
-href="https://smutbench.scutl.org/">the grid</a>.</p>
+href="https://scutbench.scutl.org/">the grid</a>.</p>
 
 <h2>Then</h2>
 <p>Back to <a href="start-here.html">Start here</a>: run the
