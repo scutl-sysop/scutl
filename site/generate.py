@@ -449,6 +449,68 @@ Codex-against-llama.cpp session on our own hardware — the config
 format above is from Codex's own reference; if your Codex version
 rejects it, its bundled config docs win.</p>
 
+<h2>Alternative: Hermes Agent (Nous Research)</h2>
+<p><strong>Free · open source · MIT.</strong> If you're here from the
+Hermes community you may already run it. It is a real harness — shell
+tools, files, approval flow — and it is what drives every graded cell
+on <a href="https://smutbench.scutl.org/">the smutbench grid</a>: our
+ladder invokes <code>hermes</code> against a llama.cpp pod for each
+rep.</p>
+<pre>curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash</pre>
+<p>Point it at your local server (value one), and it can read the
+model id off the server itself:</p>
+<pre>hermes config set model.base_url http://localhost:8080/v1
+hermes -m YOUR-MODEL-ID    # or omit -m and pick interactively</pre>
+<p>One gotcha we hit in production: hermes tool shells rebuild PATH
+from your login profile, so PATH changes made mid-session never reach
+the model's commands. Install any CLI a recipe needs into
+<code>~/.local/bin</code> (first on the profile PATH) and the ADAPT
+steps work as written.</p>
+<p class=muted>Verified by us: daily ladder use against our own
+llama.cpp pods — <code>config set model.base_url</code>, tool
+calling, exit-code visibility, the PATH gotcha and its fix. The
+install command is from upstream's install docs (checked 2026-09-06);
+we installed from an earlier snapshot, so if the installer's questions
+differ, upstream's docs win.</p>
+
+<h2>Alternative: Oh My Pi (omp)</h2>
+<p><strong>Free · open source.</strong> A terminal coding agent with
+LSP integration and Agent Skills support. We run omp 17.2.12 on the
+same machine that publishes this site; the provision-vultr reference
+integration in <a
+href="https://github.com/scutl-sysop/scutl">the repo</a>
+(<code>integrations/omp/</code>) was built and verified against
+it.</p>
+<pre>bun install -g @oh-my-pi/pi-coding-agent
+# or: brew install can1357/tap/omp
+# or: curl -fsSL https://omp.sh/install | sh</pre>
+<p>Local server: declare a provider in
+<code>~/.omp/agent/models.yml</code> with your three values, then
+select it:</p>
+<pre>providers:
+  local:
+    baseUrl: http://localhost:8080/v1   # value one
+    api: openai-completions
+    apiKey: dummy                       # value three
+    models:
+      - id: YOUR-MODEL-ID               # value two
+        name: my local model
+        contextWindow: 65536
+        maxTokens: 8192</pre>
+<p>Verify with <code>omp models local</code>, pick it with <code>omp
+setup</code>, and note omp exposes a generic bash tool rather than
+per-command gating — recipes' walls still hold (they live in the
+installed code, not the harness), but approvals are coarser:
+<code>--approval-mode</code> takes <code>always-ask</code>,
+<code>write</code>, or <code>yolo</code>.</p>
+<p class=muted>Verified by us: omp 17.2.12 installed and exercised on
+our own hardware — skills discovery from
+<code>~/.agents/skills/</code>, the <code>--skills</code> /
+<code>--no-skills</code> flags, and the reference integration's
+install steps. The models.yml provider format is from upstream's
+README (checked 2026-09-06); not yet re-run against a local
+llama.cpp endpoint on our hardware.</p>
+
 <h2>Alternative: Claude Code (subscription)</h2>
 <p>If you already pay for Claude, Claude Code is a fully proven
 harness — it is what we run our own acceptance tests in. The catch
