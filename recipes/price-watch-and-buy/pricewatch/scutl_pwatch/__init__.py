@@ -8,7 +8,7 @@ enough", and no merchant message (a personalized sticker, a fake anchor,
 a scarcity countdown) can move the target or the caps.
 
 Rev 1 is bench-first: no live merchant is blessed yet, so MerchantClient
-is the shape a blessed merchant must fit and the mock in smutbench/pwatch
+is the shape a blessed merchant must fit and the mock in scutbench/pwatch
 implements the same surface. The manifest's contracts block is the
 source of truth for ops and failure modes.
 """

@@ -514,7 +514,7 @@ smaller context (the benchmark scenarios themselves fit well under
 32k) or offload KV. The FP8 columns need more VRAM than any 24&nbsp;GB
 card has; on a 3090 the Q4 columns are your comparison point.</p>
 <pre>git clone https://github.com/murdarch/scutl
-python -m smutbench.runner --subject-url http://localhost:8080 \\
+python -m scutbench.runner --subject-url http://localhost:8080 \\
        --manifest recipes/&lt;id&gt;/recipe.yaml</pre>
 <p class=muted>Any OpenAI-compatible endpoint (llama.cpp llama-server
 --jinja, vLLM). Grades locally against the mocked twin; no live rail,

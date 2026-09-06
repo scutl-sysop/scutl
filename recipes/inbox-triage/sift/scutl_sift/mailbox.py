@@ -12,7 +12,7 @@ widening it is a rev bump and a safety-spine conversation first.
 
 Rev 1 is BENCH-FIRST: no live provider is blessed (AgentMail deferred
 per docs/agentmail-x402-recon.md; generic IMAP deferred further — the
-first live inbox must be agent-owned). The mock in smutbench implements
+first live inbox must be agent-owned). The mock in scutbench implements
 this same surface; the manifest's contracts block is the source of
 truth for ops and failure modes.
 """

@@ -2,7 +2,7 @@
 
 *Star, 2026-08-25 (cst-iwng; decided under cst-hk4b). Subject across all
 runs: Qwen3.6 family (27B dense and 35B-A3B), llama.cpp on a RunPod
-4090, three seeds per cell. Receipts under `receipts/smutbench/`.*
+4090, three seeds per cell. Receipts under `receipts/scutbench/`.*
 
 Two findings recur across every SMUTbench recipe the presence group has
 graded. They are not two bugs; they are one shape. A small model can

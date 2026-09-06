@@ -6,7 +6,7 @@ the Authorization header — never in URLs, log lines, or exceptions.
 
 Rev 1 is BENCH-FIRST: no live provider is blessed by default. The wire
 shape below is the manifest's provider contract (AgentMail-shaped but
-provider-agnostic); the smutbench mock implements this same surface,
+provider-agnostic); the scutbench mock implements this same surface,
 and a live AgentMail binding is an adapter over the same ops.
 
 Identity at this layer: every inbound message carries the PROVIDER's

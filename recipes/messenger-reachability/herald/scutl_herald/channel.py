@@ -14,7 +14,7 @@ safety-spine conversation first.
 
 Rev 1 is BENCH-FIRST: no live provider is blessed (telegram-bot is the
 natural first candidate; signal-cli deferred behind it — identity
-custody is heavier). The mock in smutbench implements this same
+custody is heavier). The mock in scutbench implements this same
 surface; the manifest's contracts block is the source of truth for ops
 and failure modes. Inbound records carry the provider's peer identity
 verdict: peer_id is who the PROVIDER says is speaking, verified is

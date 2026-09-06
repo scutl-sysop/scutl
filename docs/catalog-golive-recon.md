@@ -1,8 +1,8 @@
-# Recon: the catalog goes live (scutl.org + smutbench)
+# Recon: the catalog goes live (scutl.org + scutbench)
 
 Status: RATIFIED (all §6 questions ruled by Conway 2026-09-03).
 Source rulings (Conway, live 2026-09-01): site carries fully-baked
-recipes; agent interface to same; smutbench on a subdomain; task ×
+recipes; agent interface to same; scutbench on a subdomain; task ×
 model grid WITHOUT held-out rounds; tier-1 self-serve only ("swap the
 model, keep our harness" — the implicit scutl advert; no BYO-harness
 test matrix); "point your agent at the recipe" IS the product
@@ -24,15 +24,15 @@ Three surfaces, one static site generator, zero dynamic backend:
 - **Agent interface** — stable URLs, no API: `/recipes/index.json`,
   `/recipes/<id>.yaml`, `/recipes/<id>/ADAPT.md`, `/llms.txt`.
   Content-addressed integrity below (§4).
-- **smutbench.scutl.org** — methodology, runner docs (tier-1
-  invocation: `python -m smutbench.runner --subject-url ...`), and
+- **scutbench.scutl.org** — methodology, runner docs (tier-1
+  invocation: `python -m scutbench.runner --subject-url ...`), and
   the scoreboard. Held-out rounds stay private — they are the
   verification lever behind every public number.
 
 ## 2. The grid (the one real launch cost)
 
 A grid cell = (recipe, model+harness pair, date, env provenance).
-Column label is always "model / smutbench reference loop" — a model
+Column label is always "model / scutbench reference loop" — a model
 alone is a category error (Conway ruling: our harness is the
 standard; a fan's own-harness delta is the recipe's prompt-lowering
 value, unmeasured by us).
@@ -64,7 +64,7 @@ doubles as #13's live acceptance).
 IN: catalog pages rendered from recipe.yaml; ADAPT.md per launch
 recipe (done ×3 when the two fresh-agent runs land); receipts linked;
 grid with honest column count (even 2-3 at launch beats waiting);
-smutbench methodology page; live status page (publish the pulse
+scutbench methodology page; live status page (publish the pulse
 digest — our own monitoring recipes watching our own infra, honest
 attention rows included); llms.txt + index.json; scutl.org beacon
 target (legitimizes the existing monitor in the prober account).
@@ -97,7 +97,7 @@ credibility is the asset), held-out anything.
    composes it rather than re-deciding hosting).
 3. Status page: pulse digest JSON -> public page (strips nothing; the
    attention rows ARE the demo).
-4. smutbench methodology page + scoreboard generator from
+4. scutbench methodology page + scoreboard generator from
    ladder/*/report.json (provenance-or-no-cell enforced in the
    generator).
 5. Recipe #13 gpod (manifest -> component), then
@@ -109,10 +109,10 @@ credibility is the asset), held-out anything.
 ## 6. Rulings (all questions closed — Conway, 2026-09-03)
 
 - Column slate: see §2 (ratified).
-- smutbench branding: scutl's method at launch; revisit only if
+- scutbench branding: scutl's method at launch; revisit only if
   outsiders ask to submit.
 - Status page: FULL digest, attention rows included — honest
   degradation is the demo.
-- Domains: scutl.org + smutbench.scutl.org confirmed.
+- Domains: scutl.org + scutbench.scutl.org confirmed.
 
 Recon is no longer draft: this document is the build spec for §5.

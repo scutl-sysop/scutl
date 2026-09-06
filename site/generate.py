@@ -567,7 +567,7 @@ surviving — it counts.</p>
 calls in a shell, and returns exit codes is a harness. The benchmark
 harness in <a
 href="https://github.com/murdarch/scutl">the repo</a>
-(<code>smutbench/</code>) is a working reference: it is exactly what
+(<code>scutbench/</code>) is a working reference: it is exactly what
 graded every cell on <a
 href="https://scutbench.scutl.org/">the grid</a>.</p>
 

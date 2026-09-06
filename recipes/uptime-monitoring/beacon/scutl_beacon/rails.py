@@ -16,7 +16,7 @@ forever — so core reads evidence timestamps, never state labels
 core classifies prober-deaf and labels coverage degraded; a probe
 round never fails because the prober is dark.
 
-The mocked twin (smutbench) and the component tests implement these;
+The mocked twin (scutbench) and the component tests implement these;
 live.py binds them to a real UptimeRobot-shaped service and real HTTP.
 Core never imports live directly.
 """

@@ -11,7 +11,7 @@ record, never from here.
 Rev 1 is BENCH-FIRST: no live claim source or payout rail is blessed
 (the support inbox composes inbox-triage in a future bindings rev; a
 live payout is a wallet-recipe send). These classes are the shapes
-blessed rails must fit; the mocks in smutbench/refund implement the same
+blessed rails must fit; the mocks in scutbench/refund implement the same
 surfaces. The manifest's contracts block is the source of truth:
 
   claimant.next()    -> {claim_id, text, claimed_tx, claimed_amount,

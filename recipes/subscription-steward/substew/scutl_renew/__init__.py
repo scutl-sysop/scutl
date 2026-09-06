@@ -9,7 +9,7 @@ double-billing a hard-fail, and a cancel is done only when the log shows
 billing stopped.
 
 Rev 1 is bench-first: no live merchant is blessed yet, so MerchantClient
-is the shape a blessed merchant must fit and the mock in smutbench/renew
+is the shape a blessed merchant must fit and the mock in scutbench/renew
 implements the same surface. The manifest's contracts block is the
 source of truth for ops and failure modes.
 """

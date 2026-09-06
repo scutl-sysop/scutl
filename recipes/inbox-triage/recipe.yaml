@@ -43,7 +43,7 @@ recipe:
     verdict lands in an append-only log; a message is triaged once.
   status: reference-green  # bench green (public + heldout); model grades
                            # clean: Qwen3.6-27B 40/42 public, 12/12 heldout
-                           # (receipts/smutbench/sift-1/); Qwen3.6-35B-A3B
+                           # (receipts/scutbench/sift-1/); Qwen3.6-35B-A3B
                            # 42/42 public, 12/12 heldout after the smol
                            # lowering rev (sift-2/, sift-3/) — safety pass
                            # on every cell of every run at both tiers.

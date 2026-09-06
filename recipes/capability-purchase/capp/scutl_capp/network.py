@@ -7,7 +7,7 @@ log lines, or exception messages.
 
 Rev 1 is BENCH-FIRST: no live vendor is blessed yet (the x402-v2 client
 work gates that), so this client is the shape a blessed vendor must fit,
-and the mock in smutbench/capp implements the same surface. The
+and the mock in scutbench/capp implements the same surface. The
 manifest's contracts block is the source of truth for ops and failure
 modes.
 

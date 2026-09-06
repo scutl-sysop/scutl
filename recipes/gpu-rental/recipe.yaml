@@ -38,7 +38,7 @@ recipe:
   depends: []    # card-funded rail; wallet caps do not apply (as #3)
   composes:
     - { recipe: provision-vultr, rev: 1, seam: prior-art-walls }
-    # the ladder (smutbench grading) becomes this recipe's first
+    # the ladder (scutbench grading) becomes this recipe's first
     # consumer: pod-create.sh/pod-up.sh convert to gpod callers.
 
 # ---------------------------------------------------------------------------
@@ -287,7 +287,7 @@ verify:
   - "foreign-pod probe: a pod created outside gpod (console) is
      reported foreign and never destroyed by destroy-all"
   - "restart probe: rentals.log-derived counters survive restart"
-  - "dogfood: one full smutbench grade executed on a gpod-managed pod
+  - "dogfood: one full scutbench grade executed on a gpod-managed pod
      (this doubles as the recipe's live acceptance — cst-j01t grid
      campaign)"
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One grid-campaign column (cst-j01t step 6, on gpod rails — cst-crqs
-# live acceptance): run the public smutbench menu for every bench dir
+# live acceptance): run the public scutbench menu for every bench dir
 # that already carries reference reports, against a live subject served
 # from a gpod-managed pod, writing ladder/<bench>/<TAG>-public-report.json
 # plus the pod's env.json beside each report (provenance-or-no-cell).
@@ -50,7 +50,7 @@ for bench in "${BENCHES[@]}"; do
     echo "== $bench: NO MANIFEST FOUND, skipping =="; FAILED+=("$bench"); continue
   fi
   echo "== $bench: public menu, seeds $SEEDS, subject $TAG @ $URL =="
-  "$PY" -m smutbench.runner --manifest "$manifest" --seeds "$SEEDS" \
+  "$PY" -m scutbench.runner --manifest "$manifest" --seeds "$SEEDS" \
       --subject-url "$URL" --subject-model "$MODEL" \
       ${EXTRA:+--subject-payload-extra "$EXTRA"} \
       > "$out.tmp" 2> "$log"

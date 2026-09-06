@@ -9,7 +9,7 @@ this boundary as plain dicts matching the manifest's contracts block:
 
 Rev 1 is BENCH-FIRST: no live rail is blessed (local-probes is the
 natural first candidate — HTTP GET / TCP / systemd / disk, all
-first-party). The mock in smutbench implements this same surface.
+first-party). The mock in scutbench implements this same surface.
 
 Two facts about honesty live at this boundary:
   - probe() reports what the rail SAW, when it saw it (observed_at is

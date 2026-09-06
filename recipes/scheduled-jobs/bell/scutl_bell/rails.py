@@ -13,7 +13,7 @@ reconciles against. Its honest failure mode is WitnessUnreachable —
 core records unwitnessed and keeps going; a job never fails because
 the witness is down.
 
-The mocked twin (smutbench) and the component tests implement these;
+The mocked twin (scutbench) and the component tests implement these;
 live.py binds them to real systemd and a real Healthchecks-shaped
 service. Core never imports live directly.
 """

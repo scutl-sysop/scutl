@@ -12,7 +12,7 @@ evidence. Parking is for "true but big"; refusal is for "unproven".
 
 Rev 1 is bench-first: no live claim source or payout rail is blessed,
 so ClaimsClient/SettlementClient are the shapes blessed rails must fit
-and the mocks in smutbench/refund implement the same surfaces. The
+and the mocks in scutbench/refund implement the same surfaces. The
 manifest's contracts block is the source of truth for ops and failure
 modes.
 """

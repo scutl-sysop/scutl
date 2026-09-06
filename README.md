@@ -43,7 +43,7 @@ Each recipe is a molecule, and every part is in this repo:
 | `recipes/<id>/recipe.yaml` | The manifest: decision tree, code-enforced walls, provider contracts, acceptance tests. The manifest **is** the recipe page on scutl.org. |
 | `recipes/<id>/<cli>/` | The typed CLI component that enforces the walls (exit-code taxonomy is the protocol) |
 | `recipes/<id>/ADAPT.md` | Agent-facing installer, proven by fresh-agent acceptance runs |
-| `smutbench/` *(renaming to scutbench)* | The mocked-twin benchmark deriving scenarios from each manifest's failure modes |
+| `scutbench/` *(renaming to scutbench)* | The mocked-twin benchmark deriving scenarios from each manifest's failure modes |
 | `ladder/` | The live-rail run harness and receipts behind every Shipped badge |
 | `site/` | The static site generator — pages render from manifests, so the site cannot drift from the recipes |
 

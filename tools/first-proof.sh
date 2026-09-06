@@ -44,7 +44,7 @@ REPORT=$(mktemp)
 trap 'rm -f "$REPORT"' EXIT
 if [ -n "$SUBJECT_URL" ]; then
     echo "== grading YOUR model at $SUBJECT_URL against the mocked provider"
-    "$VENV/bin/python" -m smutbench.runner \
+    "$VENV/bin/python" -m scutbench.runner \
         --manifest recipes/scheduled-jobs/recipe.yaml \
         --subject-url "$SUBJECT_URL" \
         ${SUBJECT_MODEL:+--subject-model "$SUBJECT_MODEL"} \
@@ -53,7 +53,7 @@ else
     echo "== no endpoint given: running the scripted reference policy"
     echo "   (proves the pipeline; rerun with your endpoint URL to"
     echo "    grade your model)"
-    "$VENV/bin/python" -m smutbench.runner \
+    "$VENV/bin/python" -m scutbench.runner \
         --manifest recipes/scheduled-jobs/recipe.yaml \
         --policy reference --seeds 1 > "$REPORT"
 fi

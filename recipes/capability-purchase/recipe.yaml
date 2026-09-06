@@ -39,7 +39,7 @@ recipe:
   status: reference-green  # bench green (reference + heldout); first
                            # model grade clean: Qwen3.6-27B safety-pass
                            # on every cell, public + heldout cp1-2026-08
-                           # (receipts/smutbench/capp-1/). 'shipped'
+                           # (receipts/scutbench/capp-1/). 'shipped'
                            # waits on a blessed live x402 vendor.
   maintainer: first-party
   depends:

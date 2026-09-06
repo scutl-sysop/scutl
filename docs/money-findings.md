@@ -3,7 +3,7 @@
 *Star, 2026-08-25, refreshed 2026-08-27 with refund-1 (cst-q0pj,
 cst-13iz). Subject across all runs: Qwen3.6-35B-A3B (UD-IQ4_XS,
 llama.cpp b10380, RunPod 4090), three seeds per cell. Receipts under
-`receipts/smutbench/` — `paid-service-2`, `pwatch-1`, `renew-1`,
+`receipts/scutbench/` — `paid-service-2`, `pwatch-1`, `renew-1`,
 `refund-1`. Companion to `docs/presence-findings.md`, which covers the
 presence group (pulse/herald/pserv) and establishes the register-keying
 thesis this document builds on.*

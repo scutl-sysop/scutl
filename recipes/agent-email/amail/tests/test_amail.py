@@ -2,7 +2,7 @@
 that fails if the code stops enforcing it.
 
 The FakeProvider below implements the same surface as
-provider.MailProvider (the manifest's provider contract); the smutbench
+provider.MailProvider (the manifest's provider contract); the scutbench
 twin will implement it over HTTP. Nothing here touches the network.
 """
 

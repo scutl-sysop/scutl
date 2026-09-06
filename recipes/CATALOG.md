@@ -17,7 +17,7 @@ run.
 | **paid-service-x402** | SELL a service for x402 payments and operate it | payTo/ingress immutable to the model, income reported verbatim from `earnings.log` |
 | **provision-vultr** | rent a VPS on a card-funded rail and run workloads on it | allowlist + spend ceiling in code, never touches foreign instances, no orphaned billing |
 
-Each ships with a mocked-twin benchmark (`smutbench/`) that grades a
+Each ships with a mocked-twin benchmark (`scutbench/`) that grades a
 model+harness on the recipe before you trust it with the live rail —
 including obedience/capability discriminant triplets that tell
 *won't-obey* apart from *can't-do*.
@@ -71,7 +71,7 @@ building the first three taught us people actually ask for.
    via getLogs, not asserted, so an unlogged transfer out — the
    drain — is a first-class finding, never a balance mystery.
    Component (sprecon, 28 tests) and mocked-twin bench
-   (smutbench/sprc: 20 public cells zero skips, 5 broken-policy
+   (scutbench/sprc: 20 public cells zero skips, 5 broken-policy
    sins, held-out round sprc1-2026-08) landed; graded GREEN on
    Qwen 3.6 27B, public + heldout all axes 1.0 (ladder/sprc/).*
 
@@ -102,7 +102,7 @@ building the first three taught us people actually ask for.
    native HTTPS, or a prov-rail instance terminating TLS for one name
    in the delegated subzone — the catalog's first two-rail
    composition). Component (scutl_sweb) and mocked-twin bench
-   (smutbench/sweb, held-out round sweb1-2026-08) landed; graded
+   (scutbench/sweb, held-out round sweb1-2026-08) landed; graded
    GREEN on Qwen 3.6 27B, public + heldout all axes 1.0
    (ladder/sweb/, cst-8bm9). Recon: docs/static-website-recon.md.*
 7. **own-domain** — buy and hold a domain on a card rail; renewals,
@@ -122,7 +122,7 @@ building the first three taught us people actually ask for.
    ceremony it is — no EPP/unlock API exists. Composition seam:
    od_delegate graduates sweb's delegated subzone to an owned apex.
    Component (scutl_odom, 40 tests) and mocked-twin bench
-   (smutbench/odom: 20 public cells zero skips, 5 broken policies
+   (scutbench/odom: 20 public cells zero skips, 5 broken policies
    incl. polite-discloser — the under-escalation sin isolated on its
    own axis — held-out round odom1-2026-08); graded GREEN on
    Qwen 3.6 27B, public + heldout all axes 1.0 (ladder/odom/). The
@@ -153,7 +153,7 @@ building the first three taught us people actually ask for.
    rotation. Component (scutl_wing, 31 tests — wall-ordering
    finding: the dedup ledger outranks the skew wall, because an
    exact replay carries its original now-stale timestamp) and
-   mocked-twin bench (smutbench/wing: 19 public cells zero skips,
+   mocked-twin bench (scutbench/wing: 19 public cells zero skips,
    5 broken policies incl. blind-admitter — content-as-admission-
    authority isolated on the safety monitor — held-out round
    wing1-2026-08 with a replay-under-silence compound; the twin
@@ -183,7 +183,7 @@ building the first three taught us people actually ask for.
    teardown isn't done until the endpoint probe fails.
    Component (scutl_silo, 30 tests — the twin caught a real bug
    first run: a phantom write leaked a raw MissingObject instead of
-   failing loud) and mocked-twin bench (smutbench/silo: 18 public
+   failing loud) and mocked-twin bench (scutbench/silo: 18 public
    cells zero skips, 6 broken policies incl. rotate-to-fitter —
    cap-pressure-as-deletion-authority isolated on the safety
    monitor via wing's door-unlocked trick, a spare delete token on
@@ -232,7 +232,7 @@ building the first three taught us people actually ask for.
     green-washing silence; alarm-silencing (deregister to stop the
     noise) inherits the door-unlocked trick.
     Component (scutl_bell, 33 tests) and mocked-twin bench
-    (smutbench/bell: 18 public cells zero skips, 5 broken policies
+    (scutbench/bell: 18 public cells zero skips, 5 broken policies
     incl. catchup-launderer — the label-ironing sin isolated on the
     transparency axis — held-out round bell1-2026-08). A design find
     landed mid-build: a late reconciliation must carry its own gap
@@ -258,7 +258,7 @@ building the first three taught us people actually ask for.
     Third moneyless entry; live cost is one more cardless signup
     joining the toll-booth batch beside bell's witness.
     Component (scutl_beacon, 42 tests) and mocked-twin bench
-    (smutbench/beacon: 24 public cells zero skips over all 19 wire
+    (scutbench/beacon: 24 public cells zero skips over all 19 wire
     modes, average-hider isolated on the transparency axis,
     held-out round beacon1-2026-08). The design find landed in the
     register path: convergence must read the prober BEFORE
@@ -302,7 +302,7 @@ building the first three taught us people actually ask for.
     public menu and held-out round rf1; broken policies (gullible-clerk,
     park-jumper, silent-clerk, misreporter) each fail exactly their
     axis. First model grade landed (cst-cia8,
-    receipts/smutbench/refund-1/): Qwen3.6-35B-A3B, zero safety
+    receipts/scutbench/refund-1/): Qwen3.6-35B-A3B, zero safety
     violations on every public and held-out cell — no phantom refund,
     no misdirected payout, no self-granted exception; injection and
     redirect residue is report wording only (paraphrase, not
@@ -322,7 +322,7 @@ building the first three taught us people actually ask for.
     always data, never instructions. *Built — rev 1 reference-green;
     model grades clean at two tiers (Qwen3.6-27B and 35B-A3B, safety
     pass on every public and held-out cell; the A3B posts 42/42 after
-    the lowering rev — receipts/smutbench/sift-1..3/).*
+    the lowering rev — receipts/scutbench/sift-1..3/).*
 22. **messenger-reachability** — report to and take instruction from
     the human over a channel they already live in, with who-is-
     speaking verified in code and rate caps that make the flooding
@@ -348,7 +348,7 @@ building the first three taught us people actually ask for.
     behavior (stop, downgrade, or re-consent) is graded, not
     improvised. *Built — rev 1 reference-green; first model grade
     clean (Qwen3.6-27B, safety pass on every public and held-out
-    cell, receipts/smutbench/capp-1/).*
+    cell, receipts/scutbench/capp-1/).*
 
 ### On your behalf (delegated consumer tasks)
 

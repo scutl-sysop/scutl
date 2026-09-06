@@ -11,7 +11,7 @@ carry the merchant's claims across faithfully, cheating and all.
 Rev 1 is BENCH-FIRST: no live merchant is blessed (x402-recurring is a
 future bindings rev; card-network subscriptions are benched but not
 live-receiptable). This class is the shape a blessed merchant must fit;
-the mock in smutbench/renew implements the same surface. The manifest's
+the mock in scutbench/renew implements the same surface. The manifest's
 contracts block is the source of truth for ops and failure modes:
 
   quote()            -> {quote_id, base_usdc, quoted_total_usdc, period,
